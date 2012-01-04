@@ -2,8 +2,6 @@
 
 namespace Httpful;
 
-// TODO Easily allow swapping out HTTP for another interface (e.g. FTP)
-
 /**
  * Class to organize the Mime stuff a bit more 
  * @author Nate Good <me@nategood.com>
@@ -15,7 +13,7 @@ class Mime {
 	const PLAIN = 'text/plain';
 	const JS	= 'text/javascript';
 	const HTML  = 'text/html';
-	
+
 	/** 
 	 * Map short name for a mime type 
 	 * to a full proper mime type
@@ -27,7 +25,7 @@ class Mime {
 		'plain' => self::PLAIN,
 		'html'	=> self::HTML,
 	);
-	
+
 	/** 
 	 * Get the full Mime Type name from a "short name". 
 	 * Returns the short if no mapping was found.
@@ -50,9 +48,9 @@ class Http {
 
 class Response {
 	// TODO magic method getters for headers?
-	
+
 	public $body, $raw_body, $headers, $request;
-	
+
 	/**
 	 * @param string $body
 	 * @param string $headers
@@ -64,7 +62,7 @@ class Response {
 		$this->body 	= $this->_parse($body);
 		$this->headers 	= $headers; // todo $this->_parseHeaders
 	}
-	
+
 	/**
 	 * Parse the response into a clean data structure
 	 * (most often an associative array) based on the expected 
@@ -76,11 +74,11 @@ class Response {
 		switch ($this->request->expected_type) {
 			case Mime::JSON: 
 				$parsed = json_decode($response, false);
-				if (!$parsed) throw new Exception("Unable to parse response as JSON");
+				if (!$parsed) throw new \Exception("Unable to parse response as JSON");
 				break;
 			case Mime::XML:
 				// XML Parsing not yet supported
-			 	throw new Exception('XML not yet supported');
+			 	throw new \Exception('XML not yet supported');
 				break;
 			case Mime::FORM:
 				$parsed = array();
@@ -91,7 +89,7 @@ class Response {
 		}
 		return $parsed;
 	}
-	
+
 	/**
 	 * @return string
 	 */
@@ -118,14 +116,14 @@ class Request {
 	public $uri, $method = Http::GET, $headers = array(), $strict_ssl = false, $content_type = Mime::JSON, $expected_type = Mime::JSON, 
 		$username, $password,
 		$parseCallback, $errorCallback;
-	
+
 	// Curl Handle
 	private $_ch,
 		$_debug;
-	
+
 	// Template Request object
 	private static $_template;
-	
+
 	/**
 	 * We made the constructor private to force the factory style.  This was 
 	 * done to keep the syntax cleaner and better the support the idea of 
@@ -139,7 +137,7 @@ class Request {
 			$this->$attr = $value;
 		}
 	}
-	
+
 	// Defaults Management
 	
 	/** 
@@ -195,7 +193,7 @@ class Request {
 	/**
 	 * Actually send off the request, and parse the response
 	 * @return string|associative array of parsed results
- 	 * @throws Exception when unable to parse or communicate w server
+ 	 * @throws \Exception when unable to parse or communicate w server
      */
 	public function send() {
 		if (!$this->hasBeenInitialized())
@@ -206,7 +204,7 @@ class Request {
 		if ($result === false) {
             // return new Response(400);
             // $this->_error(curl_error($this->_ch));
-            throw new Exception('Unable to connect.  See log for details.');
+            throw new \Exception('Unable to connect.  See log for details.');
 		}
 		
 		list($header, $body) = explode("\r\n\r\n", $result, 2);
@@ -450,7 +448,7 @@ class Request {
 	private function _curlPrep() {
 		// Check for required stuff
 		if (!isset($this->uri))
-			throw new Exception('Attempting to send a request before defining a URI endpoint.');
+			throw new \Exception('Attempting to send a request before defining a URI endpoint.');
 
 		$ch = curl_init($this->uri);
 
@@ -475,7 +473,7 @@ class Request {
 		if ($this->_debug) {
 			curl_setopt($ch, CURLOPT_VERBOSE, true);
 		}
-		
+
 		curl_setopt($ch, CURLOPT_HEADER, 1);
 
 		$this->_ch = $ch;
@@ -498,7 +496,7 @@ class Request {
 			case Mime::FORM: 
 				return http_build_query($payload);
 			case Mime::XML:
-				throw new Exception('XML not yet supported');
+				throw new \Exception('XML not yet supported');
 			default:
 				return (string) $payload;
 		}
