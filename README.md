@@ -1,15 +1,15 @@
 # Httpful
 
-Httpful is a simple Http Client library for PHP 5.3.  There is an emphasis of readability without loosing concise syntax.  As such, you will notice that the library lends itself very nicely to "chaining".  
+Httpful is a simple Http Client library for PHP 5.3+.  There is an emphasis of readability without loosing concise syntax.  As such, you will notice that the library lends itself very nicely to "chaining".  
 
 # Use it
 
 Basic example.  Fire off a GET request to FreeBase API to find albums by The Dead Weather.  Notice, we expect the data returned to be JSON and the library parses it nicely.
 
-    namespace Httpful;
+    
     $uri = "https://www.googleapis.com/freebase/v1/mqlread?query=%7B%22type%22:%22/music/artist%22%2C%22name%22:%22The%20Dead%20Weather%22%2C%22album%22:%5B%5D%7D";
-    $response = Request::get($uri)
-        ->expectsType(Mime::JSON)
+    $response = \Httpful\Request::get($uri)
+        ->expectsType(\Httpful\Mime::JSON)
         ->sendIt();
     echo 'The Dead Weather has ' . count($response->result->album) . ' albums.';
 
