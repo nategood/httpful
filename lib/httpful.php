@@ -363,13 +363,13 @@ class Request {
 	
 	// Custom Handlers
 	
-	/**
-	 * Ability to set a custom response handler
-	 * @param function $callback
-	 */
-	public function setResponseHandler($callback) {
-		// TODO
-	}
+    // /**
+    //  * Ability to set a custom response handler
+    //  * @param function $callback
+    //  */
+    // public function setResponseHandler($callback) {
+    //  // TODO
+    // }
 	
 	// Internal Functions
 	
