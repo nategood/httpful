@@ -26,16 +26,46 @@ The library allows "chaining" to build up your requests.  Need to add on a conte
 
 ## Custom Headers
 
-The library allows for custom headers without sacrificing readability.  Simply chain another method on to your request with the "key" of the header as the method name (in camel case) and the value of the header as that method's argument.  Let's add in an example header X-Example-Header
+The library allows for custom headers without sacrificing readability.  Simply chain another method on to your request with the "key" of the header as the method name (in camel case) and the value of the header as that method's argument.  Let's add in two custom additional headers, X-Example-Header and X-Another-Header:
 
     $response = Httpful\Request::get($uri)
         ->expectsType(Httpful\Mime::JSON)
         ->xExampleHeader("My Value")            // Add in a custom header X-Example-Header
+        ->withXAnotherHeader("Another Value")   // Sugar: You can also prefix the method with "with"
         ->sendIt();
 
 ## Smart Parsing
 
-If you expect (and get) a response in a supported format (JSON, Form Url Encoded, XML Soon), the response will automatically parse that response into a useful response object.  For example, our "Dead Weather" example above was a JSON response, however the library parsed that request and converted into a useful object.
+If you expect (and get) a response in a supported format (JSON, Form Url Encoded, XML Soon), the response will automatically parse that response into a useful response object.  For example, our "Dead Weather" example above was a JSON response, however the library parsed that request and converted into a useful object.  If the text is not supported by the internal parsing, it simply gets returned as a string.
+
+    // JSON
+    $response = Httpful\Request::get($uri)
+        ->expectsType(Httpful\Mime::JSON)
+        ->sendIt();
+    
+    // If the JSON response is {"scalar":1,"object":{"scalar":2}}
+    echo $response->scalar; // prints 1
+    echo $response->object->scalar; // prints 5
+
+## Request Templates
+
+Often, if we are working with an API, a lot of the headers we send to that API remain the same (e.g. the expected mime type, authentication headers).  Often we just write boiler plate code to get around this.  Httpful solves this problem by letting you create "template" requests.  Subsequent Requests will by default use the headers and settings of that template request.
+
+
+    // Create the template
+    $template = Request::init()
+        ->method(Http::POST)
+        ->withStrictSsl()
+        ->expectsType(Mime::HTML)
+        ->sendsType(Mime::FORM);
+    
+    // Set it as a template
+    Request::ini($template);
+    
+    // This new request will have all the settings 
+    // of our template by default.  We can override
+    // any of these settings.
+    $r = Request::init();
 
 # Testing
 
