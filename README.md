@@ -1,17 +1,16 @@
 # Httpful
 
-Httpful is a simple Http Client library for PHP 5.3+.  There is an emphasis of readability without loosing concise syntax.  As such, you will notice that the library lends itself very nicely to "chaining".  
+Httpful is a simple Http Client library for PHP 5.3+.  There is an emphasis of readability without losing concise syntax.  As such, you will notice that the library lends itself very nicely to "chaining".  
 
 # Use it
 
-Basic example.  Fire off a GET request to FreeBase API to find albums by The Dead Weather.  Notice, we expect the data returned to be JSON and the library parses it nicely.
+Basic example.  Fire off a GET request to FreeBase API to find albums by The Dead Weather.  Notice, we expect the data returned to be JSON formatted and the library parses it nicely.
 
-    
     $uri = "https://www.googleapis.com/freebase/v1/mqlread?query=%7B%22type%22:%22/music/artist%22%2C%22name%22:%22The%20Dead%20Weather%22%2C%22album%22:%5B%5D%7D";
     $response = \Httpful\Request::get($uri)
         ->expectsType(\Httpful\Mime::JSON)
         ->sendIt();
-    echo 'The Dead Weather has ' . count($response->result->album) . ' albums.';
+    echo 'The Dead Weather has ' . count($response->body->result->album) . ' albums.';
 
 *For more details, checkout the examples directory*
 
@@ -41,13 +40,12 @@ If you expect (and get) a response in a supported format (JSON, Form Url Encoded
         ->sendIt();
     
     // If the JSON response is {"scalar":1,"object":{"scalar":2}}
-    echo $response->scalar; // prints 1
-    echo $response->object->scalar; // prints 5
+    echo $response->body->scalar;           // prints 1
+    echo $response->body->object->scalar;   // prints 5
 
 ## Request Templates
 
-Often, if we are working with an API, a lot of the headers we send to that API remain the same (e.g. the expected mime type, authentication headers).  Often we just write boiler plate code to get around this.  Httpful solves this problem by letting you create "template" requests.  Subsequent Requests will by default use the headers and settings of that template request.
-
+Often, if we are working with an API, a lot of the headers we send to that API remain the same (e.g. the expected mime type, authentication headers).  Usually it ends up in writing boiler plate code to get around this.  Httpful solves this problem by letting you create "template" requests.  Subsequent requests will by default use the headers and settings of that template request.
 
     // Create the template
     $template = Request::init()
@@ -70,3 +68,10 @@ You will see several "alias" methods: more readable method definitions that wrap
 # Testing
 
 Because this is a HTTP Client library, to thoroughly test it, we need an HTTP server.  I included a basic node.js server that takes an HTTP request, serializes it and spits it back out.  See `tests/runTestServer.js` and `tests/httpful.test.php`.
+
+# Todo
+
+ - Add XML parsing support out of the box
+ - Register a callback to handle custom MIME types
+ - Register a callback to handle errors
+ - Support SSL Client Side Cert Authentication
