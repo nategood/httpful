@@ -15,10 +15,7 @@ Basic example.  Fire off a GET request to FreeBase API to find albums by The Dea
 
 *For more details, checkout the examples directory*
 
-# About the Library
-You will see several "alias" methods: more readable method definitions that wrap their more concise counterparts.  You will also notice no public constructor.  This two adds to the readability and "chainabilty" of the library.
-
-# More features
+# Features
 
 ## Chainability
 
@@ -66,6 +63,9 @@ Often, if we are working with an API, a lot of the headers we send to that API r
     // of our template by default.  We can override
     // any of these settings.
     $r = Request::init();
+
+# Notes about Source Code
+You will see several "alias" methods: more readable method definitions that wrap their more concise counterparts.  You will also notice no public constructor.  This too adds to the readability and "chainabilty" of the library.
 
 # Testing
 
