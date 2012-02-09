@@ -70,22 +70,29 @@ class Response {
 	 * @return array|string|object the response parse accordingly
 	 * @param string Http response body
 	 */
-	private function _parse($response) {
+	private function _parse($body) {
+	    // If provided, use custom parsing callback
+        if (isset($this->request->parseCallback)) {
+            // echo call_user_func($this->request->parseCallback, $body);exit;
+            return call_user_func($this->request->parseCallback, $body);
+        }
+	    
+	    // Fallback to sensible parsing defaults
 		switch ($this->request->expected_type) {
 			case Mime::JSON: 
-				$parsed = json_decode($response, false);
+				$parsed = json_decode($body, false);
 				if (!$parsed) throw new \Exception("Unable to parse response as JSON");
 				break;
-			case Mime::XML:
-				// XML Parsing not yet supported
-			 	throw new \Exception('XML not yet supported');
-				break;
+            case Mime::XML:
+                // XML Parsing not yet supported :-(
+                throw new \Exception('XML not yet supported');
+             break;
 			case Mime::FORM:
 				$parsed = array();
-				parse_str($response, $parsed);
+				parse_str($body, $parsed);
 				break;
 			default:
-				$parsed = $response;
+				$parsed = $body;
 		}
 		return $parsed;
 	}
@@ -203,8 +210,8 @@ class Request {
 
 		if ($result === false) {
             // return new Response(400);
-            // $this->_error(curl_error($this->_ch));
-            throw new \Exception('Unable to connect.  See log for details.');
+            $this->_error(curl_error($this->_ch));
+            throw new \Exception('Unable to connect.');
 		}
 		
 		list($header, $body) = explode("\r\n\r\n", $result, 2);
@@ -331,6 +338,19 @@ class Request {
 	}
 	
 	/**
+	 * Use a custom function to parse the response.
+	 * @return Request this
+	 * @param Closure $callback Takes the raw body of 
+	 *    the http response and returns a mixed
+	 */
+	public function parseWith(\Closure $callback) {
+	    $this->parseCallback = $callback;
+	    return $this;
+	}
+	// @alias parseWith
+	public function parseResponsesWith(\Closure $callback) { return $this->parseWith($callback); }
+	
+	/**
 	 * Magic method allows for neatly setting other headers in a 
 	 * similar syntax as the other setters
 	 * @return Request this
@@ -414,8 +434,8 @@ class Request {
 	}
 
 	private function _error($error) {
-		// Default actions write to error log
-		// erorr_log($error);
+        // Default actions write to error log
+        erorr_log($error);
 	}
 
 	/** 

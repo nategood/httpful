@@ -178,6 +178,18 @@ function testJsonResponseParse() {
     assert(1 === $response->body->array[0]);
 }
 
+function testCustomParse() {
+    $f = function($body) {
+        return $body . $body;
+    };
+    
+    $req = Request::init()->parseWith($f);
+    $raw_body = 'my response text';
+    $response = new Response($raw_body, array(), $req);
+
+    assert($raw_body . $raw_body === $response->body);
+}
+
 function testCustomHeader() {
     $value = "custom header value";
     $r = Request::init()
@@ -245,6 +257,7 @@ testSendsAndExpectsType();
 testIni();
 testAuthSetup();
 testJsonResponseParse();
+testCustomParse();
 
 checkForTestServer();
 
