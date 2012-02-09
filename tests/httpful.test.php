@@ -248,6 +248,32 @@ function testSendDelete() {
     assert(Http::DELETE === $response->body->requestMethod);
 }
 
+function testAddOnCurlOption() {
+    // Let's use the NOBODY curl opt
+    // to override our post.  This should
+    // result in getting no response from the
+    // server.
+    $req = Request::post(TEST_URL)
+        ->body('HELLO')
+        ->expects(Mime::HTML)
+        ->addOnCurlOption(CURLOPT_NOBODY, true);
+    $response = $req->sendIt();
+    $bodyWithHeadOverride = $response->raw_body;
+    
+    assert(empty($bodyWithHeadOverride));
+    
+    // Let's remove it and make sure we 
+    // get our body back
+    $req = Request::post(TEST_URL)
+        ->body('HELLO')
+        ->expects(Mime::HTML);
+    $response = $req->sendIt();
+    $bodyWithoutOverride = $response->raw_body;
+
+    assert($bodyWithHeadOverride !== $bodyWithoutOverride);
+    assert('HELLO' === json_decode($bodyWithoutOverride)->requestBody);
+}
+
 testInit();
 testMethods();
 testDefaults();
@@ -258,6 +284,7 @@ testIni();
 testAuthSetup();
 testJsonResponseParse();
 testCustomParse();
+testAddOnCurlOption();
 
 checkForTestServer();
 

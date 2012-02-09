@@ -121,11 +121,12 @@ class Response {
  */
 class Request {
 	public $uri, $method = Http::GET, $headers = array(), $strict_ssl = false, $content_type = Mime::JSON, $expected_type = Mime::JSON, 
+	    $additional_curl_opts = array(),
 		$username, $password,
 		$parseCallback, $errorCallback;
 
 	// Curl Handle
-	private $_ch,
+	public $_ch,
 		$_debug;
 
 	// Template Request object
@@ -496,9 +497,27 @@ class Request {
 
 		curl_setopt($ch, CURLOPT_HEADER, 1);
 
+        // If there are some additional curl opts that the user wants
+        // to set, we can tack them in here
+        foreach ($this->additional_curl_opts as $curlopt => $curlval) {
+            curl_setopt($ch, $curlopt, $curlval);
+        }
+
 		$this->_ch = $ch;
 
 		return $this;
+	}
+	
+	/**
+	 * Semi-reluctantly added this as a way to add in curl opts
+	 * that are not otherwise accessible from the rest of the API.
+	 * @return Request $this
+	 * @param string $curlopt
+	 * @param $curloptval $mixed
+	 */
+	public function addOnCurlOption($curlopt, $curloptval) {
+	    $this->additional_curl_opts[$curlopt] = $curloptval;
+	    return $this;
 	}
 	
 	/**
