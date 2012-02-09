@@ -35,6 +35,14 @@ class Mime {
 	public static function getFullMime($short_name) {
 		return array_key_exists($short_name, self::$mimes) ? self::$mimes[$short_name] : $short_name;
 	}
+	
+	/**
+	 * @return bool
+	 * @param string $short_name
+	 */
+	public static function supportsMimeType($short_name) {
+	    return array_key_exists($short_name, self::$mimes);
+	}
 }
 
 class Http {
@@ -273,6 +281,8 @@ class Request {
 	}
 	// @alias of mime
 	public function sendsAndExpectsType($mime) { return $this->mime($mime); }
+	// @alias of mime
+	public function sendsAndExpects($mime) { return $this->mime($mime); }
 	
 	/**
 	 * Set the method.  Shouldn't be called often as the preferred syntax
@@ -353,7 +363,8 @@ class Request {
 	
 	/**
 	 * Magic method allows for neatly setting other headers in a 
-	 * similar syntax as the other setters
+	 * similar syntax as the other setters.  This method also allows
+	 * for the sends* syntax.
 	 * @return Request this
 	 * @param string $method "missing" method name called 
 	 *    the method name called should be the name of the header that you
@@ -366,6 +377,32 @@ class Request {
 	 *    and that argument should be a string value of the header we're setting
 	 */
 	public function __call($method, $args) {
+	    // This method supports the sends* methods 
+	    // like sendsJSON, sendsForm
+	    //!method_exists($this, $method) && 
+	    if (substr($method, 0, 5) === 'sends') {
+	        $mime = strtolower(substr($method, 5));
+	        if (Mime::supportsMimeType($mime)) {
+	            $this->sends(Mime::getFullMime($mime));
+	            return $this;
+	        } 
+            // else {
+            //     throw new \Exception("Unsupported Content-Type $mime");
+            // }
+	    }
+	    if (substr($method, 0, 7) === 'expects') {
+	        $mime = strtolower(substr($method, 7));
+	        if (Mime::supportsMimeType($mime)) {
+	            $this->expects(Mime::getFullMime($mime));
+	            return $this;
+	        } 
+            // else {
+            //     throw new \Exception("Unsupported Content-Type $mime");
+            // }
+	    }
+	    
+	    // This method also adds the custom header support as described in the 
+	    // method comments
 		if (count($args) === 0) 
 			return;
 		
@@ -373,7 +410,7 @@ class Request {
 		// This is okay because: No defined HTTP headers begin with with,
 		// and if you are defining a custom header, the standard is to prefix it
 		// with an "X-", so that should take care of any collisions.
-		if (substr($method, 0, 4) == 'with')
+		if (substr($method, 0, 4) === 'with')
 			$method = substr($method, 4);
 		
 		// Precede upper case letters with dashes, uppercase the first letter of method

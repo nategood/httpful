@@ -178,6 +178,20 @@ function testJsonResponseParse() {
     assert(1 === $response->body->array[0]);
 }
 
+function testSendsSugar() {
+    $req = Request::init()->sendsJson();
+    $req2 = Request::init()->sends(Mime::JSON);
+    assert($req2->content_type === $req->content_type);
+    assert($req->content_type === 'application/json');
+}
+
+function testExpectsSugar() {
+    $req = Request::init()->expectsJson();
+    $req2 = Request::init()->expects(Mime::JSON);
+    assert($req2->expected_type === $req->expected_type);
+    assert($req->expected_type === 'application/json');
+}
+
 function testCustomParse() {
     $f = function($body) {
         return $body . $body;
@@ -285,6 +299,7 @@ testAuthSetup();
 testJsonResponseParse();
 testCustomParse();
 testAddOnCurlOption();
+testSendsSugar();
 
 checkForTestServer();
 
