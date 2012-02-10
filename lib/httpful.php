@@ -19,11 +19,11 @@ class Mime {
      * to a full proper mime type
      */
     public static $mimes = array(
-        'json'     => self::JSON,
-        'xml'    => self::XML,
-        'form'    => self::FORM,
-        'plain' => self::PLAIN,
-        'html'    => self::HTML,
+        'json'      => self::JSON,
+        'xml'       => self::XML,
+        'form'      => self::FORM,
+        'plain'     => self::PLAIN,
+        'html'      => self::HTML,
     );
 
     /**
@@ -46,12 +46,12 @@ class Mime {
 }
 
 class Http {
-    const HEAD        = 'HEAD';
-    const GET        = 'GET';
-    const POST        = 'POST';
-    const PUT        = 'PUT';
+    const HEAD      = 'HEAD';
+    const GET       = 'GET';
+    const POST      = 'POST';
+    const PUT       = 'PUT';
     const DELETE    = 'DELETE';
-    const OPTIONS    = 'OPTIONS';
+    const OPTIONS   = 'OPTIONS';
 }
 
 class Response {
