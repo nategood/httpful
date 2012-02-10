@@ -196,7 +196,7 @@ function testCustomParse() {
     $f = function($body) {
         return $body . $body;
     };
-    
+
     $req = Request::init()->parseWith($f);
     $raw_body = 'my response text';
     $response = new Response($raw_body, array(), $req);
@@ -273,10 +273,10 @@ function testAddOnCurlOption() {
         ->addOnCurlOption(CURLOPT_NOBODY, true);
     $response = $req->sendIt();
     $bodyWithHeadOverride = $response->raw_body;
-    
+
     assert(empty($bodyWithHeadOverride));
-    
-    // Let's remove it and make sure we 
+
+    // Let's remove it and make sure we
     // get our body back
     $req = Request::post(TEST_URL)
         ->body('HELLO')
@@ -300,6 +300,7 @@ testJsonResponseParse();
 testCustomParse();
 testAddOnCurlOption();
 testSendsSugar();
+testExpectsSugar();
 
 checkForTestServer();
 

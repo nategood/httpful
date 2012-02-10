@@ -8,7 +8,7 @@ Basic example.  Fire off a GET request to FreeBase API to find albums by The Dea
 
     $uri = "https://www.googleapis.com/freebase/v1/mqlread?query=%7B%22type%22:%22/music/artist%22%2C%22name%22:%22The%20Dead%20Weather%22%2C%22album%22:%5B%5D%7D";
     $response = \Httpful\Request::get($uri)
-        ->expectsType(\Httpful\Mime::JSON)
+        ->expectsJson()
         ->sendIt();
     echo 'The Dead Weather has ' . count($response->body->result->album) . ' albums.';
 
@@ -36,7 +36,7 @@ If you expect (and get) a response in a supported format (JSON, Form Url Encoded
 
     // JSON
     $response = Httpful\Request::get($uri)
-        ->expectsType(Httpful\Mime::JSON)
+        ->expectsJson() // More concise syntax than for expectsType(Httpful\Mime::JSON)
         ->sendIt();
     
     // If the JSON response is {"scalar":1,"object":{"scalar":2}}
