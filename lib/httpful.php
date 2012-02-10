@@ -7,9 +7,9 @@ namespace Httpful;
  * @author Nate Good <me@nategood.com>
  */
 class Mime {
-    const JSON    = 'application/json';
-    const XML    = 'application/xml';
-    const FORM    = 'application/x-www-form-urlencoded';
+    const JSON  = 'application/json';
+    const XML   = 'application/xml';
+    const FORM  = 'application/x-www-form-urlencoded';
     const PLAIN = 'text/plain';
     const JS    = 'text/javascript';
     const HTML  = 'text/html';
@@ -19,11 +19,11 @@ class Mime {
      * to a full proper mime type
      */
     public static $mimes = array(
-        'json'      => self::JSON,
-        'xml'       => self::XML,
-        'form'      => self::FORM,
-        'plain'     => self::PLAIN,
-        'html'      => self::HTML,
+        'json'  => self::JSON,
+        'xml'   => self::XML,
+        'form'  => self::FORM,
+        'plain' => self::PLAIN,
+        'html'  => self::HTML,
     );
 
     /**
@@ -46,12 +46,12 @@ class Mime {
 }
 
 class Http {
-    const HEAD      = 'HEAD';
-    const GET       = 'GET';
-    const POST      = 'POST';
-    const PUT       = 'PUT';
-    const DELETE    = 'DELETE';
-    const OPTIONS   = 'OPTIONS';
+    const HEAD    = 'HEAD';
+    const GET     = 'GET';
+    const POST    = 'POST';
+    const PUT     = 'PUT';
+    const DELETE  = 'DELETE';
+    const OPTIONS = 'OPTIONS';
 }
 
 class Response {
@@ -65,10 +65,10 @@ class Response {
      * @param Request $request
      */
     public function __construct($body, $headers, Request $request) {
-        $this->request    = $request;
+        $this->request  = $request;
         $this->raw_body = $body;
         $this->body     = $this->_parse($body);
-        $this->headers     = $headers; // todo $this->_parseHeaders
+        $this->headers  = $headers; // todo $this->_parseHeaders
     }
 
     /**
@@ -128,14 +128,21 @@ class Response {
  * @author Nate Good <me@nategood.com>
  */
 class Request {
-    public $uri, $method = Http::GET, $headers = array(), $strict_ssl = false, $content_type = Mime::JSON, $expected_type = Mime::JSON,
-        $additional_curl_opts = array(),
-        $username, $password,
-        $parseCallback, $errorCallback;
+    public $uri,
+           $method        = Http::GET,
+           $headers       = array(),
+           $strict_ssl    = false,
+           $content_type  = Mime::JSON,
+           $expected_type = Mime::JSON,
+           $additional_curl_opts = array(),
+           $username,
+           $password,
+           $parseCallback,
+           $errorCallback;
 
     // Curl Handle
     public $_ch,
-        $_debug;
+           $_debug;
 
     // Template Request object
     private static $_template;
@@ -302,11 +309,13 @@ class Request {
      */
     public function expects($mime) {
         if (empty($mime)) return $this;
-        $this->expected_type     = Mime::getFullMime($mime);
+        $this->expected_type = Mime::getFullMime($mime);
         return $this;
     }
     // @alias of expects
-    public function expectsType($mime) { return $this->expects($mime); }
+    public function expectsType($mime) {
+        return $this->expects($mime);
+    }
 
     /**
      * @return Request this
@@ -314,11 +323,13 @@ class Request {
      */
     public function contentType($mime) {
         if (empty($mime)) return $this;
-        $this->content_type     = Mime::getFullMime($mime);
+        $this->content_type  = Mime::getFullMime($mime);
         return $this;
     }
     // @alias of contentType
-    public function sends($mime) { return $this->contentType($mime); }
+    public function sends($mime) {
+        return $this->contentType($mime);
+    }
     // @alias of contentType
     public function sendsType($mime) { return $this->contentType($mime); }
 
@@ -331,8 +342,12 @@ class Request {
         $this->strict_ssl = $strict;
         return $this;
     }
-    public function withoutStrictSSL() { return $this->strictSSL(false); }
-    public function withStrictSSL() { return $this->strictSSL(true); }
+    public function withoutStrictSSL() {
+        return $this->strictSSL(false);
+    }
+    public function withStrictSSL() {
+        return $this->strictSSL(true);
+    }
 
     /**
      * Add an additional header to the request
@@ -359,7 +374,9 @@ class Request {
         return $this;
     }
     // @alias parseWith
-    public function parseResponsesWith(\Closure $callback) { return $this->parseWith($callback); }
+    public function parseResponsesWith(\Closure $callback) {
+        return $this->parseWith($callback);
+    }
 
     /**
      * Magic method allows for neatly setting other headers in a
@@ -519,7 +536,8 @@ class Request {
 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-        $headers = array("Content-Type: {$this->content_type}", "Accept: {$this->expected_type}, text/plain");
+        $headers = array("Content-Type: {$this->content_type}",
+                         "Accept: {$this->expected_type}, text/plain");
         foreach ($this->headers as $header => $value) {
             $headers[] = "$header: $value";
         }
