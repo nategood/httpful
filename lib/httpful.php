@@ -7,9 +7,9 @@ namespace Httpful;
  * @author Nate Good <me@nategood.com>
  */
 class Mime {
-    const JSON    = 'application/json';
-    const XML    = 'application/xml';
-    const FORM    = 'application/x-www-form-urlencoded';
+    const JSON  = 'application/json';
+    const XML   = 'application/xml';
+    const FORM  = 'application/x-www-form-urlencoded';
     const PLAIN = 'text/plain';
     const JS    = 'text/javascript';
     const HTML  = 'text/html';
