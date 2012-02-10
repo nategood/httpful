@@ -94,7 +94,5 @@ Because this is a HTTP Client library, to thoroughly test it, we need an HTTP se
 
 # Todo
 
- - Add XML parsing support out of the box
- - Register a callback to handle custom MIME types
- - Register a callback to handle errors
+ - Add XML and YAML parsing support out of the box
  - Support SSL Client Side Cert Authentication
