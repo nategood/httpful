@@ -69,7 +69,8 @@ class Http {
 class Response {
     // TODO magic method getters for headers?
 
-    public $body, $raw_body, $headers, $request, $code, $contentType;
+    public $body, $raw_body, $headers, $request, 
+        $code, $content_type, $charset;
 
     /**
      * @param string $body
@@ -77,10 +78,15 @@ class Response {
      * @param Request $request
      */
     public function __construct($body, $headers, Request $request) {
-        $this->request    = $request;
-        $this->raw_body = $body;
-        $this->body     = $this->_parse($body);
-        $this->headers     = $headers; // todo $this->_parseHeaders
+        $this->request      = $request;
+        $this->raw_headers  = $headers;
+        $this->raw_body     = $body;
+        
+        $this->headers      = $this->_parseHeaders($headers);
+// var_dump($this->headers);
+        $this->_interpretHeaders();
+        
+        $this->body         = $this->_parse($body);
     }
 
     /**
@@ -90,15 +96,24 @@ class Response {
      * @return array|string|object the response parse accordingly
      * @param string Http response body
      */
-    private function _parse($body) {
+    public function _parse($body) {
+        // If the user decided to forgo the automatic
+        // smart parsing, short circuit.
+        if (!$this->request->auto_parse) {
+            return $body;
+        }
+        
         // If provided, use custom parsing callback
-        if (isset($this->request->parseCallback)) {
-            // echo call_user_func($this->request->parseCallback, $body);exit;
-            return call_user_func($this->request->parseCallback, $body);
+        if (isset($this->request->parse_callback)) {
+            return call_user_func($this->request->parse_callback, $body);
         }
 
         // Fallback to sensible parsing defaults
-        switch ($this->request->expected_type) {
+        $parse_with = (!$this->request->expected_type && isset($this->content_type)) ?
+            $this->content_type :
+            $this->request->expected_type;
+        
+        switch ($parse_with) {
             case Mime::JSON:
                 $parsed = json_decode($body, false);
                 if (!$parsed) throw new \Exception("Unable to parse response as JSON");
@@ -115,6 +130,46 @@ class Response {
                 $parsed = $body;
         }
         return $parsed;
+    }
+    
+    /**
+     * Parse text headers from response into
+     * array of key value pairs
+     * @return array parse headers
+     * @param string $headers raw headers
+     */
+    public function _parseHeaders($headers) {
+// var_dump($headers);
+        $headers = preg_split("/(\r|\n)+/", $headers);
+        for ($i = 1; $i < count($headers); $i++) {
+            list($key, $raw_value) = explode(':', $headers[$i], 2);
+            $parse_headers[trim($key)] = trim($raw_value);
+        }
+// var_dump($parse_headers);
+        return $parse_headers;
+    }
+    
+    /**
+     * After we've parse the headers, let's clean things
+     * up a bit and treat some headers specially
+     */
+    public function _interpretHeaders() {
+        // Parse the Content-Type and charset
+        $content_type = explode(';', $this->headers['Content-Type']);
+// var_dump($content_type);
+// var_dump($this->headers['Content-Type']);
+        $this->content_type = $content_type[0];
+        if (count($content_type) == 2 && strpos($content_type[1], '=') !== false) {
+            list($nill, $this->charset) = explode('=', $content_type[1]);
+        }
+        // RFC 2616 states "text/*" Content-Types should have a default
+        // charset of ISO-8859-1. "application/*" and other Content-Types  
+        // are assumed to have UTF-8 unless otherwise specified.
+        // http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1
+        // http://www.w3.org/International/O-HTTP-charset.en.php      
+        if (!isset($this->charset)) {
+            $this->charset = substr($this->content_type, 5) === 'text/' ? 'iso-8859-1' : 'utf-8';
+        }
     }
 
     /**
@@ -141,9 +196,9 @@ class Response {
  */
 class Request {
     public $uri, $method = Http::GET, $headers = array(), $strict_ssl = false, $content_type = Mime::JSON, $expected_type = Mime::JSON,
-        $additional_curl_opts = array(),
+        $additional_curl_opts = array(), $auto_parse = true,
         $username, $password,
-        $parseCallback, $errorCallback;
+        $parse_callback, $errorCallback;
 
     // Curl Handle
     public $_ch,
@@ -359,6 +414,20 @@ class Request {
         $this->headers[$header_name] = $value;
         return $this;
     }
+    
+    /**
+     * @return Request
+     * @param bool $auto_parse perform automatic "smart"
+     *    parsing based on Content-Type or "expectedType"
+     *    If not auto parsing, Response->body returns the body 
+     *    as a string.
+     */
+    public function autoParse($auto_parse = true) {
+        $this->auto_parse = $auto_parse;
+        return $this;
+    }
+    public function withoutAutoParsing() { return $this->autoParse(false); }
+    public function withAutoParsing() { return $this->autoParse(true); }
 
     /**
      * Use a custom function to parse the response.
@@ -367,7 +436,7 @@ class Request {
      *    the http response and returns a mixed
      */
     public function parseWith(\Closure $callback) {
-        $this->parseCallback = $callback;
+        $this->parse_callback = $callback;
         return $this;
     }
     // @alias parseWith
