@@ -57,7 +57,7 @@ class Http {
 class Response {
     // TODO magic method getters for headers?
 
-    public $body, $raw_body, $headers, $request;
+    public $body, $raw_body, $headers, $request, $code, $contentType;
 
     /**
      * @param string $body
@@ -194,14 +194,14 @@ class Request {
 
     /**
      * @return bool has the internal curl request been initialized?
-    */
+     */
     public function hasBeenInitialized() {
         return isset($this->_ch);
     }
 
     /**
      * @return bool Is this request setup for basic auth?
-    */
+     */
     public function hasBasicAuth() {
         return isset($this->password) && isset($this->username);
     }
@@ -209,7 +209,7 @@ class Request {
     /**
      * Actually send off the request, and parse the response
      * @return string|associative array of parsed results
-      * @throws \Exception when unable to parse or communicate w server
+     * @throws \Exception when unable to parse or communicate w server
      */
     public function send() {
         if (!$this->hasBeenInitialized())
@@ -326,7 +326,7 @@ class Request {
      * Do we strictly enforce SSL verification?
      * @return Request this
      * @param bool $strict
-    */
+     */
     public function strictSSL($strict) {
         $this->strict_ssl = $strict;
         return $this;
@@ -419,16 +419,6 @@ class Request {
         return $this;
     }
 
-    // Custom Handlers
-
-    // /**
-    //  * Ability to set a custom response handler
-    //  * @param function $callback
-    //  */
-    // public function setResponseHandler($callback) {
-    //  // TODO
-    // }
-
     // Internal Functions
 
     /**
@@ -519,7 +509,12 @@ class Request {
 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-        $headers = array("Content-Type: {$this->content_type}", "Accept: {$this->expected_type}, text/plain");
+        $headers = array("Content-Type: {$this->content_type}");
+        
+        $headers[] = !empty($this->expected_type) ? 
+            "Accept: {$this->expected_type}, text/plain" :
+            "Accept: */*";
+        
         foreach ($this->headers as $header => $value) {
             $headers[] = "$header: $value";
         }
@@ -579,7 +574,6 @@ class Request {
     }
 
     // Http Method Sugar
-
     /**
      * HTTP Method Get
      * @return Request
@@ -593,6 +587,7 @@ class Request {
 
     /**
      * HTTP Method Post
+     * @return Request
      * @param string $uri optional uri to use
      * @param string $payload data to send in body of request
      * @param string $mime MIME to use for Content-Type
@@ -603,7 +598,10 @@ class Request {
 
     /**
      * HTTP Method Put
+     * @return Request
      * @param string $uri optional uri to use
+     * @param string $payload data to send in body of request
+     * @param string $mime MIME to use for Content-Type
      */
     public static function put($uri, $payload = null, $mime = null) {
         return self::init(Http::PUT)->uri($uri)->body($payload, $mime);
@@ -611,6 +609,7 @@ class Request {
 
     /**
      * HTTP Method Delete
+     * @return Request
      * @param string $uri optional uri to use
      */
     public static function delete($uri, $mime = null) {
@@ -619,6 +618,7 @@ class Request {
 
     /**
      * HTTP Method Head
+     * @return Request
      * @param string $uri optional uri to use
      */
     public static function head($uri) {
@@ -627,6 +627,7 @@ class Request {
 
     /**
      * HTTP Method Options
+     * @return Request
      * @param string $uri optional uri to use
      */
     public static function options($uri) {
