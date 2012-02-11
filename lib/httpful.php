@@ -473,7 +473,7 @@ class Request {
 
     private function _error($error) {
         // Default actions write to error log
-        erorr_log($error);
+        error_log($error);
     }
 
     /**
