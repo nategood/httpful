@@ -218,7 +218,6 @@ class Request {
         $result = curl_exec($this->_ch);
 
         if ($result === false) {
-            // return new Response(400);
             $this->_error(curl_error($this->_ch));
             throw new \Exception('Unable to connect.');
         }
@@ -241,7 +240,8 @@ class Request {
     }
 
     /**
-     * User Basic Auth. WARNING Only use when over SSL/TSL.
+     * User Basic Auth. 
+     * Only use when over SSL/TSL/HTTPS.
      * @return Request this
      * @param string $username
      * @param string $password
