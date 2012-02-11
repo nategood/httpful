@@ -67,7 +67,6 @@ class Http {
 }
 
 class Response {
-    // TODO magic method getters for headers?
 
     public $body, $raw_body, $headers, $request, 
         $code, $content_type, $charset;
@@ -83,7 +82,7 @@ class Response {
         $this->raw_body     = $body;
         
         $this->headers      = $this->_parseHeaders($headers);
-// var_dump($this->headers);
+
         $this->_interpretHeaders();
         
         $this->body         = $this->_parse($body);
@@ -139,13 +138,11 @@ class Response {
      * @param string $headers raw headers
      */
     public function _parseHeaders($headers) {
-// var_dump($headers);
         $headers = preg_split("/(\r|\n)+/", $headers);
         for ($i = 1; $i < count($headers); $i++) {
             list($key, $raw_value) = explode(':', $headers[$i], 2);
             $parse_headers[trim($key)] = trim($raw_value);
         }
-// var_dump($parse_headers);
         return $parse_headers;
     }
     
@@ -156,8 +153,7 @@ class Response {
     public function _interpretHeaders() {
         // Parse the Content-Type and charset
         $content_type = explode(';', $this->headers['Content-Type']);
-// var_dump($content_type);
-// var_dump($this->headers['Content-Type']);
+
         $this->content_type = $content_type[0];
         if (count($content_type) == 2 && strpos($content_type[1], '=') !== false) {
             list($nill, $this->charset) = explode('=', $content_type[1]);
