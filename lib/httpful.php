@@ -118,7 +118,7 @@ class Http {
 class Response {
 
     public $body, $raw_body, $headers, $request, 
-        $code, $content_type, $charset;
+        $code = 0, $content_type, $charset;
 
     /**
      * @param string $body
@@ -335,6 +335,7 @@ class Request {
         }
 
         list($header, $body) = explode("\r\n\r\n", $result, 2);
+        $this->code = curl_getinfo($ch, CURLINFO_HTTP_CODE); 
 
         return new Response($body, $header, $this);
     }
