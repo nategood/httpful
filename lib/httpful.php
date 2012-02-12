@@ -412,6 +412,21 @@ class Request {
     }
     
     /**
+     * Add group of headers all at once.  Note: This is
+     * here just as a convenience in very specific cases.
+     * The preferred "readable" way would be to leverage 
+     * the support for custom header methods.
+     * @return Response $this
+     * @param array $headers
+     */
+    public function addHeaders(array $headers) {
+        foreach ($headers as $header => $value) {
+            $this->addHeader($header, $value);
+        }
+        return $this;
+    }
+    
+    /**
      * @return Request
      * @param bool $auto_parse perform automatic "smart"
      *    parsing based on Content-Type or "expectedType"
