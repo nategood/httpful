@@ -588,10 +588,10 @@ class Request {
 
         $request = new Request();
         return $request
-            ->_setDefaults()
-            ->method($method)
-            ->sendsType($mime)
-            ->expectsType($mime);
+               ->_setDefaults()
+               ->method($method)
+               ->sendsType($mime)
+               ->expectsType($mime);
     }
 
     /**
