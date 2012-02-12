@@ -1,5 +1,12 @@
 <?php
-
+/**
+ * Todo
+ *  - toString on Request returns the full text HTTP request
+ *  - Use Content-Type of response to determine "expects" and parse
+ *  - pull the response code
+ *  - Support a 5.2 branch?
+ */
+ 
 namespace Httpful;
 
 /**
@@ -13,17 +20,22 @@ class Mime {
     const PLAIN = 'text/plain';
     const JS    = 'text/javascript';
     const HTML  = 'text/html';
+    const YAML  = 'application/x-yaml';
 
     /**
      * Map short name for a mime type
      * to a full proper mime type
      */
     public static $mimes = array(
-        'json'  => self::JSON,
-        'xml'   => self::XML,
-        'form'  => self::FORM,
-        'plain' => self::PLAIN,
-        'html'  => self::HTML,
+        'json'      => self::JSON,
+        'xml'       => self::XML,
+        'form'      => self::FORM,
+        'plain'     => self::PLAIN,
+        'text'      => self::PLAIN,
+        'html'      => self::HTML,
+        'js'        => self::JS,
+        'javascript'=> self::JS,
+        'yaml'      => self::YAML,
     );
 
     /**
@@ -60,7 +72,10 @@ class Response {
     public $body,
            $raw_body,
            $headers,
-           $request;
+           $request,
+           $code,
+           $content_type,
+           $charset;
 
     /**
      * @param string $body
@@ -68,10 +83,14 @@ class Response {
      * @param Request $request
      */
     public function __construct($body, $headers, Request $request) {
-        $this->request  = $request;
-        $this->raw_body = $body;
-        $this->body     = $this->_parse($body);
-        $this->headers  = $headers; // todo $this->_parseHeaders
+        $this->request      = $request;
+        $this->raw_headers  = $headers;
+        $this->raw_body     = $body;
+        
+        $this->headers      = $this->_parseHeaders($headers);
+        $this->_interpretHeaders();
+        
+        $this->body         = $this->_parse($body);
     }
 
     /**
@@ -81,15 +100,24 @@ class Response {
      * @return array|string|object the response parse accordingly
      * @param string Http response body
      */
-    private function _parse($body) {
+    public function _parse($body) {
+        // If the user decided to forgo the automatic
+        // smart parsing, short circuit.
+        if (!$this->request->auto_parse) {
+            return $body;
+        }
+        
         // If provided, use custom parsing callback
-        if (isset($this->request->parseCallback)) {
-            // echo call_user_func($this->request->parseCallback, $body);exit;
-            return call_user_func($this->request->parseCallback, $body);
+        if (isset($this->request->parse_callback)) {
+            return call_user_func($this->request->parse_callback, $body);
         }
 
         // Fallback to sensible parsing defaults
-        switch ($this->request->expected_type) {
+        $parse_with = (!$this->request->expected_type && isset($this->content_type)) ?
+            $this->content_type :
+            $this->request->expected_type;
+        
+        switch ($parse_with) {
             case Mime::JSON:
                 $parsed = json_decode($body, false);
                 if (!$parsed) throw new \Exception("Unable to parse response as JSON");
@@ -106,6 +134,42 @@ class Response {
                 $parsed = $body;
         }
         return $parsed;
+    }
+    
+    /**
+     * Parse text headers from response into
+     * array of key value pairs
+     * @return array parse headers
+     * @param string $headers raw headers
+     */
+    public function _parseHeaders($headers) {
+        $headers = preg_split("/(\r|\n)+/", $headers);
+        for ($i = 1; $i < count($headers); $i++) {
+            list($key, $raw_value) = explode(':', $headers[$i], 2);
+            $parse_headers[trim($key)] = trim($raw_value);
+        }
+        return $parse_headers;
+    }
+    
+    /**
+     * After we've parse the headers, let's clean things
+     * up a bit and treat some headers specially
+     */
+    public function _interpretHeaders() {
+        // Parse the Content-Type and charset
+        $content_type = explode(';', $this->headers['Content-Type']);
+        $this->content_type = $content_type[0];
+        if (count($content_type) == 2 && strpos($content_type[1], '=') !== false) {
+            list($nill, $this->charset) = explode('=', $content_type[1]);
+        }
+        // RFC 2616 states "text/*" Content-Types should have a default
+        // charset of ISO-8859-1. "application/*" and other Content-Types  
+        // are assumed to have UTF-8 unless otherwise specified.
+        // http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1
+        // http://www.w3.org/International/O-HTTP-charset.en.php      
+        if (!isset($this->charset)) {
+            $this->charset = substr($this->content_type, 5) === 'text/' ? 'iso-8859-1' : 'utf-8';
+        }
     }
 
     /**
@@ -138,9 +202,10 @@ class Request {
            $content_type  = Mime::JSON,
            $expected_type = Mime::JSON,
            $additional_curl_opts = array(),
+           $auto_parse    = true,
            $username,
            $password,
-           $parseCallback,
+           $parse_callback,
            $errorCallback;
 
     // Curl Handle
@@ -204,14 +269,14 @@ class Request {
 
     /**
      * @return bool has the internal curl request been initialized?
-    */
+     */
     public function hasBeenInitialized() {
         return isset($this->_ch);
     }
 
     /**
      * @return bool Is this request setup for basic auth?
-    */
+     */
     public function hasBasicAuth() {
         return isset($this->password) && isset($this->username);
     }
@@ -219,7 +284,7 @@ class Request {
     /**
      * Actually send off the request, and parse the response
      * @return string|associative array of parsed results
-      * @throws \Exception when unable to parse or communicate w server
+     * @throws \Exception when unable to parse or communicate w server
      */
     public function send() {
         if (!$this->hasBeenInitialized())
@@ -228,7 +293,6 @@ class Request {
         $result = curl_exec($this->_ch);
 
         if ($result === false) {
-            // return new Response(400);
             $this->_error(curl_error($this->_ch));
             throw new \Exception('Unable to connect.');
         }
@@ -253,7 +317,8 @@ class Request {
     }
 
     /**
-     * User Basic Auth. WARNING Only use when over SSL/TSL.
+     * User Basic Auth. 
+     * Only use when over SSL/TSL/HTTPS.
      * @return Request this
      * @param string $username
      * @param string $password
@@ -348,7 +413,7 @@ class Request {
      * Do we strictly enforce SSL verification?
      * @return Request this
      * @param bool $strict
-    */
+     */
     public function strictSSL($strict) {
         $this->strict_ssl = $strict;
         return $this;
@@ -373,6 +438,20 @@ class Request {
         $this->headers[$header_name] = $value;
         return $this;
     }
+    
+    /**
+     * @return Request
+     * @param bool $auto_parse perform automatic "smart"
+     *    parsing based on Content-Type or "expectedType"
+     *    If not auto parsing, Response->body returns the body 
+     *    as a string.
+     */
+    public function autoParse($auto_parse = true) {
+        $this->auto_parse = $auto_parse;
+        return $this;
+    }
+    public function withoutAutoParsing() { return $this->autoParse(false); }
+    public function withAutoParsing() { return $this->autoParse(true); }
 
     /**
      * Use a custom function to parse the response.
@@ -381,7 +460,7 @@ class Request {
      *    the http response and returns a mixed
      */
     public function parseWith(\Closure $callback) {
-        $this->parseCallback = $callback;
+        $this->parse_callback = $callback;
         return $this;
     }
     // @alias parseWith
@@ -447,16 +526,6 @@ class Request {
         return $this;
     }
 
-    // Custom Handlers
-
-    // /**
-    //  * Ability to set a custom response handler
-    //  * @param function $callback
-    //  */
-    // public function setResponseHandler($callback) {
-    //  // TODO
-    // }
-
     // Internal Functions
 
     /**
@@ -501,7 +570,7 @@ class Request {
 
     private function _error($error) {
         // Default actions write to error log
-        erorr_log($error);
+        error_log($error);
     }
 
     /**
@@ -548,8 +617,12 @@ class Request {
 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-        $headers = array("Content-Type: {$this->content_type}",
-                         "Accept: {$this->expected_type}, text/plain");
+        $headers = array("Content-Type: {$this->content_type}");
+        
+        $headers[] = !empty($this->expected_type) ? 
+            "Accept: {$this->expected_type}, text/plain" :
+            "Accept: */*";
+
         foreach ($this->headers as $header => $value) {
             $headers[] = "$header: $value";
         }
@@ -653,7 +726,6 @@ class Request {
     }
 
     // Http Method Sugar
-
     /**
      * HTTP Method Get
      * @return Request
@@ -667,6 +739,7 @@ class Request {
 
     /**
      * HTTP Method Post
+     * @return Request
      * @param string $uri optional uri to use
      * @param string $payload data to send in body of request
      * @param string $mime MIME to use for Content-Type
@@ -677,7 +750,10 @@ class Request {
 
     /**
      * HTTP Method Put
+     * @return Request
      * @param string $uri optional uri to use
+     * @param string $payload data to send in body of request
+     * @param string $mime MIME to use for Content-Type
      */
     public static function put($uri, $payload = null, $mime = null) {
         return self::init(Http::PUT)->uri($uri)->body($payload, $mime);
@@ -685,6 +761,7 @@ class Request {
 
     /**
      * HTTP Method Delete
+     * @return Request
      * @param string $uri optional uri to use
      */
     public static function delete($uri, $mime = null) {
@@ -693,6 +770,7 @@ class Request {
 
     /**
      * HTTP Method Head
+     * @return Request
      * @param string $uri optional uri to use
      */
     public static function head($uri) {
@@ -701,6 +779,7 @@ class Request {
 
     /**
      * HTTP Method Options
+     * @return Request
      * @param string $uri optional uri to use
      */
     public static function options($uri) {

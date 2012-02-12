@@ -27,6 +27,11 @@ require(__DIR__ . '/../lib/httpful.php');
 
 define('TEST_SERVER', '127.0.0.1:8008');
 define('TEST_URL', 'http://' . TEST_SERVER);
+define('SAMPLE_JSON_RESPONSE', '{"key":"value","object":{"key":"value"},"array":[1,2,3,4]}');
+define('SAMPLE_HEADER', "HTTP/1.1 200 OK
+Content-Type: application/json
+Connection: keep-alive
+Transfer-Encoding: chunked");
 
 // Helpers
 
@@ -62,7 +67,6 @@ function testMethods() {
   foreach ($valid_methods as $method) {
     $r = call_user_func(array('Httpful\Request', $method), $url);
     assert('Httpful\Request' === get_class($r));
-    // var_dump($method);var_dump($r->method);
     assert(strtoupper($method) === $r->method);
   }
 }
@@ -70,7 +74,6 @@ function testMethods() {
 function testDefaults() {
     // Our current defaults are as follows
     $r = Request::init();
-    // var_dump($r);
     assert(Http::GET === $r->method);
     assert(Mime::JSON === $r->expected_type);
     assert(Mime::JSON === $r->content_type);
@@ -158,7 +161,7 @@ function testIni() {
 
 function testAuthSetup() {
     $username = 'nathan';
-    $password = 'openseasame';
+    $password = 'opensesame';
 
     $r = Request::get('http://example.com/')
         ->authenticateWith($username, $password);
@@ -170,12 +173,34 @@ function testAuthSetup() {
 
 function testJsonResponseParse() {
     $req = Request::init()->sendsAndExpects(Mime::JSON);
-    $response = new Response('{"key":"value","object":{"key":"value"},"array":[1,2,3,4]}', array(), $req);
+    $response = new Response(SAMPLE_JSON_RESPONSE, SAMPLE_HEADER, $req);
 
     assert("value" === $response->body->key);
     assert("value" === $response->body->object->key);
     assert(is_array($response->body->array));
     assert(1 === $response->body->array[0]);
+}
+
+
+function testParsingContentTypeCharset() {
+    $req = Request::init()->sendsAndExpects(Mime::JSON);
+    // $response = new Response(SAMPLE_JSON_RESPONSE, "", $req);
+    // // Check default content type of iso-8859-1
+    $response = new Response(SAMPLE_JSON_RESPONSE, "HTTP/1.1 200 OK
+Content-Type: text/plain; charset=utf-8", $req);
+    assert(is_array($response->headers));
+    assert($response->headers['Content-Type'] === 'text/plain; charset=utf-8');
+    assert($response->content_type === 'text/plain');
+    assert($response->charset === 'utf-8');
+}
+
+function testNoAutoParse() {
+    $req = Request::init()->sendsAndExpects(Mime::JSON)->withoutAutoParsing();
+    $response = new Response(SAMPLE_JSON_RESPONSE, SAMPLE_HEADER, $req);
+    assert(is_string($response->body));
+    $req = Request::init()->sendsAndExpects(Mime::JSON)->withAutoParsing();
+    $response = new Response(SAMPLE_JSON_RESPONSE, SAMPLE_HEADER, $req);
+    assert(is_object($response->body));
 }
 
 function testSendsSugar() {
@@ -199,7 +224,7 @@ function testCustomParse() {
 
     $req = Request::init()->parseWith($f);
     $raw_body = 'my response text';
-    $response = new Response($raw_body, array(), $req);
+    $response = new Response($raw_body, "", $req);
 
     assert($raw_body . $raw_body === $response->body);
 }
@@ -262,6 +287,16 @@ function testSendDelete() {
     assert(Http::DELETE === $response->body->requestMethod);
 }
 
+function testParsingResponseHeaders() {
+    $response =
+        Request::get(TEST_URL)
+            ->expects(Mime::JSON)
+            ->sendIt();
+    
+    assert(is_array($response->headers));
+    assert($response->headers['Content-Type'] === 'application/json');
+}
+
 function testAddOnCurlOption() {
     // Let's use the NOBODY curl opt
     // to override our post.  This should
@@ -298,9 +333,10 @@ testIni();
 testAuthSetup();
 testJsonResponseParse();
 testCustomParse();
-testAddOnCurlOption();
 testSendsSugar();
 testExpectsSugar();
+testNoAutoParse();
+testParsingContentTypeCharset();
 
 checkForTestServer();
 
@@ -308,3 +344,5 @@ testSendGet();
 testSendPost();
 testSendPut();
 testSendDelete();
+testParsingResponseHeaders();
+testAddOnCurlOption();
