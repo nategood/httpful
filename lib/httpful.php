@@ -685,31 +685,40 @@ class Request {
     }
     private function _future_serializeAsXml($value, $node=null, $dom=null) {
         if (!$dom) {
-            $dom = new DOMDocument;
+            $dom = new \DOMDocument;
         }
         if (!$node) {
-            $node = $dom->appendChild($dom->createElement('response'));
+            if (!is_object($value)) {
+                $node = $dom->createElement('response');
+                $dom->appendChild($node);
+            } else {
+                $node = $dom;
+            }
         }
         if (is_object($value)) {
             $objNode = $dom->createElement(get_class($value));
-                $node->appendChild($objNode);
-                $this->_future_serializeObjectAsXml($value, $objNode, $dom);
+            $node->appendChild($objNode);
+            $this->_future_serializeObjectAsXml($value, $objNode, $dom);
         } else if (is_array($value)) {
             $arrNode = $dom->createElement('array');
-                $node->appendChild($arrNode);
-                $this->_future_serializeArrayAsXml($value, $arrNode, $dom);
+            $node->appendChild($arrNode);
+            $this->_future_serializeArrayAsXml($value, $arrNode, $dom);
+        } else if (is_bool($value)) {
+            $node->appendChild($dom->createTextNode($value?'TRUE':'FALSE'));
         } else {
-            $txtNode = $dom->createTextElement($value);
-                $node->appendChild($txtNode);
+            $node->appendChild($dom->createTextNode($value));
         }
         return array($node, $dom);
     }
     private function _future_serializeArrayAsXml($value, &$parent, &$dom) {
-        foreach ($value as $k => $v) {
-            $el = $dom->createElement($k);
-                $parent->appendChild($el);
-                $this->_future_serializeAsXml($v, $el, $dom);
-                $el->appendChild($elc);
+        foreach ($value as $k => &$v) {
+            $n = $k;
+            if (is_numeric($k)) {
+                $n = "child-{$n}";
+            }
+            $el = $dom->createElement($n);
+            $parent->appendChild($el);
+            $this->_future_serializeAsXml($v, $el, $dom);
         }
         return array($parent, $dom);
     }
@@ -718,8 +727,8 @@ class Request {
         foreach ($refl->getProperties() as $pr) {
             if (!$pr->isPrivate()) {
                 $el = $dom->createElement($pr->getName());
-                    $parent->appendChild($el);
-                    $this->_future_serializeAsXml($pr->getValue($value), $el, $dom);
+                $parent->appendChild($el);
+                $this->_future_serializeAsXml($pr->getValue($value), $el, $dom);
             }
         }
         return array($parent, $dom);
