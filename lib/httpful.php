@@ -58,25 +58,72 @@ class Mime {
 }
 
 class Http {
-    const HEAD    = 'HEAD';
-    const GET     = 'GET';
-    const POST    = 'POST';
-    const PUT     = 'PUT';
-    const DELETE  = 'DELETE';
-    const OPTIONS = 'OPTIONS';
+    const HEAD      = 'HEAD';
+    const GET       = 'GET';
+    const POST      = 'POST';
+    const PUT       = 'PUT';
+    const DELETE    = 'DELETE';
+    const OPTIONS   = 'OPTIONS';
+    
+    /**
+     * @return array of HTTP method strings
+     */
+    public static function safeMethods() {
+        return array(self::HEAD, self::GET, self::OPTIONS);
+    }
+    
+    /**
+     * @return bool
+     * @param string HTTP method
+     */
+    public static function isSafeMethod($method) { return in_array(self::safeMethods()); }
+    
+    /**
+     * @return bool
+     * @param string HTTP method
+     */
+    public static function isUnsafeMethod($method) { return !in_array(self::safeMethods()); }
+    
+    /** 
+     * @return array list of (always) idempotent HTTP methods
+     */
+    public static function idempotentMethods() {
+        // Though it is possible to be idempotent, POST
+        // is not guarunteed to be, and more often than
+        // not, it is not.
+        return array(self::HEAD, self::GET, self::PUT, self::DELETE, self::OPTIONS);
+    }
+    
+    /**
+     * @return bool
+     * @param string HTTP method
+     */
+    public static function isIdempotent($method) { return in_array(self::safeidempotentMethodsMethods()); }
+    
+    /**
+     * @return bool
+     * @param string HTTP method
+     */
+    public static function isNotIdempotent($method) { return !in_array(self::idempotentMethods()); }
+    
+    /**
+     * @return array of HTTP method strings
+     */
+    public static function canHaveBody() {
+        return array(self::POST, self::PUT, self::OPTIONS);
+    }
+    
 }
 
 class Response {
-    // TODO magic method getters for headers?
 
     public $body,
            $raw_body,
            $headers,
            $request,
-           $code,
+           $code = 0,
            $content_type,
            $charset;
-
     /**
      * @param string $body
      * @param string $headers
@@ -88,6 +135,7 @@ class Response {
         $this->raw_body     = $body;
         
         $this->headers      = $this->_parseHeaders($headers);
+
         $this->_interpretHeaders();
         
         $this->body         = $this->_parse($body);
@@ -158,6 +206,7 @@ class Response {
     public function _interpretHeaders() {
         // Parse the Content-Type and charset
         $content_type = explode(';', $this->headers['Content-Type']);
+
         $this->content_type = $content_type[0];
         if (count($content_type) == 2 && strpos($content_type[1], '=') !== false) {
             list($nill, $this->charset) = explode('=', $content_type[1]);
@@ -195,6 +244,7 @@ class Response {
  * @author Nate Good <me@nategood.com>
  */
 class Request {
+
     public $uri,
            $method        = Http::GET,
            $headers       = array(),
@@ -298,6 +348,7 @@ class Request {
         }
 
         list($header, $body) = explode("\r\n\r\n", $result, 2);
+        $this->code = curl_getinfo($ch, CURLINFO_HTTP_CODE); 
 
         return new Response($body, $header, $this);
     }
@@ -436,6 +487,21 @@ class Request {
      */
     public function addHeader($header_name, $value) {
         $this->headers[$header_name] = $value;
+        return $this;
+    }
+    
+    /**
+     * Add group of headers all at once.  Note: This is
+     * here just as a convenience in very specific cases.
+     * The preferred "readable" way would be to leverage 
+     * the support for custom header methods.
+     * @return Response $this
+     * @param array $headers
+     */
+    public function addHeaders(array $headers) {
+        foreach ($headers as $header => $value) {
+            $this->addHeader($header, $value);
+        }
         return $this;
     }
     
@@ -622,7 +688,7 @@ class Request {
         $headers[] = !empty($this->expected_type) ? 
             "Accept: {$this->expected_type}, text/plain" :
             "Accept: */*";
-
+        
         foreach ($this->headers as $header => $value) {
             $headers[] = "$header: $value";
         }
