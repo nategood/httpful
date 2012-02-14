@@ -118,7 +118,8 @@ class Http {
 class Response {
 
     public $body, $raw_body, $headers, $request, 
-        $code = 0, $content_type, $charset;
+        $code = 0, $content_type, $charset,
+        $use_detect_payload = true;
 
     /**
      * @param string $body
@@ -448,6 +449,15 @@ class Request {
     public function withStrictSSL() { return $this->strictSSL(true); }
 
     /**
+     * Automatically serialize the payload
+     * @return Request $this
+     * @param bool $serialize
+     */
+    public function serializePayload($serialize = true) {
+        $this->use_detect_payload = $serialize;
+    }
+
+    /**
      * Add an additional header to the request
      * Can also use the cleaner syntax of
      * $Request->withMyHeaderName($my_value);  See the
@@ -662,8 +672,10 @@ class Request {
         }
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
-        if (isset($this->payload))
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $this->_detectPayload($this->payload));
+        if (isset($this->payload)) {
+            $payload = $this->use_detect_payload ? $this->_detectPayload($this->payload) : $this->payload;
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+        }
 
         if ($this->_debug) {
             curl_setopt($ch, CURLOPT_VERBOSE, true);
