@@ -118,8 +118,7 @@ class Http {
 class Response {
 
     public $body, $raw_body, $headers, $request, 
-        $code = 0, $content_type, $charset,
-        $auto_serialize_payload;
+        $code = 0, $content_type, $charset;
 
     /**
      * @param string $body
@@ -241,10 +240,20 @@ class Response {
  * @author Nate Good <me@nategood.com>
  */
 class Request {
+    // Option constants
+    const SERIALIZE_PAYLOAD_NEVER  = 0;
+    const SERIALIZE_PAYLOAD_ALWAYS = 1;
+    const SERIALIZE_PAYLOAD_SMART  = 2;
+    
     public $uri, $method = Http::GET, $headers = array(), $strict_ssl = false, $content_type = Mime::JSON, $expected_type = Mime::JSON,
         $additional_curl_opts = array(), $auto_parse = true,
         $username, $password,
         $parse_callback, $errorCallback;
+    
+    // Options
+    private $_options = array(
+        'auto_serialize_payload' => self::SERIALIZE_PAYLOAD_SMART
+    );
 
     // Curl Handle
     public $_ch,
@@ -253,10 +262,6 @@ class Request {
     // Template Request object
     private static $_template;
 
-    // Option constants
-    const SERIALIZE_PAYLOAD_NEVER  = 0;
-    const SERIALIZE_PAYLOAD_ALWAYS = 1;
-    const SERIALIZE_PAYLOAD_SMART  = 2;
 
     /**
      * We made the constructor private to force the factory style.  This was
@@ -475,7 +480,7 @@ class Request {
      * @param int $mode
      */
     public function alwaysSerializePayload($mode = self::SERIALIZE_PAYLOAD_ALWAYS) {
-        $this->options['auto_serialize_payload'] = $mode;
+        $this->_options['auto_serialize_payload'] = $mode;
         return $this;
     }
     /**
@@ -751,11 +756,11 @@ class Request {
      * @return string
      */
     private function _detectPayload($payload) {
-        if (empty($payload) || $this->options['auto_serialize_payload'] === self::SERIALIZE_PAYLOAD_NEVER)
+        if (empty($payload) || $this->_options['auto_serialize_payload'] === self::SERIALIZE_PAYLOAD_NEVER)
             return $payload;
         
         // When we are in "smart" mode, don't serialize strings/scalars, assume they are already serialized
-        if ($this->options['auto_serialize_payload'] === self::SERIALIZE_PAYLOAD_SMART && is_scalar($payload))
+        if ($this->_options['auto_serialize_payload'] === self::SERIALIZE_PAYLOAD_SMART && is_scalar($payload))
             return $payload;
 
         switch($this->content_type) {
