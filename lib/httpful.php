@@ -335,7 +335,7 @@ class Request {
         }
 
         list($header, $body) = explode("\r\n\r\n", $result, 2);
-        $this->code = curl_getinfo($ch, CURLINFO_HTTP_CODE); 
+        $this->code = curl_getinfo($this->_ch, CURLINFO_HTTP_CODE); 
 
         return new Response($body, $header, $this);
     }
