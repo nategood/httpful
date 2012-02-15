@@ -119,7 +119,7 @@ class Response {
 
     public $body, $raw_body, $headers, $request, 
         $code = 0, $content_type, $charset,
-        $use_detect_payload = true;
+        $auto_serialize_payload;
 
     /**
      * @param string $body
@@ -252,6 +252,11 @@ class Request {
 
     // Template Request object
     private static $_template;
+
+    // Option constants
+    const SERIALIZE_PAYLOAD_NEVER  = 0;
+    const SERIALIZE_PAYLOAD_ALWAYS = 1;
+    const SERIALIZE_PAYLOAD_SMART  = 2;
 
     /**
      * We made the constructor private to force the factory style.  This was
@@ -449,12 +454,44 @@ class Request {
     public function withStrictSSL() { return $this->strictSSL(true); }
 
     /**
-     * Automatically serialize the payload
+     * Determine how/if we use the built in serialization by 
+     * setting the serialize_payload_method
+     * The default (SERIALIZE_PAYLOAD_SMART) is...
+     *  - if payload is not a scalar (object/array)
+     *    use the appropriate serialize method according to
+     *    the Content-Type of this request.
+     *  - if the payload IS a scalar (int, float, string, bool)
+     *    than just return it as is.
+     * When this option is set SERIALIZE_PAYLOAD_ALWAYS, 
+     * it will always use the appropriate
+     * serialize option regardless of whether payload is scalar or not
+     * When this option is set SERIALIZE_PAYLOAD_NEVER, 
+     * it will never use any of the serialization methods.
+     * Really the only use for this is if you want the serialize methods
+     * to handle strings or not (e.g. Blah is not valid JSON, but "Blah"
+     * is).  Forcing the serialization helps prevent that kind of error from
+     * happening.
      * @return Request $this
-     * @param bool $serialize
+     * @param int $mode
      */
-    public function serializePayload($serialize = true) {
-        $this->use_detect_payload = $serialize;
+    public function alwaysSerializePayload($mode = self::SERIALIZE_PAYLOAD_ALWAYS) {
+        $this->options['auto_serialize_payload'] = $mode;
+        return $this;
+    }
+    /**
+     * See serializePayload
+     * @return Request
+     */
+    public function neverSerializePayload() {
+        return $this->serializePayload(self::SERIALIZE_PAYLOAD_NEVER);
+    }
+    /**
+     * See serializePayload
+     * This method is the default behavior
+     * @return Request
+     */
+    public function smartSerializePayload() {
+        return $this->serializePayload(self::SERIALIZE_PAYLOAD_SMART);
     }
 
     /**
@@ -673,7 +710,7 @@ class Request {
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         if (isset($this->payload)) {
-            $payload = $this->use_detect_payload ? $this->_detectPayload($this->payload) : $this->payload;
+            $payload = $this->_detectPayload($this->payload);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
         }
 
@@ -708,11 +745,17 @@ class Request {
 
     /**
      * Turn payload from structure data into
-     * a string based on the current Mime type
+     * a string based on the current Mime type. 
+     * This uses the auto_serialize option to determine
+     * it's course of action.  See 
      * @return string
      */
     private function _detectPayload($payload) {
-        if (empty($payload) || is_string($payload))
+        if (empty($payload) || $this->options['auto_serialize_payload'] === self::SERIALIZE_PAYLOAD_NEVER)
+            return $payload;
+        
+        // When we are in "smart" mode, don't serialize strings/scalars, assume they are already serialized
+        if ($this->options['auto_serialize_payload'] === self::SERIALIZE_PAYLOAD_SMART && is_scalar($payload))
             return $payload;
 
         switch($this->content_type) {
