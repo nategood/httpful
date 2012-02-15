@@ -117,9 +117,13 @@ class Http {
 
 class Response {
 
-    public $body, $raw_body, $headers, $request, 
-        $code = 0, $content_type, $charset;
-
+    public $body,
+           $raw_body,
+           $headers,
+           $request,
+           $code = 0,
+           $content_type,
+           $charset;
     /**
      * @param string $body
      * @param string $headers
@@ -167,9 +171,9 @@ class Response {
                 if (!$parsed) throw new \Exception("Unable to parse response as JSON");
                 break;
             case Mime::XML:
-                // XML Parsing not yet supported :-(
-                throw new \Exception('XML not yet supported');
-             break;
+                $parsed = simple_xml_load_string($body);
+                if (!$parsed) throw new \Exception("Unable to parse response as XML");
+                break;
             case Mime::FORM:
                 $parsed = array();
                 parse_str($body, $parsed);
@@ -240,14 +244,23 @@ class Response {
  * @author Nate Good <me@nategood.com>
  */
 class Request {
-    public $uri, $method = Http::GET, $headers = array(), $strict_ssl = false, $content_type = Mime::JSON, $expected_type = Mime::JSON,
-        $additional_curl_opts = array(), $auto_parse = true,
-        $username, $password,
-        $parse_callback, $errorCallback;
+
+    public $uri,
+           $method        = Http::GET,
+           $headers       = array(),
+           $strict_ssl    = false,
+           $content_type  = Mime::JSON,
+           $expected_type = Mime::JSON,
+           $additional_curl_opts = array(),
+           $auto_parse    = true,
+           $username,
+           $password,
+           $parse_callback,
+           $errorCallback;
 
     // Curl Handle
     public $_ch,
-        $_debug;
+           $_debug;
 
     // Template Request object
     private static $_template;
@@ -339,7 +352,9 @@ class Request {
 
         return new Response($body, $header, $this);
     }
-    public function sendIt() {return $this->send();}
+    public function sendIt() {
+        return $this->send();
+    }
 
     // Setters
 
@@ -365,7 +380,9 @@ class Request {
         return $this;
     }
     // @alias of basicAuth
-    public function authenticateWith($username, $password) {return $this->basicAuth($username, $password);}
+    public function authenticateWith($username, $password) {
+        return $this->basicAuth($username, $password);
+    }
 
     /**
      * Set the body of the request
@@ -393,9 +410,13 @@ class Request {
         return $this;
     }
     // @alias of mime
-    public function sendsAndExpectsType($mime) { return $this->mime($mime); }
+    public function sendsAndExpectsType($mime) {
+        return $this->mime($mime);
+    }
     // @alias of mime
-    public function sendsAndExpects($mime) { return $this->mime($mime); }
+    public function sendsAndExpects($mime) {
+        return $this->mime($mime);
+    }
 
     /**
      * Set the method.  Shouldn't be called often as the preferred syntax
@@ -415,11 +436,13 @@ class Request {
      */
     public function expects($mime) {
         if (empty($mime)) return $this;
-        $this->expected_type     = Mime::getFullMime($mime);
+        $this->expected_type = Mime::getFullMime($mime);
         return $this;
     }
     // @alias of expects
-    public function expectsType($mime) { return $this->expects($mime); }
+    public function expectsType($mime) {
+        return $this->expects($mime);
+    }
 
     /**
      * @return Request this
@@ -427,11 +450,13 @@ class Request {
      */
     public function contentType($mime) {
         if (empty($mime)) return $this;
-        $this->content_type     = Mime::getFullMime($mime);
+        $this->content_type  = Mime::getFullMime($mime);
         return $this;
     }
     // @alias of contentType
-    public function sends($mime) { return $this->contentType($mime); }
+    public function sends($mime) {
+        return $this->contentType($mime);
+    }
     // @alias of contentType
     public function sendsType($mime) { return $this->contentType($mime); }
 
@@ -444,8 +469,12 @@ class Request {
         $this->strict_ssl = $strict;
         return $this;
     }
-    public function withoutStrictSSL() { return $this->strictSSL(false); }
-    public function withStrictSSL() { return $this->strictSSL(true); }
+    public function withoutStrictSSL() {
+        return $this->strictSSL(false);
+    }
+    public function withStrictSSL() {
+        return $this->strictSSL(true);
+    }
 
     /**
      * Add an additional header to the request
@@ -501,7 +530,9 @@ class Request {
         return $this;
     }
     // @alias parseWith
-    public function parseResponsesWith(\Closure $callback) { return $this->parseWith($callback); }
+    public function parseResponsesWith(\Closure $callback) {
+        return $this->parseWith($callback);
+    }
 
     /**
      * Magic method allows for neatly setting other headers in a
@@ -623,10 +654,10 @@ class Request {
 
         $request = new Request();
         return $request
-            ->_setDefaults()
-            ->method($method)
-            ->sendsType($mime)
-            ->expectsType($mime);
+               ->_setDefaults()
+               ->method($method)
+               ->sendsType($mime)
+               ->expectsType($mime);
     }
 
     /**
@@ -644,8 +675,9 @@ class Request {
 
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $this->method);
 
-        if ($this->hasBasicAuth())
+        if ($this->hasBasicAuth()) {
             curl_setopt($ch, CURLOPT_USERPWD, $this->username . ':' . $this->password);
+        }
 
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $this->strict_ssl);
 
@@ -709,10 +741,63 @@ class Request {
             case Mime::FORM:
                 return http_build_query($payload);
             case Mime::XML:
-                throw new \Exception('XML not yet supported');
+                try {
+                   list($_, $dom) = $this->_future_serializeAsXml($payload);
+                   return $dom->saveXml();
+                } catch (Exception $e) {}
             default:
                 return (string) $payload;
         }
+    }
+    private function _future_serializeAsXml($value, $node=null, $dom=null) {
+        if (!$dom) {
+            $dom = new \DOMDocument;
+        }
+        if (!$node) {
+            if (!is_object($value)) {
+                $node = $dom->createElement('response');
+                $dom->appendChild($node);
+            } else {
+                $node = $dom;
+            }
+        }
+        if (is_object($value)) {
+            $objNode = $dom->createElement(get_class($value));
+            $node->appendChild($objNode);
+            $this->_future_serializeObjectAsXml($value, $objNode, $dom);
+        } else if (is_array($value)) {
+            $arrNode = $dom->createElement('array');
+            $node->appendChild($arrNode);
+            $this->_future_serializeArrayAsXml($value, $arrNode, $dom);
+        } else if (is_bool($value)) {
+            $node->appendChild($dom->createTextNode($value?'TRUE':'FALSE'));
+        } else {
+            $node->appendChild($dom->createTextNode($value));
+        }
+        return array($node, $dom);
+    }
+    private function _future_serializeArrayAsXml($value, &$parent, &$dom) {
+        foreach ($value as $k => &$v) {
+            $n = $k;
+            if (is_numeric($k)) {
+                $n = "child-{$n}";
+            }
+            $el = $dom->createElement($n);
+            $parent->appendChild($el);
+            $this->_future_serializeAsXml($v, $el, $dom);
+        }
+        return array($parent, $dom);
+    }
+    private function _future_serializeObjectAsXml($value, &$parent, &$dom) {
+        $refl = new \ReflectionObject($value);
+        foreach ($refl->getProperties() as $pr) {
+            if (!$pr->isPrivate()) {
+                $el = $dom->createElement($pr->getName());
+                $parent->appendChild($el);
+                $this->_future_serializeAsXml($pr->getValue($value), $el, $dom);
+            }
+        }
+        return array($parent, $dom);
     }
 
     // Http Method Sugar

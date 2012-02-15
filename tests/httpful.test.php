@@ -28,8 +28,13 @@ require(__DIR__ . '/../lib/httpful.php');
 define('TEST_SERVER', '127.0.0.1:8008');
 define('TEST_URL', 'http://' . TEST_SERVER);
 define('SAMPLE_JSON_RESPONSE', '{"key":"value","object":{"key":"value"},"array":[1,2,3,4]}');
-define('SAMPLE_HEADER', "HTTP/1.1 200 OK
+define('SAMPLE_JSON_HEADER', "HTTP/1.1 200 OK
 Content-Type: application/json
+Connection: keep-alive
+Transfer-Encoding: chunked");
+define('SAMPLE_XML_RESPONSE', '<stdClass><arrayProp><array><k1><myClass><intProp>2</intProp></myClass></k1></array></arrayProp><stringProp>a string</stringProp><boolProp>TRUE</boolProp></stdClass>');
+define('SAMPLE_XML_HEADER', "HTTP/1.1 200 OK
+Content-Type: application/xml
 Connection: keep-alive
 Transfer-Encoding: chunked");
 
@@ -173,12 +178,29 @@ function testAuthSetup() {
 
 function testJsonResponseParse() {
     $req = Request::init()->sendsAndExpects(Mime::JSON);
-    $response = new Response(SAMPLE_JSON_RESPONSE, SAMPLE_HEADER, $req);
+    $response = new Response(SAMPLE_JSON_RESPONSE, SAMPLE_JSON_HEADER, $req);
 
     assert("value" === $response->body->key);
     assert("value" === $response->body->object->key);
     assert(is_array($response->body->array));
     assert(1 === $response->body->array[0]);
+}
+
+function testXMLResponseParse() {
+    $req = Request::init()->sendsAndExpects(Mime::XML);
+    $response = new Response(SAMPLE_XML_RESPONSE, SAMPLE_XML_HEADER, $req);
+    $sxe = $response->body;
+    assert("object" === gettype($sxe));
+    assert("SimpleXMLElement" === get_class($sxe));
+    $bools = $sxe->xpath('/stdClass/boolProp');
+    list( , $bool ) = each($bools);
+    assert("TRUE" === (string) $bool);
+    $ints = $sxe->xpath('/stdClass/arrayProp/array/k1/myClass/intProp');
+    list( , $int ) = each($ints);
+    assert("2" === (string) $int);
+    $strings = $sxe->xpath('/stdClass/stringProp');
+    list( , $string ) = each($strings);
+    assert("a string" === (string) $string);
 }
 
 
@@ -196,10 +218,10 @@ Content-Type: text/plain; charset=utf-8", $req);
 
 function testNoAutoParse() {
     $req = Request::init()->sendsAndExpects(Mime::JSON)->withoutAutoParsing();
-    $response = new Response(SAMPLE_JSON_RESPONSE, SAMPLE_HEADER, $req);
+    $response = new Response(SAMPLE_JSON_RESPONSE, SAMPLE_JSON_HEADER, $req);
     assert(is_string($response->body));
     $req = Request::init()->sendsAndExpects(Mime::JSON)->withAutoParsing();
-    $response = new Response(SAMPLE_JSON_RESPONSE, SAMPLE_HEADER, $req);
+    $response = new Response(SAMPLE_JSON_RESPONSE, SAMPLE_JSON_HEADER, $req);
     assert(is_object($response->body));
 }
 
@@ -332,6 +354,7 @@ testSendsAndExpectsType();
 testIni();
 testAuthSetup();
 testJsonResponseParse();
+testXMLResponseParse();
 testCustomParse();
 testSendsSugar();
 testExpectsSugar();
