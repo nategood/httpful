@@ -246,14 +246,16 @@ class Request {
     const SERIALIZE_PAYLOAD_SMART  = 2;
     
     public $uri, $method = Http::GET, $headers = array(), $strict_ssl = false, $content_type = Mime::JSON, $expected_type = Mime::JSON,
-        $additional_curl_opts = array(), $auto_parse = true,
+        $additional_curl_opts = array(), $auto_parse = true, $auto_serialize_payload = self::SERIALIZE_PAYLOAD_SMART,
         $username, $password,
-        $parse_callback, $errorCallback;
+        $serialized_payload, $payload,
+        $parse_callback, $error_callback;
     
     // Options
-    private $_options = array(
-        'auto_serialize_payload' => self::SERIALIZE_PAYLOAD_SMART
-    );
+    // private $_options = array(
+    //     'auto_serialize_payload' => self::SERIALIZE_PAYLOAD_SMART
+    //     'auto_parse' => true
+    // );
 
     // Curl Handle
     public $_ch,
@@ -387,8 +389,9 @@ class Request {
     public function body($payload, $mimeType = null) {
         $this->mime($mimeType);
         $this->payload = $payload;
-        // Intentially don't call _detectPayload yet.  Wait until
-        // we actually send off the request to convert payload to string
+        // Intentially don't call _serializePayload yet.  Wait until
+        // we actually send off the request to convert payload to string.
+        // At that time, the `serialized_payload` is set accordingly.
         return $this;
     }
 
@@ -480,7 +483,7 @@ class Request {
      * @param int $mode
      */
     public function alwaysSerializePayload($mode = self::SERIALIZE_PAYLOAD_ALWAYS) {
-        $this->_options['auto_serialize_payload'] = $mode;
+        $this->auto_serialize_payload = $mode;
         return $this;
     }
     /**
@@ -491,7 +494,7 @@ class Request {
         return $this->serializePayload(self::SERIALIZE_PAYLOAD_NEVER);
     }
     /**
-     * See serializePayload
+     * See `serializePayload`
      * This method is the default behavior
      * @return Request
      */
@@ -715,8 +718,8 @@ class Request {
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         if (isset($this->payload)) {
-            $payload = $this->_detectPayload($this->payload);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+            $this->serialized_payload = $this->_serializePayload($this->payload);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $this->serialized_payload);
         }
 
         if ($this->_debug) {
@@ -752,17 +755,19 @@ class Request {
      * Turn payload from structure data into
      * a string based on the current Mime type. 
      * This uses the auto_serialize option to determine
-     * it's course of action.  See 
+     * it's course of action.  See serialize method for more.
+     * Renamed from _detectPayload to _serializePayload as of
+     * 2012-02-15.
      * @return string
      */
-    private function _detectPayload($payload) {
-        if (empty($payload) || $this->_options['auto_serialize_payload'] === self::SERIALIZE_PAYLOAD_NEVER)
+    private function _serializePayload($payload) {
+        if (empty($payload) || $this->auto_serialize_payload === self::SERIALIZE_PAYLOAD_NEVER)
             return $payload;
         
         // When we are in "smart" mode, don't serialize strings/scalars, assume they are already serialized
-        if ($this->_options['auto_serialize_payload'] === self::SERIALIZE_PAYLOAD_SMART && is_scalar($payload))
+        if ($this->auto_serialize_payload === self::SERIALIZE_PAYLOAD_SMART && is_scalar($payload))
             return $payload;
-
+// var_dump($this->auto_serialize_payload, is_scalar($payload));
         switch($this->content_type) {
             case Mime::JSON:
                 return json_encode($payload);

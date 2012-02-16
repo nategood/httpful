@@ -181,6 +181,30 @@ function testJsonResponseParse() {
     assert(1 === $response->body->array[0]);
 }
 
+function testSerializePayloadOptions() {
+    $req = Request::get(TEST_URL)
+        ->sendsJson()
+        ->body("Nathan")
+        ->alwaysSerializePayload();
+
+    $res = $req->send();
+    
+    // Rare, but perfect example of why you might want 
+    // to use alwaysSerializePayload
+    
+    assert(is_string($req->serialized_payload));
+    assert('"Nathan"' === $req->serialized_payload);
+    
+    $req = Request::get(TEST_URL)
+        ->sendsJson()
+        ->body("Nathan")
+        ->neverSerializePayload();
+    
+    $res = $req->send();
+    assert(is_string($req->serialized_payload));
+    assert('Nathan' === $req->serialized_payload);
+    
+}
 
 function testParsingContentTypeCharset() {
     $req = Request::init()->sendsAndExpects(Mime::JSON);
@@ -346,3 +370,4 @@ testSendPut();
 testSendDelete();
 testParsingResponseHeaders();
 testAddOnCurlOption();
+testSerializePayloadOptions();
