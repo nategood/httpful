@@ -257,14 +257,14 @@ class Request {
     const SERIALIZE_PAYLOAD_SMART  = 2;
 
     public $uri, $method = Http::GET, $headers = array(), $strict_ssl = false, $content_type = Mime::JSON, $expected_type = Mime::JSON,
-        $additional_curl_opts = array(), $auto_parse = true, $auto_serialize_payload = self::SERIALIZE_PAYLOAD_SMART,
+        $additional_curl_opts = array(), $auto_parse = true, $serialize_payload_method = self::SERIALIZE_PAYLOAD_SMART,
         $username, $password,
         $serialized_payload, $payload,
-        $parse_callback, $error_callback;
+        $parse_callback, $error_callback, $payload_serializers = array();
 
     // Options
     // private $_options = array(
-    //     'auto_serialize_payload' => self::SERIALIZE_PAYLOAD_SMART
+    //     'serialize_payload_method' => self::SERIALIZE_PAYLOAD_SMART
     //     'auto_parse' => true
     // );
 
@@ -493,7 +493,7 @@ class Request {
      * @param int $mode
      */
     public function alwaysSerializePayload($mode = self::SERIALIZE_PAYLOAD_ALWAYS) {
-        $this->auto_serialize_payload = $mode;
+        $this->serialize_payload_method = $mode;
         return $this;
     }
 
@@ -569,6 +569,32 @@ class Request {
     }
     // @alias parseWith
     public function parseResponsesWith(\Closure $callback) { return $this->parseWith($callback); }
+
+    /**
+     * Register a callback that will be used to serialize the payload
+     * for a particular mime type.  When using "*" for the mime
+     * type, it will use that parser for all responses regardless of the mime
+     * type.  If a custom '*' and 'application/json' exist, the custom
+     * 'application/json' would take precedence over the '*' callback.
+     *
+     * @return Request $this
+     * @param string $mime mime type we're registering
+     * @param Closure $callback takes one argument, $payload,
+     *    which is the payload that we'll be
+     */
+    public function registerPayloadSerializer($mime, \Closure $callback) {
+        $this->payload_serializers[Mime::getFullMime($mime)] = $callback;
+        return $this;
+    }
+
+    /**
+     * See`registerPayloadSerializer`
+     * @return Request $this
+     * @param Closure $callback
+     */
+    public function serializePayloadWith(\Closure $callback) {
+        return $this->regregisterPayloadSerializer('*', $callback);
+    }
 
     /**
      * Magic method allows for neatly setting other headers in a
@@ -770,15 +796,26 @@ class Request {
      * it's course of action.  See serialize method for more.
      * Renamed from _detectPayload to _serializePayload as of
      * 2012-02-15.
+     *
+     * Added in support for custom payload serializers.  See
+     * `registerPayloadSerializer`.  The serialize_payload_method
+     * stuff still holds true though.
+     *
      * @return string
+     * @param mixed $payload
      */
     private function _serializePayload($payload) {
-        if (empty($payload) || $this->auto_serialize_payload === self::SERIALIZE_PAYLOAD_NEVER)
+        if (empty($payload) || $this->serialize_payload_method === self::SERIALIZE_PAYLOAD_NEVER)
             return $payload;
 
         // When we are in "smart" mode, don't serialize strings/scalars, assume they are already serialized
-        if ($this->auto_serialize_payload === self::SERIALIZE_PAYLOAD_SMART && is_scalar($payload))
+        if ($this->serialize_payload_method === self::SERIALIZE_PAYLOAD_SMART && is_scalar($payload))
             return $payload;
+
+        if (isset($this->payload_serializers['*']) || isset($this->payload_serializers[$this->content_type])) {
+            $key = isset($this->payload_serializers[$this->content_type]) ? $this->content_type : '*';
+            return call_user_func($this->payload_serializers[$key], $payload);
+        }
 
         switch($this->content_type) {
             case Mime::JSON:

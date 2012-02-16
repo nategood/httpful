@@ -207,6 +207,22 @@ function testSerializePayloadOptions() {
     
 }
 
+function testCustomPayloadSerializer($mime_type) {
+    $req = Request::get(TEST_URL)
+        ->sendsJson()
+        ->body("Nathan")
+        ->alwaysSerializePayload()
+        ->registerPayloadSerializer($mime_type, function($payload) {
+            // Screw it.  Our trivial serializer just
+            // always returns the word regardless of 
+            // the $payload
+            return 'Apples';
+        });
+
+    $res = $req->send();
+    assert('Apples' === $req->serialized_payload);
+}
+
 function testParsingContentTypeCharset() {
     $req = Request::init()->sendsAndExpects(Mime::JSON);
     // $response = new Response(SAMPLE_JSON_RESPONSE, "", $req);
@@ -412,3 +428,6 @@ testAddOnCurlOption();
 test200StatusCode();
 // test400StatusCode();
 testSerializePayloadOptions();
+testCustomPayloadSerializer('application/json');
+testCustomPayloadSerializer('json');
+testCustomPayloadSerializer('*');
