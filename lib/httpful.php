@@ -130,6 +130,7 @@ class Response {
         $this->raw_headers  = $headers;
         $this->raw_body     = $body;
         
+        $this->code         = $this->_parseCode($headers);
         $this->headers      = $this->_parseHeaders($headers);
 
         $this->_interpretHeaders();
@@ -195,6 +196,16 @@ class Response {
         return $parse_headers;
     }
     
+    public function _parseCode($headers) {
+
+        $parts = explode(' ', substr($headers, 0, strpos($headers, "\n")));
+        if (count($parts) < 2 || !is_numeric($parts[1])) {
+            throw new \Exception("Unable to parse response code from HTTP response due to malformed response");
+        }
+        
+        return intval($parts[1]);
+    }
+    
     /**
      * After we've parse the headers, let's clean things
      * up a bit and treat some headers specially
@@ -243,7 +254,7 @@ class Request {
     public $uri, $method = Http::GET, $headers = array(), $strict_ssl = false, $content_type = Mime::JSON, $expected_type = Mime::JSON,
         $additional_curl_opts = array(), $auto_parse = true,
         $username, $password,
-        $parse_callback, $errorCallback;
+        $parse_callback, $error_callback;
 
     // Curl Handle
     public $_ch,
@@ -335,7 +346,6 @@ class Request {
         }
 
         list($header, $body) = explode("\r\n\r\n", $result, 2);
-        $this->code = curl_getinfo($this->_ch, CURLINFO_HTTP_CODE); 
 
         return new Response($body, $header, $this);
     }
