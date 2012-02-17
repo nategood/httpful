@@ -6,7 +6,7 @@
  *  - pull the response code
  *  - Support a 5.2 branch?
  */
- 
+
 namespace Httpful;
 
 /**
@@ -64,27 +64,27 @@ class Http {
     const PUT       = 'PUT';
     const DELETE    = 'DELETE';
     const OPTIONS   = 'OPTIONS';
-    
+
     /**
      * @return array of HTTP method strings
      */
     public static function safeMethods() {
         return array(self::HEAD, self::GET, self::OPTIONS);
     }
-    
+
     /**
      * @return bool
      * @param string HTTP method
      */
     public static function isSafeMethod($method) { return in_array(self::safeMethods()); }
-    
+
     /**
      * @return bool
      * @param string HTTP method
      */
     public static function isUnsafeMethod($method) { return !in_array(self::safeMethods()); }
-    
-    /** 
+
+    /**
      * @return array list of (always) idempotent HTTP methods
      */
     public static function idempotentMethods() {
@@ -93,26 +93,26 @@ class Http {
         // not, it is not.
         return array(self::HEAD, self::GET, self::PUT, self::DELETE, self::OPTIONS);
     }
-    
+
     /**
      * @return bool
      * @param string HTTP method
      */
     public static function isIdempotent($method) { return in_array(self::safeidempotentMethodsMethods()); }
-    
+
     /**
      * @return bool
      * @param string HTTP method
      */
     public static function isNotIdempotent($method) { return !in_array(self::idempotentMethods()); }
-    
+
     /**
      * @return array of HTTP method strings
      */
     public static function canHaveBody() {
         return array(self::POST, self::PUT, self::OPTIONS);
     }
-    
+
 }
 
 class Response {
@@ -133,11 +133,12 @@ class Response {
         $this->request      = $request;
         $this->raw_headers  = $headers;
         $this->raw_body     = $body;
-        
+
+        $this->code         = $this->_parseCode($headers);
         $this->headers      = $this->_parseHeaders($headers);
 
         $this->_interpretHeaders();
-        
+
         $this->body         = $this->_parse($body);
     }
 
@@ -154,7 +155,7 @@ class Response {
         if (!$this->request->auto_parse) {
             return $body;
         }
-        
+
         // If provided, use custom parsing callback
         if (isset($this->request->parse_callback)) {
             return call_user_func($this->request->parse_callback, $body);
@@ -164,14 +165,14 @@ class Response {
         $parse_with = (!$this->request->expected_type && isset($this->content_type)) ?
             $this->content_type :
             $this->request->expected_type;
-        
+
         switch ($parse_with) {
             case Mime::JSON:
                 $parsed = json_decode($body, false);
                 if (!$parsed) throw new \Exception("Unable to parse response as JSON");
                 break;
             case Mime::XML:
-                $parsed = simple_xml_load_string($body);
+                $parsed = simplexml_load_string($body);
                 if (!$parsed) throw new \Exception("Unable to parse response as XML");
                 break;
             case Mime::FORM:
@@ -183,7 +184,7 @@ class Response {
         }
         return $parsed;
     }
-    
+
     /**
      * Parse text headers from response into
      * array of key value pairs
@@ -198,7 +199,17 @@ class Response {
         }
         return $parse_headers;
     }
-    
+
+    public function _parseCode($headers) {
+
+        $parts = explode(' ', substr($headers, 0, strpos($headers, "\n")));
+        if (count($parts) < 2 || !is_numeric($parts[1])) {
+            throw new \Exception("Unable to parse response code from HTTP response due to malformed response");
+        }
+
+        return intval($parts[1]);
+    }
+
     /**
      * After we've parse the headers, let's clean things
      * up a bit and treat some headers specially
@@ -212,10 +223,10 @@ class Response {
             list($nill, $this->charset) = explode('=', $content_type[1]);
         }
         // RFC 2616 states "text/*" Content-Types should have a default
-        // charset of ISO-8859-1. "application/*" and other Content-Types  
+        // charset of ISO-8859-1. "application/*" and other Content-Types
         // are assumed to have UTF-8 unless otherwise specified.
         // http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1
-        // http://www.w3.org/International/O-HTTP-charset.en.php      
+        // http://www.w3.org/International/O-HTTP-charset.en.php
         if (!isset($this->charset)) {
             $this->charset = substr($this->content_type, 5) === 'text/' ? 'iso-8859-1' : 'utf-8';
         }
@@ -245,18 +256,33 @@ class Response {
  */
 class Request {
 
+    // Option constants
+    const SERIALIZE_PAYLOAD_NEVER  = 0;
+    const SERIALIZE_PAYLOAD_ALWAYS = 1;
+    const SERIALIZE_PAYLOAD_SMART  = 2;
+
     public $uri,
-           $method        = Http::GET,
-           $headers       = array(),
-           $strict_ssl    = false,
-           $content_type  = Mime::JSON,
-           $expected_type = Mime::JSON,
-           $additional_curl_opts = array(),
-           $auto_parse    = true,
+           $method                  = Http::GET,
+           $headers                 = array(),
+           $strict_ssl              = false,
+           $content_type            = Mime::JSON,
+           $expected_type           = Mime::JSON,
+           $additional_curl_opts    = array(),
+           $auto_parse              = true,
+           $serialize_payload_method = self::SERIALIZE_PAYLOAD_SMART,
            $username,
            $password,
+           $serialized_payload,
+           $payload,
            $parse_callback,
-           $errorCallback;
+           $error_callback,
+           $payload_serializers     = array();
+
+    // Options
+    // private $_options = array(
+    //     'serialize_payload_method' => self::SERIALIZE_PAYLOAD_SMART
+    //     'auto_parse' => true
+    // );
 
     // Curl Handle
     public $_ch,
@@ -348,7 +374,6 @@ class Request {
         }
 
         list($header, $body) = explode("\r\n\r\n", $result, 2);
-        $this->code = curl_getinfo($ch, CURLINFO_HTTP_CODE); 
 
         return new Response($body, $header, $this);
     }
@@ -368,7 +393,7 @@ class Request {
     }
 
     /**
-     * User Basic Auth. 
+     * User Basic Auth.
      * Only use when over SSL/TSL/HTTPS.
      * @return Request this
      * @param string $username
@@ -393,8 +418,9 @@ class Request {
     public function body($payload, $mimeType = null) {
         $this->mime($mimeType);
         $this->payload = $payload;
-        // Intentially don't call _detectPayload yet.  Wait until
-        // we actually send off the request to convert payload to string
+        // Intentially don't call _serializePayload yet.  Wait until
+        // we actually send off the request to convert payload to string.
+        // At that time, the `serialized_payload` is set accordingly.
         return $this;
     }
 
@@ -477,6 +503,49 @@ class Request {
     }
 
     /**
+     * Determine how/if we use the built in serialization by
+     * setting the serialize_payload_method
+     * The default (SERIALIZE_PAYLOAD_SMART) is...
+     *  - if payload is not a scalar (object/array)
+     *    use the appropriate serialize method according to
+     *    the Content-Type of this request.
+     *  - if the payload IS a scalar (int, float, string, bool)
+     *    than just return it as is.
+     * When this option is set SERIALIZE_PAYLOAD_ALWAYS,
+     * it will always use the appropriate
+     * serialize option regardless of whether payload is scalar or not
+     * When this option is set SERIALIZE_PAYLOAD_NEVER,
+     * it will never use any of the serialization methods.
+     * Really the only use for this is if you want the serialize methods
+     * to handle strings or not (e.g. Blah is not valid JSON, but "Blah"
+     * is).  Forcing the serialization helps prevent that kind of error from
+     * happening.
+     * @return Request $this
+     * @param int $mode
+     */
+    public function alwaysSerializePayload($mode = self::SERIALIZE_PAYLOAD_ALWAYS) {
+        $this->serialize_payload_method = $mode;
+        return $this;
+    }
+
+    /**
+     * See `alwaysSerializePayload`
+     * @return Request
+     */
+    public function neverSerializePayload() {
+        return $this->serializePayload(self::SERIALIZE_PAYLOAD_NEVER);
+    }
+
+    /**
+     * See `alwaysSerializePayload`
+     * This method is the default behavior
+     * @return Request
+     */
+    public function smartSerializePayload() {
+        return $this->serializePayload(self::SERIALIZE_PAYLOAD_SMART);
+    }
+
+    /**
      * Add an additional header to the request
      * Can also use the cleaner syntax of
      * $Request->withMyHeaderName($my_value);  See the
@@ -489,11 +558,11 @@ class Request {
         $this->headers[$header_name] = $value;
         return $this;
     }
-    
+
     /**
      * Add group of headers all at once.  Note: This is
      * here just as a convenience in very specific cases.
-     * The preferred "readable" way would be to leverage 
+     * The preferred "readable" way would be to leverage
      * the support for custom header methods.
      * @return Response $this
      * @param array $headers
@@ -504,12 +573,12 @@ class Request {
         }
         return $this;
     }
-    
+
     /**
      * @return Request
      * @param bool $auto_parse perform automatic "smart"
      *    parsing based on Content-Type or "expectedType"
-     *    If not auto parsing, Response->body returns the body 
+     *    If not auto parsing, Response->body returns the body
      *    as a string.
      */
     public function autoParse($auto_parse = true) {
@@ -532,6 +601,32 @@ class Request {
     // @alias parseWith
     public function parseResponsesWith(\Closure $callback) {
         return $this->parseWith($callback);
+    }
+
+    /**
+     * Register a callback that will be used to serialize the payload
+     * for a particular mime type.  When using "*" for the mime
+     * type, it will use that parser for all responses regardless of the mime
+     * type.  If a custom '*' and 'application/json' exist, the custom
+     * 'application/json' would take precedence over the '*' callback.
+     *
+     * @return Request $this
+     * @param string $mime mime type we're registering
+     * @param Closure $callback takes one argument, $payload,
+     *    which is the payload that we'll be
+     */
+    public function registerPayloadSerializer($mime, \Closure $callback) {
+        $this->payload_serializers[Mime::getFullMime($mime)] = $callback;
+        return $this;
+    }
+
+    /**
+     * See`registerPayloadSerializer`
+     * @return Request $this
+     * @param Closure $callback
+     */
+    public function serializePayloadWith(\Closure $callback) {
+        return $this->regregisterPayloadSerializer('*', $callback);
     }
 
     /**
@@ -684,18 +779,20 @@ class Request {
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
         $headers = array("Content-Type: {$this->content_type}");
-        
-        $headers[] = !empty($this->expected_type) ? 
+
+        $headers[] = !empty($this->expected_type) ?
             "Accept: {$this->expected_type}, text/plain" :
             "Accept: */*";
-        
+
         foreach ($this->headers as $header => $value) {
             $headers[] = "$header: $value";
         }
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
-        if (isset($this->payload))
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $this->_detectPayload($this->payload));
+        if (isset($this->payload)) {
+            $this->serialized_payload = $this->_serializePayload($this->payload);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $this->serialized_payload);
+        }
 
         if ($this->_debug) {
             curl_setopt($ch, CURLOPT_VERBOSE, true);
@@ -728,12 +825,31 @@ class Request {
 
     /**
      * Turn payload from structure data into
-     * a string based on the current Mime type
+     * a string based on the current Mime type.
+     * This uses the auto_serialize option to determine
+     * it's course of action.  See serialize method for more.
+     * Renamed from _detectPayload to _serializePayload as of
+     * 2012-02-15.
+     *
+     * Added in support for custom payload serializers.  See
+     * `registerPayloadSerializer`.  The serialize_payload_method
+     * stuff still holds true though.
+     *
      * @return string
+     * @param mixed $payload
      */
-    private function _detectPayload($payload) {
-        if (empty($payload) || is_string($payload))
+    private function _serializePayload($payload) {
+        if (empty($payload) || $this->serialize_payload_method === self::SERIALIZE_PAYLOAD_NEVER)
             return $payload;
+
+        // When we are in "smart" mode, don't serialize strings/scalars, assume they are already serialized
+        if ($this->serialize_payload_method === self::SERIALIZE_PAYLOAD_SMART && is_scalar($payload))
+            return $payload;
+
+        if (isset($this->payload_serializers['*']) || isset($this->payload_serializers[$this->content_type])) {
+            $key = isset($this->payload_serializers[$this->content_type]) ? $this->content_type : '*';
+            return call_user_func($this->payload_serializers[$key], $payload);
+        }
 
         switch($this->content_type) {
             case Mime::JSON:
@@ -810,7 +926,9 @@ class Request {
     public static function get($uri, $mime = null) {
         return self::init(Http::GET)->uri($uri)->mime($mime);
     }
-    public static function getQuick($uri, $mime = null) { return self::get($uri, $mime)->send(); }
+    public static function getQuick($uri, $mime = null) {
+        return self::get($uri, $mime)->send();
+    }
 
     /**
      * HTTP Method Post

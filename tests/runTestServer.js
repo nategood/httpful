@@ -4,7 +4,8 @@ var http = require('http');
 // Responds with {requestMethod: "", requestHeaders:{}, requestBody:""}
 http.createServer(function(req, res){
 	var echo = "";
-    res.writeHead(200, {"Content-Type":"application/json"});
+	var code = req.url == '/400' ? 400 : 200;
+    res.writeHead(code, {"Content-Type":"application/json"});
     req.on('data', function(data){
         echo += data;
     });

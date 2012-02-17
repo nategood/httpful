@@ -27,6 +27,7 @@ require(__DIR__ . '/../lib/httpful.php');
 
 define('TEST_SERVER', '127.0.0.1:8008');
 define('TEST_URL', 'http://' . TEST_SERVER);
+define('TEST_URL_400', 'http://' . TEST_SERVER . '/400');
 define('SAMPLE_JSON_RESPONSE', '{"key":"value","object":{"key":"value"},"array":[1,2,3,4]}');
 define('SAMPLE_JSON_HEADER', "HTTP/1.1 200 OK
 Content-Type: application/json
@@ -203,6 +204,46 @@ function testXMLResponseParse() {
     assert("a string" === (string) $string);
 }
 
+function testSerializePayloadOptions() {
+    $req = Request::get(TEST_URL)
+        ->sendsJson()
+        ->body("Nathan")
+        ->alwaysSerializePayload();
+
+    $res = $req->send();
+    
+    // Rare, but perfect example of why you might want 
+    // to use alwaysSerializePayload
+    
+    assert(is_string($req->serialized_payload));
+    assert('"Nathan"' === $req->serialized_payload);
+    
+    $req = Request::get(TEST_URL)
+        ->sendsJson()
+        ->body("Nathan")
+        ->neverSerializePayload();
+    
+    $res = $req->send();
+    assert(is_string($req->serialized_payload));
+    assert('Nathan' === $req->serialized_payload);
+    
+}
+
+function testCustomPayloadSerializer($mime_type) {
+    $req = Request::get(TEST_URL)
+        ->sendsJson()
+        ->body("Nathan")
+        ->alwaysSerializePayload()
+        ->registerPayloadSerializer($mime_type, function($payload) {
+            // Screw it.  Our trivial serializer just
+            // always returns the word regardless of 
+            // the $payload
+            return 'Apples';
+        });
+
+    $res = $req->send();
+    assert('Apples' === $req->serialized_payload);
+}
 
 function testParsingContentTypeCharset() {
     $req = Request::init()->sendsAndExpects(Mime::JSON);
@@ -246,7 +287,7 @@ function testCustomParse() {
 
     $req = Request::init()->parseWith($f);
     $raw_body = 'my response text';
-    $response = new Response($raw_body, "", $req);
+    $response = new Response($raw_body, SAMPLE_JSON_HEADER, $req);
 
     assert($raw_body . $raw_body === $response->body);
 }
@@ -345,6 +386,43 @@ function testAddOnCurlOption() {
     assert('HELLO' === json_decode($bodyWithoutOverride)->requestBody);
 }
 
+function test200StatusCode() {
+    $res = Request::get(TEST_URL)
+        ->sendsJson()
+        ->sendIt();
+    assert(200 === $res->code);
+}
+
+function test400StatusCode() {
+    $res = Request::get(TEST_URL_400)
+        ->sendsJson()
+        ->sendIt();
+    assert(400 === $res->code);
+}
+
+function testStatusCodeParse() {
+    $req = Request::get(TEST_URL);
+    
+    $res = new Response(SAMPLE_JSON_RESPONSE, SAMPLE_JSON_HEADER, $req);
+    assert(200 === $res->code);
+    
+    $four_oh_four_headers = "HTTP/1.1 400 OK
+Content-Type: application/json";
+
+    $res = new Response(SAMPLE_JSON_RESPONSE, $four_oh_four_headers, $req);
+    assert(400 === $res->code);
+    
+    // Let's make sure we catch malformed HTTP responses
+    try {
+        $bad_headers = "Wait, this ain't a stinking HTTP response!";
+        $res = new Response(SAMPLE_JSON_RESPONSE, $bad_headers, $req);
+    } catch(\Exception $e) {
+        $yep_caught_it = true;
+    }
+    assert(true === $yep_caught_it);
+}
+
+
 testInit();
 testMethods();
 testDefaults();
@@ -360,6 +438,7 @@ testSendsSugar();
 testExpectsSugar();
 testNoAutoParse();
 testParsingContentTypeCharset();
+testStatusCodeParse();
 
 checkForTestServer();
 
@@ -369,3 +448,9 @@ testSendPut();
 testSendDelete();
 testParsingResponseHeaders();
 testAddOnCurlOption();
+test200StatusCode();
+// test400StatusCode();
+testSerializePayloadOptions();
+testCustomPayloadSerializer('application/json');
+testCustomPayloadSerializer('json');
+testCustomPayloadSerializer('*');
