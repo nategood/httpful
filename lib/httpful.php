@@ -414,7 +414,8 @@ class Request {
      * @return Request this
      * @param string $uri
      */
-    public function uri($uri) {
+    public function uri($uri) 
+    {
         $this->uri = $uri;
         return $this;
     }
@@ -426,7 +427,8 @@ class Request {
      * @param string $username
      * @param string $password
      */
-    public function basicAuth($username, $password) {
+    public function basicAuth($username, $password) 
+    {
         $this->username = $username;
         $this->password = $password;
         return $this;
@@ -791,7 +793,8 @@ class Request {
         return $this;
     }
 
-    private function _error($error) {
+    private function _error($error) 
+    {
         // Default actions write to error log
         error_log($error);
     }
@@ -882,7 +885,8 @@ class Request {
      * @param string $curlopt
      * @param $curloptval $mixed
      */
-    public function addOnCurlOption($curlopt, $curloptval) {
+    public function addOnCurlOption($curlopt, $curloptval) 
+    {
         $this->additional_curl_opts[$curlopt] = $curloptval;
         return $this;
     }
@@ -902,7 +906,8 @@ class Request {
      * @return string
      * @param mixed $payload
      */
-    private function _serializePayload($payload) {
+    private function _serializePayload($payload) 
+    {
         if (empty($payload) || $this->serialize_payload_method === self::SERIALIZE_PAYLOAD_NEVER)
             return $payload;
 
@@ -929,7 +934,9 @@ class Request {
                 return (string) $payload;
         }
     }
-    private function _future_serializeAsXml($value, $node=null, $dom=null) {
+    
+    private function _future_serializeAsXml($value, $node = null, $dom = null) 
+    {
         if (!$dom) {
             $dom = new \DOMDocument;
         }
@@ -956,7 +963,8 @@ class Request {
         }
         return array($node, $dom);
     }
-    private function _future_serializeArrayAsXml($value, &$parent, &$dom) {
+    private function _future_serializeArrayAsXml($value, &$parent, &$dom) 
+    {
         foreach ($value as $k => &$v) {
             $n = $k;
             if (is_numeric($k)) {
@@ -968,7 +976,8 @@ class Request {
         }
         return array($parent, $dom);
     }
-    private function _future_serializeObjectAsXml($value, &$parent, &$dom) {
+    private function _future_serializeObjectAsXml($value, &$parent, &$dom) 
+    {
         $refl = new \ReflectionObject($value);
         foreach ($refl->getProperties() as $pr) {
             if (!$pr->isPrivate()) {
@@ -987,10 +996,12 @@ class Request {
      * @param string $uri optional uri to use
      * @param string $mime expected
      */
-    public static function get($uri, $mime = null) {
+    public static function get($uri, $mime = null) 
+    {
         return self::init(Http::GET)->uri($uri)->mime($mime);
     }
-    public static function getQuick($uri, $mime = null) {
+    public static function getQuick($uri, $mime = null) 
+    {
         return self::get($uri, $mime)->send();
     }
 
@@ -1001,7 +1012,8 @@ class Request {
      * @param string $payload data to send in body of request
      * @param string $mime MIME to use for Content-Type
      */
-    public static function post($uri, $payload = null, $mime = null) {
+    public static function post($uri, $payload = null, $mime = null) 
+    {
         return self::init(Http::POST)->uri($uri)->body($payload, $mime);
     }
 
@@ -1012,7 +1024,8 @@ class Request {
      * @param string $payload data to send in body of request
      * @param string $mime MIME to use for Content-Type
      */
-    public static function put($uri, $payload = null, $mime = null) {
+    public static function put($uri, $payload = null, $mime = null) 
+    {
         return self::init(Http::PUT)->uri($uri)->body($payload, $mime);
     }
 
@@ -1021,7 +1034,8 @@ class Request {
      * @return Request
      * @param string $uri optional uri to use
      */
-    public static function delete($uri, $mime = null) {
+    public static function delete($uri, $mime = null) 
+    {
         return self::init(Http::DELETE)->uri($uri)->mime($mime);
     }
 
@@ -1030,7 +1044,8 @@ class Request {
      * @return Request
      * @param string $uri optional uri to use
      */
-    public static function head($uri) {
+    public static function head($uri) 
+    {
         return self::init(Http::HEAD)->uri($uri);
     }
 
@@ -1039,7 +1054,8 @@ class Request {
      * @return Request
      * @param string $uri optional uri to use
      */
-    public static function options($uri) {
+    public static function options($uri) 
+    {
         return self::init(Http::OPTIONS)->uri($uri);
     }
 }
