@@ -13,7 +13,8 @@ namespace Httpful;
  * Class to organize the Mime stuff a bit more
  * @author Nate Good <me@nategood.com>
  */
-class Mime {
+class Mime
+{
     const JSON  = 'application/json';
     const XML   = 'application/xml';
     const FORM  = 'application/x-www-form-urlencoded';
@@ -57,7 +58,8 @@ class Mime {
     }
 }
 
-class Http {
+class Http
+{
     const HEAD      = 'HEAD';
     const GET       = 'GET';
     const POST      = 'POST';
@@ -106,18 +108,18 @@ class Http {
      * @return bool
      * @param string HTTP method
      */
-    public static function isIdempotent($method) 
-    { 
-        return in_array(self::safeidempotentMethodsMethods()); 
+    public static function isIdempotent($method)
+    {
+        return in_array(self::safeidempotentMethodsMethods());
     }
 
     /**
      * @return bool
      * @param string HTTP method
      */
-    public static function isNotIdempotent($method) 
-    { 
-        return !in_array(self::idempotentMethods()); 
+    public static function isNotIdempotent($method)
+    {
+        return !in_array(self::idempotentMethods());
     }
 
     /**
@@ -130,7 +132,8 @@ class Http {
 
 }
 
-class Response {
+class Response
+{
 
     public $body,
            $raw_body,
@@ -144,7 +147,7 @@ class Response {
      * @param string $headers
      * @param Request $request
      */
-    public function __construct($body, $headers, Request $request) 
+    public function __construct($body, $headers, Request $request)
     {
         $this->request      = $request;
         $this->raw_headers  = $headers;
@@ -165,7 +168,7 @@ class Response {
      * @return array|string|object the response parse accordingly
      * @param string Http response body
      */
-    public function _parse($body) 
+    public function _parse($body)
     {
         // If the user decided to forgo the automatic
         // smart parsing, short circuit.
@@ -208,7 +211,7 @@ class Response {
      * @return array parse headers
      * @param string $headers raw headers
      */
-    public function _parseHeaders($headers) 
+    public function _parseHeaders($headers)
     {
         $headers = preg_split("/(\r|\n)+/", $headers);
         for ($i = 1; $i < count($headers); $i++) {
@@ -218,7 +221,7 @@ class Response {
         return $parse_headers;
     }
 
-    public function _parseCode($headers) 
+    public function _parseCode($headers)
     {
         $parts = explode(' ', substr($headers, 0, strpos($headers, "\n")));
         if (count($parts) < 2 || !is_numeric($parts[1])) {
@@ -273,12 +276,13 @@ class Response {
  *
  * @author Nate Good <me@nategood.com>
  */
-class Request {
+class Request
+{
 
     // Option constants
-    const SERIALIZE_PAYLOAD_NEVER  = 0;
-    const SERIALIZE_PAYLOAD_ALWAYS = 1;
-    const SERIALIZE_PAYLOAD_SMART  = 2;
+    const SERIALIZE_PAYLOAD_NEVER   = 0;
+    const SERIALIZE_PAYLOAD_ALWAYS  = 1;
+    const SERIALIZE_PAYLOAD_SMART   = 2;
 
     public $uri,
            $method                  = Http::GET,
@@ -317,7 +321,7 @@ class Request {
      * for internal use.
      * @param array $attrs hash of initial attribute values
      */
-    private function __construct($attrs = null) 
+    private function __construct($attrs = null)
     {
         if (!is_array($attrs)) return;
         foreach ($attrs as $attr => $value) {
@@ -339,7 +343,7 @@ class Request {
      * scheme of things as it typically only occurs once
      * @param Request $template
      */
-    public static function ini(Request $template) 
+    public static function ini(Request $template)
     {
         self::$_template = clone $template;
     }
@@ -359,7 +363,7 @@ class Request {
      * @param string|null $attr Name of attribute (e.g. mime, headers)
      *    if null just return the whole template object;
      */
-    public function d($attr) 
+    public function d($attr)
     {
         return isset($attr) ? self::$_template->$attr : self::$_template;
     }
@@ -414,7 +418,7 @@ class Request {
      * @return Request this
      * @param string $uri
      */
-    public function uri($uri) 
+    public function uri($uri)
     {
         $this->uri = $uri;
         return $this;
@@ -427,14 +431,14 @@ class Request {
      * @param string $username
      * @param string $password
      */
-    public function basicAuth($username, $password) 
+    public function basicAuth($username, $password)
     {
         $this->username = $username;
         $this->password = $password;
         return $this;
     }
     // @alias of basicAuth
-    public function authenticateWith($username, $password) 
+    public function authenticateWith($username, $password)
     {
         return $this->basicAuth($username, $password);
     }
@@ -445,7 +449,7 @@ class Request {
      * @param mixed $payload
      * @param string $mimeType
      */
-    public function body($payload, $mimeType = null) 
+    public function body($payload, $mimeType = null)
     {
         $this->mime($mimeType);
         $this->payload = $payload;
@@ -461,19 +465,19 @@ class Request {
      * @return Request this
      * @param string $mime mime type to use for content type and expected return type
      */
-    public function mime($mime) 
+    public function mime($mime)
     {
         if (empty($mime)) return $this;
         $this->content_type = $this->expected_type = Mime::getFullMime($mime);
         return $this;
     }
     // @alias of mime
-    public function sendsAndExpectsType($mime) 
+    public function sendsAndExpectsType($mime)
     {
         return $this->mime($mime);
     }
     // @alias of mime
-    public function sendsAndExpects($mime) 
+    public function sendsAndExpects($mime)
     {
         return $this->mime($mime);
     }
@@ -484,7 +488,7 @@ class Request {
      * @return Request this
      * @param string $method
      */
-    public function method($method) 
+    public function method($method)
     {
         if (empty($method)) return $this;
         $this->method = $method;
@@ -495,14 +499,14 @@ class Request {
      * @return Request this
      * @param string $mime
      */
-    public function expects($mime) 
+    public function expects($mime)
     {
         if (empty($mime)) return $this;
         $this->expected_type = Mime::getFullMime($mime);
         return $this;
     }
     // @alias of expects
-    public function expectsType($mime) 
+    public function expectsType($mime)
     {
         return $this->expects($mime);
     }
@@ -511,21 +515,21 @@ class Request {
      * @return Request this
      * @param string $mime
      */
-    public function contentType($mime) 
+    public function contentType($mime)
     {
         if (empty($mime)) return $this;
         $this->content_type  = Mime::getFullMime($mime);
         return $this;
     }
     // @alias of contentType
-    public function sends($mime) 
+    public function sends($mime)
     {
         return $this->contentType($mime);
     }
     // @alias of contentType
-    public function sendsType($mime) 
+    public function sendsType($mime)
     {
-        return $this->contentType($mime); 
+        return $this->contentType($mime);
     }
 
     /**
@@ -533,7 +537,7 @@ class Request {
      * @return Request this
      * @param bool $strict
      */
-    public function strictSSL($strict) 
+    public function strictSSL($strict)
     {
         $this->strict_ssl = $strict;
         return $this;
@@ -568,7 +572,7 @@ class Request {
      * @return Request $this
      * @param int $mode
      */
-    public function alwaysSerializePayload($mode = self::SERIALIZE_PAYLOAD_ALWAYS) 
+    public function alwaysSerializePayload($mode = self::SERIALIZE_PAYLOAD_ALWAYS)
     {
         $this->serialize_payload_method = $mode;
         return $this;
@@ -793,7 +797,7 @@ class Request {
         return $this;
     }
 
-    private function _error($error) 
+    private function _error($error)
     {
         // Default actions write to error log
         error_log($error);
@@ -885,7 +889,7 @@ class Request {
      * @param string $curlopt
      * @param $curloptval $mixed
      */
-    public function addOnCurlOption($curlopt, $curloptval) 
+    public function addOnCurlOption($curlopt, $curloptval)
     {
         $this->additional_curl_opts[$curlopt] = $curloptval;
         return $this;
@@ -906,7 +910,7 @@ class Request {
      * @return string
      * @param mixed $payload
      */
-    private function _serializePayload($payload) 
+    private function _serializePayload($payload)
     {
         if (empty($payload) || $this->serialize_payload_method === self::SERIALIZE_PAYLOAD_NEVER)
             return $payload;
@@ -934,8 +938,8 @@ class Request {
                 return (string) $payload;
         }
     }
-    
-    private function _future_serializeAsXml($value, $node = null, $dom = null) 
+
+    private function _future_serializeAsXml($value, $node = null, $dom = null)
     {
         if (!$dom) {
             $dom = new \DOMDocument;
@@ -963,7 +967,7 @@ class Request {
         }
         return array($node, $dom);
     }
-    private function _future_serializeArrayAsXml($value, &$parent, &$dom) 
+    private function _future_serializeArrayAsXml($value, &$parent, &$dom)
     {
         foreach ($value as $k => &$v) {
             $n = $k;
@@ -976,7 +980,7 @@ class Request {
         }
         return array($parent, $dom);
     }
-    private function _future_serializeObjectAsXml($value, &$parent, &$dom) 
+    private function _future_serializeObjectAsXml($value, &$parent, &$dom)
     {
         $refl = new \ReflectionObject($value);
         foreach ($refl->getProperties() as $pr) {
@@ -996,11 +1000,11 @@ class Request {
      * @param string $uri optional uri to use
      * @param string $mime expected
      */
-    public static function get($uri, $mime = null) 
+    public static function get($uri, $mime = null)
     {
         return self::init(Http::GET)->uri($uri)->mime($mime);
     }
-    public static function getQuick($uri, $mime = null) 
+    public static function getQuick($uri, $mime = null)
     {
         return self::get($uri, $mime)->send();
     }
@@ -1012,7 +1016,7 @@ class Request {
      * @param string $payload data to send in body of request
      * @param string $mime MIME to use for Content-Type
      */
-    public static function post($uri, $payload = null, $mime = null) 
+    public static function post($uri, $payload = null, $mime = null)
     {
         return self::init(Http::POST)->uri($uri)->body($payload, $mime);
     }
@@ -1024,7 +1028,7 @@ class Request {
      * @param string $payload data to send in body of request
      * @param string $mime MIME to use for Content-Type
      */
-    public static function put($uri, $payload = null, $mime = null) 
+    public static function put($uri, $payload = null, $mime = null)
     {
         return self::init(Http::PUT)->uri($uri)->body($payload, $mime);
     }
@@ -1034,7 +1038,7 @@ class Request {
      * @return Request
      * @param string $uri optional uri to use
      */
-    public static function delete($uri, $mime = null) 
+    public static function delete($uri, $mime = null)
     {
         return self::init(Http::DELETE)->uri($uri)->mime($mime);
     }
@@ -1044,7 +1048,7 @@ class Request {
      * @return Request
      * @param string $uri optional uri to use
      */
-    public static function head($uri) 
+    public static function head($uri)
     {
         return self::init(Http::HEAD)->uri($uri);
     }
@@ -1054,7 +1058,7 @@ class Request {
      * @return Request
      * @param string $uri optional uri to use
      */
-    public static function options($uri) 
+    public static function options($uri)
     {
         return self::init(Http::OPTIONS)->uri($uri);
     }
