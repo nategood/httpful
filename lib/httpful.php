@@ -1,11 +1,4 @@
 <?php
-/**
- * Todo
- *  - toString on Request returns the full text HTTP request
- *  - Use Content-Type of response to determine "expects" and parse
- *  - pull the response code
- *  - Support a 5.2 branch?
- */
 
 namespace Httpful;
 
@@ -20,7 +13,11 @@ class Mime {
     const PLAIN = 'text/plain';
     const JS    = 'text/javascript';
     const HTML  = 'text/html';
+    const CSV   = 'text/csv';
     const YAML  = 'application/x-yaml';
+    const JPEG  = 'image/jpeg';
+    const PNG   = 'image/png';
+    const GIF   = 'image/gif';
 
     /**
      * Map short name for a mime type
@@ -36,6 +33,11 @@ class Mime {
         'js'        => self::JS,
         'javascript'=> self::JS,
         'yaml'      => self::YAML,
+        'jpg'       => self::JPEG,
+        'jpeg'      => self::JPEG,
+        'png'       => self::PNG,
+        'gif'       => self::GIF,
+        'csv'       => self::CSV,
     );
 
     /**

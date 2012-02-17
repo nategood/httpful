@@ -98,4 +98,7 @@ Because this is a HTTP Client library, to thoroughly test it, we need an HTTP se
  - Support SSL Client Side Cert Authentication
  - Add support for URI templates
  - Move the unit tests to more standard PHPUnit syntax
+ - toString on Request returns the full text HTTP request
+ - Use Content-Type of response to determine "expects" and parse
+ - Support a 5.2 branch?
 
