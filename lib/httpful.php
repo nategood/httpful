@@ -68,7 +68,8 @@ class Http {
     /**
      * @return array of HTTP method strings
      */
-    public static function safeMethods() {
+    public static function safeMethods()
+    {
         return array(self::HEAD, self::GET, self::OPTIONS);
     }
 
@@ -76,18 +77,25 @@ class Http {
      * @return bool
      * @param string HTTP method
      */
-    public static function isSafeMethod($method) { return in_array(self::safeMethods()); }
+    public static function isSafeMethod($method)
+    {
+        return in_array(self::safeMethods());
+    }
 
     /**
      * @return bool
      * @param string HTTP method
      */
-    public static function isUnsafeMethod($method) { return !in_array(self::safeMethods()); }
+    public static function isUnsafeMethod($method)
+    {
+        return !in_array(self::safeMethods());
+    }
 
     /**
      * @return array list of (always) idempotent HTTP methods
      */
-    public static function idempotentMethods() {
+    public static function idempotentMethods()
+    {
         // Though it is possible to be idempotent, POST
         // is not guarunteed to be, and more often than
         // not, it is not.
@@ -98,18 +106,25 @@ class Http {
      * @return bool
      * @param string HTTP method
      */
-    public static function isIdempotent($method) { return in_array(self::safeidempotentMethodsMethods()); }
+    public static function isIdempotent($method) 
+    { 
+        return in_array(self::safeidempotentMethodsMethods()); 
+    }
 
     /**
      * @return bool
      * @param string HTTP method
      */
-    public static function isNotIdempotent($method) { return !in_array(self::idempotentMethods()); }
+    public static function isNotIdempotent($method) 
+    { 
+        return !in_array(self::idempotentMethods()); 
+    }
 
     /**
      * @return array of HTTP method strings
      */
-    public static function canHaveBody() {
+    public static function canHaveBody()
+    {
         return array(self::POST, self::PUT, self::OPTIONS);
     }
 
@@ -129,7 +144,8 @@ class Response {
      * @param string $headers
      * @param Request $request
      */
-    public function __construct($body, $headers, Request $request) {
+    public function __construct($body, $headers, Request $request) 
+    {
         $this->request      = $request;
         $this->raw_headers  = $headers;
         $this->raw_body     = $body;
@@ -149,7 +165,8 @@ class Response {
      * @return array|string|object the response parse accordingly
      * @param string Http response body
      */
-    public function _parse($body) {
+    public function _parse($body) 
+    {
         // If the user decided to forgo the automatic
         // smart parsing, short circuit.
         if (!$this->request->auto_parse) {
@@ -191,7 +208,8 @@ class Response {
      * @return array parse headers
      * @param string $headers raw headers
      */
-    public function _parseHeaders($headers) {
+    public function _parseHeaders($headers) 
+    {
         $headers = preg_split("/(\r|\n)+/", $headers);
         for ($i = 1; $i < count($headers); $i++) {
             list($key, $raw_value) = explode(':', $headers[$i], 2);
@@ -200,13 +218,12 @@ class Response {
         return $parse_headers;
     }
 
-    public function _parseCode($headers) {
-
+    public function _parseCode($headers) 
+    {
         $parts = explode(' ', substr($headers, 0, strpos($headers, "\n")));
         if (count($parts) < 2 || !is_numeric($parts[1])) {
             throw new \Exception("Unable to parse response code from HTTP response due to malformed response");
         }
-
         return intval($parts[1]);
     }
 
@@ -214,7 +231,8 @@ class Response {
      * After we've parse the headers, let's clean things
      * up a bit and treat some headers specially
      */
-    public function _interpretHeaders() {
+    public function _interpretHeaders()
+    {
         // Parse the Content-Type and charset
         $content_type = explode(';', $this->headers['Content-Type']);
 
@@ -235,7 +253,8 @@ class Response {
     /**
      * @return string
      */
-    public function __toString() {
+    public function __toString()
+    {
         return $this->raw_body;
     }
 }
@@ -298,7 +317,8 @@ class Request {
      * for internal use.
      * @param array $attrs hash of initial attribute values
      */
-    private function __construct($attrs = null) {
+    private function __construct($attrs = null) 
+    {
         if (!is_array($attrs)) return;
         foreach ($attrs as $attr => $value) {
             $this->$attr = $value;
@@ -319,7 +339,8 @@ class Request {
      * scheme of things as it typically only occurs once
      * @param Request $template
      */
-    public static function ini(Request $template) {
+    public static function ini(Request $template) 
+    {
         self::$_template = clone $template;
     }
 
@@ -327,7 +348,8 @@ class Request {
      * Reset the default template back to the
      * library defaults.
      */
-    public static function resetIni() {
+    public static function resetIni()
+    {
         self::_initializeDefaults();
     }
 
@@ -337,7 +359,8 @@ class Request {
      * @param string|null $attr Name of attribute (e.g. mime, headers)
      *    if null just return the whole template object;
      */
-    public function d($attr) {
+    public function d($attr) 
+    {
         return isset($attr) ? self::$_template->$attr : self::$_template;
     }
 
@@ -346,14 +369,16 @@ class Request {
     /**
      * @return bool has the internal curl request been initialized?
      */
-    public function hasBeenInitialized() {
+    public function hasBeenInitialized()
+    {
         return isset($this->_ch);
     }
 
     /**
      * @return bool Is this request setup for basic auth?
      */
-    public function hasBasicAuth() {
+    public function hasBasicAuth()
+    {
         return isset($this->password) && isset($this->username);
     }
 
@@ -362,7 +387,8 @@ class Request {
      * @return string|associative array of parsed results
      * @throws \Exception when unable to parse or communicate w server
      */
-    public function send() {
+    public function send()
+    {
         if (!$this->hasBeenInitialized())
             $this->_curlPrep();
 
@@ -377,7 +403,8 @@ class Request {
 
         return new Response($body, $header, $this);
     }
-    public function sendIt() {
+    public function sendIt()
+    {
         return $this->send();
     }
 
@@ -405,7 +432,8 @@ class Request {
         return $this;
     }
     // @alias of basicAuth
-    public function authenticateWith($username, $password) {
+    public function authenticateWith($username, $password) 
+    {
         return $this->basicAuth($username, $password);
     }
 
@@ -415,7 +443,8 @@ class Request {
      * @param mixed $payload
      * @param string $mimeType
      */
-    public function body($payload, $mimeType = null) {
+    public function body($payload, $mimeType = null) 
+    {
         $this->mime($mimeType);
         $this->payload = $payload;
         // Intentially don't call _serializePayload yet.  Wait until
@@ -430,17 +459,20 @@ class Request {
      * @return Request this
      * @param string $mime mime type to use for content type and expected return type
      */
-    public function mime($mime) {
+    public function mime($mime) 
+    {
         if (empty($mime)) return $this;
         $this->content_type = $this->expected_type = Mime::getFullMime($mime);
         return $this;
     }
     // @alias of mime
-    public function sendsAndExpectsType($mime) {
+    public function sendsAndExpectsType($mime) 
+    {
         return $this->mime($mime);
     }
     // @alias of mime
-    public function sendsAndExpects($mime) {
+    public function sendsAndExpects($mime) 
+    {
         return $this->mime($mime);
     }
 
@@ -450,7 +482,8 @@ class Request {
      * @return Request this
      * @param string $method
      */
-    public function method($method) {
+    public function method($method) 
+    {
         if (empty($method)) return $this;
         $this->method = $method;
         return $this;
@@ -460,13 +493,15 @@ class Request {
      * @return Request this
      * @param string $mime
      */
-    public function expects($mime) {
+    public function expects($mime) 
+    {
         if (empty($mime)) return $this;
         $this->expected_type = Mime::getFullMime($mime);
         return $this;
     }
     // @alias of expects
-    public function expectsType($mime) {
+    public function expectsType($mime) 
+    {
         return $this->expects($mime);
     }
 
@@ -474,31 +509,39 @@ class Request {
      * @return Request this
      * @param string $mime
      */
-    public function contentType($mime) {
+    public function contentType($mime) 
+    {
         if (empty($mime)) return $this;
         $this->content_type  = Mime::getFullMime($mime);
         return $this;
     }
     // @alias of contentType
-    public function sends($mime) {
+    public function sends($mime) 
+    {
         return $this->contentType($mime);
     }
     // @alias of contentType
-    public function sendsType($mime) { return $this->contentType($mime); }
+    public function sendsType($mime) 
+    {
+        return $this->contentType($mime); 
+    }
 
     /**
      * Do we strictly enforce SSL verification?
      * @return Request this
      * @param bool $strict
      */
-    public function strictSSL($strict) {
+    public function strictSSL($strict) 
+    {
         $this->strict_ssl = $strict;
         return $this;
     }
-    public function withoutStrictSSL() {
+    public function withoutStrictSSL()
+    {
         return $this->strictSSL(false);
     }
-    public function withStrictSSL() {
+    public function withStrictSSL()
+    {
         return $this->strictSSL(true);
     }
 
@@ -523,7 +566,8 @@ class Request {
      * @return Request $this
      * @param int $mode
      */
-    public function alwaysSerializePayload($mode = self::SERIALIZE_PAYLOAD_ALWAYS) {
+    public function alwaysSerializePayload($mode = self::SERIALIZE_PAYLOAD_ALWAYS) 
+    {
         $this->serialize_payload_method = $mode;
         return $this;
     }
@@ -532,7 +576,8 @@ class Request {
      * See `alwaysSerializePayload`
      * @return Request
      */
-    public function neverSerializePayload() {
+    public function neverSerializePayload()
+    {
         return $this->serializePayload(self::SERIALIZE_PAYLOAD_NEVER);
     }
 
@@ -541,7 +586,8 @@ class Request {
      * This method is the default behavior
      * @return Request
      */
-    public function smartSerializePayload() {
+    public function smartSerializePayload()
+    {
         return $this->serializePayload(self::SERIALIZE_PAYLOAD_SMART);
     }
 
@@ -554,7 +600,8 @@ class Request {
      * @param string $header_name
      * @param string $value
      */
-    public function addHeader($header_name, $value) {
+    public function addHeader($header_name, $value)
+    {
         $this->headers[$header_name] = $value;
         return $this;
     }
@@ -567,7 +614,8 @@ class Request {
      * @return Response $this
      * @param array $headers
      */
-    public function addHeaders(array $headers) {
+    public function addHeaders(array $headers)
+    {
         foreach ($headers as $header => $value) {
             $this->addHeader($header, $value);
         }
@@ -581,12 +629,19 @@ class Request {
      *    If not auto parsing, Response->body returns the body
      *    as a string.
      */
-    public function autoParse($auto_parse = true) {
+    public function autoParse($auto_parse = true)
+    {
         $this->auto_parse = $auto_parse;
         return $this;
     }
-    public function withoutAutoParsing() { return $this->autoParse(false); }
-    public function withAutoParsing() { return $this->autoParse(true); }
+    public function withoutAutoParsing()
+    {
+        return $this->autoParse(false);
+    }
+    public function withAutoParsing()
+    {
+        return $this->autoParse(true);
+    }
 
     /**
      * Use a custom function to parse the response.
@@ -594,12 +649,14 @@ class Request {
      * @param Closure $callback Takes the raw body of
      *    the http response and returns a mixed
      */
-    public function parseWith(\Closure $callback) {
+    public function parseWith(\Closure $callback)
+    {
         $this->parse_callback = $callback;
         return $this;
     }
     // @alias parseWith
-    public function parseResponsesWith(\Closure $callback) {
+    public function parseResponsesWith(\Closure $callback)
+    {
         return $this->parseWith($callback);
     }
 
@@ -615,7 +672,8 @@ class Request {
      * @param Closure $callback takes one argument, $payload,
      *    which is the payload that we'll be
      */
-    public function registerPayloadSerializer($mime, \Closure $callback) {
+    public function registerPayloadSerializer($mime, \Closure $callback)
+    {
         $this->payload_serializers[Mime::getFullMime($mime)] = $callback;
         return $this;
     }
@@ -625,7 +683,8 @@ class Request {
      * @return Request $this
      * @param Closure $callback
      */
-    public function serializePayloadWith(\Closure $callback) {
+    public function serializePayloadWith(\Closure $callback)
+    {
         return $this->regregisterPayloadSerializer('*', $callback);
     }
 
@@ -644,7 +703,8 @@ class Request {
      * @param array $args in this case, there should only ever be 1 argument provided
      *    and that argument should be a string value of the header we're setting
      */
-    public function __call($method, $args) {
+    public function __call($method, $args)
+    {
         // This method supports the sends* methods
         // like sendsJSON, sendsForm
         //!method_exists($this, $method) &&
@@ -698,7 +758,8 @@ class Request {
      * Request instantiation), it promotes readability
      * and flexibility within the class.
      */
-    private static function _initializeDefaults() {
+    private static function _initializeDefaults()
+    {
         // This is the only place you will
         // see this constructor syntax.  It
         // is only done here to prevent infinite
@@ -719,7 +780,8 @@ class Request {
      * Doesn't copy variables prefixed with _
      * @return Request this
      */
-    private function _setDefaults() {
+    private function _setDefaults()
+    {
         if (!isset(self::$_template))
             self::_initializeDefaults();
         foreach (self::$_template as $k=>$v) {
@@ -742,7 +804,8 @@ class Request {
      * @param string $method Http Method
      * @param string $mime Mime Type to Use
      */
-    public static function init($method = null, $mime = null) {
+    public static function init($method = null, $mime = null)
+    {
         // Setup the default template if need be
         if (!isset(self::$_template))
             self::_initializeDefaults();
@@ -761,7 +824,8 @@ class Request {
      * Note: It does NOT actually send the request
      * @return Request $this;
      */
-    private function _curlPrep() {
+    private function _curlPrep()
+    {
         // Check for required stuff
         if (!isset($this->uri))
             throw new \Exception('Attempting to send a request before defining a URI endpoint.');

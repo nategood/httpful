@@ -41,7 +41,8 @@ Transfer-Encoding: chunked");
 
 // Helpers
 
-function checkForTestServer() {
+function checkForTestServer()
+{
     $fp = @fsockopen(TEST_SERVER);
 
     if ($fp === false) {
@@ -61,13 +62,15 @@ The local test server requires node.js and can be run via `node tests/runTestSer
 
 // Tests
 
-function testInit() {
+function testInit()
+{
   $r = Request::init();
   // Did we get a 'Request' object?
   assert('Httpful\Request' === get_class($r));
 }
 
-function testMethods() {
+function testMethods()
+{
   $valid_methods = array('get', 'post', 'delete', 'put', 'options', 'head');
   $url = 'http://example.com/';
   foreach ($valid_methods as $method) {
@@ -77,7 +80,8 @@ function testMethods() {
   }
 }
 
-function testDefaults() {
+function testDefaults()
+{
     // Our current defaults are as follows
     $r = Request::init();
     assert(Http::GET === $r->method);
@@ -86,7 +90,8 @@ function testDefaults() {
     assert(false === $r->strict_ssl);
 }
 
-function testShortMime() {
+function testShortMime()
+{
     // Valid short ones
     assert(Mime::JSON === Mime::getFullMime('json'));
     assert(Mime::XML === Mime::getFullMime('xml'));
@@ -103,7 +108,8 @@ function testShortMime() {
     assert(Mime::HTML !== Mime::getFullMime(Mime::JSON));
 }
 
-function testSettingStrictSsl() {
+function testSettingStrictSsl()
+{
     $r = Request::init()
          ->withStrictSsl();
 
@@ -115,7 +121,8 @@ function testSettingStrictSsl() {
     assert(false === $r->strict_ssl);
 }
 
-function testSendsAndExpectsType() {
+function testSendsAndExpectsType()
+{
     $r = Request::init()
         ->sendsAndExpectsType(Mime::JSON);
     assert(Mime::JSON === $r->expected_type);
@@ -137,7 +144,8 @@ function testSendsAndExpectsType() {
     assert(Mime::FORM === $r->content_type);
 }
 
-function testIni() {
+function testIni()
+{
     // Test setting defaults/templates
 
     // Create the template
@@ -165,7 +173,8 @@ function testIni() {
     Request::resetIni();
 }
 
-function testAuthSetup() {
+function testAuthSetup()
+{
     $username = 'nathan';
     $password = 'opensesame';
 
@@ -177,7 +186,8 @@ function testAuthSetup() {
     assert(true === $r->hasBasicAuth());
 }
 
-function testJsonResponseParse() {
+function testJsonResponseParse()
+{
     $req = Request::init()->sendsAndExpects(Mime::JSON);
     $response = new Response(SAMPLE_JSON_RESPONSE, SAMPLE_JSON_HEADER, $req);
 
@@ -187,7 +197,8 @@ function testJsonResponseParse() {
     assert(1 === $response->body->array[0]);
 }
 
-function testXMLResponseParse() {
+function testXMLResponseParse()
+{
     $req = Request::init()->sendsAndExpects(Mime::XML);
     $response = new Response(SAMPLE_XML_RESPONSE, SAMPLE_XML_HEADER, $req);
     $sxe = $response->body;
@@ -204,39 +215,41 @@ function testXMLResponseParse() {
     assert("a string" === (string) $string);
 }
 
-function testSerializePayloadOptions() {
+function testSerializePayloadOptions()
+{
     $req = Request::get(TEST_URL)
         ->sendsJson()
         ->body("Nathan")
         ->alwaysSerializePayload();
 
     $res = $req->send();
-    
-    // Rare, but perfect example of why you might want 
+
+    // Rare, but perfect example of why you might want
     // to use alwaysSerializePayload
-    
+
     assert(is_string($req->serialized_payload));
     assert('"Nathan"' === $req->serialized_payload);
-    
+
     $req = Request::get(TEST_URL)
         ->sendsJson()
         ->body("Nathan")
         ->neverSerializePayload();
-    
+
     $res = $req->send();
     assert(is_string($req->serialized_payload));
     assert('Nathan' === $req->serialized_payload);
-    
+
 }
 
-function testCustomPayloadSerializer($mime_type) {
+function testCustomPayloadSerializer($mime_type)
+{
     $req = Request::get(TEST_URL)
         ->sendsJson()
         ->body("Nathan")
         ->alwaysSerializePayload()
         ->registerPayloadSerializer($mime_type, function($payload) {
             // Screw it.  Our trivial serializer just
-            // always returns the word regardless of 
+            // always returns the word regardless of
             // the $payload
             return 'Apples';
         });
@@ -245,7 +258,8 @@ function testCustomPayloadSerializer($mime_type) {
     assert('Apples' === $req->serialized_payload);
 }
 
-function testParsingContentTypeCharset() {
+function testParsingContentTypeCharset()
+{
     $req = Request::init()->sendsAndExpects(Mime::JSON);
     // $response = new Response(SAMPLE_JSON_RESPONSE, "", $req);
     // // Check default content type of iso-8859-1
@@ -257,7 +271,8 @@ Content-Type: text/plain; charset=utf-8", $req);
     assert($response->charset === 'utf-8');
 }
 
-function testNoAutoParse() {
+function testNoAutoParse()
+{
     $req = Request::init()->sendsAndExpects(Mime::JSON)->withoutAutoParsing();
     $response = new Response(SAMPLE_JSON_RESPONSE, SAMPLE_JSON_HEADER, $req);
     assert(is_string($response->body));
@@ -266,21 +281,24 @@ function testNoAutoParse() {
     assert(is_object($response->body));
 }
 
-function testSendsSugar() {
+function testSendsSugar()
+{
     $req = Request::init()->sendsJson();
     $req2 = Request::init()->sends(Mime::JSON);
     assert($req2->content_type === $req->content_type);
     assert($req->content_type === 'application/json');
 }
 
-function testExpectsSugar() {
+function testExpectsSugar()
+{
     $req = Request::init()->expectsJson();
     $req2 = Request::init()->expects(Mime::JSON);
     assert($req2->expected_type === $req->expected_type);
     assert($req->expected_type === 'application/json');
 }
 
-function testCustomParse() {
+function testCustomParse()
+{
     $f = function($body) {
         return $body . $body;
     };
@@ -292,7 +310,8 @@ function testCustomParse() {
     assert($raw_body . $raw_body === $response->body);
 }
 
-function testCustomHeader() {
+function testCustomHeader()
+{
     $value = "custom header value";
     $r = Request::init()
         ->withXCustomHeader($value);
@@ -303,7 +322,8 @@ function testCustomHeader() {
 // The test server basically just echoes what it
 // receives in a JSON response in the format of:
 // {requestMethod:"", requestHeaders:{}, requestBody: ""}
-function testSendGet() {
+function testSendGet()
+{
     $response =
         Request::get(TEST_URL)
             ->expects(Mime::JSON)
@@ -312,7 +332,8 @@ function testSendGet() {
     assert(Http::GET === $response->body->requestMethod);
 }
 
-function testSendPost() {
+function testSendPost()
+{
     $response =
       Request::post(TEST_URL)
         ->sendsAndExpects(Mime::JSON)
@@ -323,7 +344,8 @@ function testSendPost() {
     assert(Http::POST === $response->body->requestMethod);
 }
 
-function testSendPut() {
+function testSendPut()
+{
     $response =
       Request::put(TEST_URL)
         ->sendsAndExpects(Mime::JSON)
@@ -341,7 +363,8 @@ function testSendPut() {
     assert('{"key":"value"}' === $response->body->requestBody);
 }
 
-function testSendDelete() {
+function testSendDelete()
+{
     $response =
         Request::delete(TEST_URL)
             ->expects(Mime::JSON)
@@ -350,17 +373,19 @@ function testSendDelete() {
     assert(Http::DELETE === $response->body->requestMethod);
 }
 
-function testParsingResponseHeaders() {
+function testParsingResponseHeaders()
+{
     $response =
         Request::get(TEST_URL)
             ->expects(Mime::JSON)
             ->sendIt();
-    
+
     assert(is_array($response->headers));
     assert($response->headers['Content-Type'] === 'application/json');
 }
 
-function testAddOnCurlOption() {
+function testAddOnCurlOption()
+{
     // Let's use the NOBODY curl opt
     // to override our post.  This should
     // result in getting no response from the
@@ -386,32 +411,35 @@ function testAddOnCurlOption() {
     assert('HELLO' === json_decode($bodyWithoutOverride)->requestBody);
 }
 
-function test200StatusCode() {
+function test200StatusCode()
+{
     $res = Request::get(TEST_URL)
         ->sendsJson()
         ->sendIt();
     assert(200 === $res->code);
 }
 
-function test400StatusCode() {
+function test400StatusCode()
+{
     $res = Request::get(TEST_URL_400)
         ->sendsJson()
         ->sendIt();
     assert(400 === $res->code);
 }
 
-function testStatusCodeParse() {
+function testStatusCodeParse()
+{
     $req = Request::get(TEST_URL);
-    
+
     $res = new Response(SAMPLE_JSON_RESPONSE, SAMPLE_JSON_HEADER, $req);
     assert(200 === $res->code);
-    
+
     $four_oh_four_headers = "HTTP/1.1 400 OK
 Content-Type: application/json";
 
     $res = new Response(SAMPLE_JSON_RESPONSE, $four_oh_four_headers, $req);
     assert(400 === $res->code);
-    
+
     // Let's make sure we catch malformed HTTP responses
     try {
         $bad_headers = "Wait, this ain't a stinking HTTP response!";
