@@ -1,15 +1,15 @@
 <?php
 /**
  * DO NOT EDIT
- * 
- * THIS FILE WAS AUTOMATICALLY GENERATED.  IT IS A 
+ *
+ * THIS FILE WAS AUTOMATICALLY GENERATED.  IT IS A
  * CONCATENATION OF THE SOURCE CODE FOR HTTPFUL.  ITS
  * PURPOSE IS TO HAVE A SIMPLE, SINGLE FILE DOWNLOAD
  * AVAILABLE FOR EASY ONE OFF, DROP IN USAGE, WITHOUT NEEDING
- * TO DOWNLOAD AN ENTIRE REPO.  THIS FILE IS AVAILABLE AS A 
+ * TO DOWNLOAD AN ENTIRE REPO.  THIS FILE IS AVAILABLE AS A
  * STANDALONE DOWNLOAD FROM GITHUB AND THE PROJECT PAGE.
  *
- * FOR MORE ABOUT HTTPFUL VISIT 
+ * FOR MORE ABOUT HTTPFUL VISIT
  * https://github.com/nategood/httpful
  */
 namespace Httpful;
@@ -374,6 +374,41 @@ class Request
     public function authenticateWith($username, $password)
     {
         return $this->basicAuth($username, $password);
+    }
+    // @alias of basicAuth
+    public function authenticateWithBasic($username, $password)
+    {
+        return $this->basicAuth($username, $password);
+    }
+
+    /**
+     * @return is this request setup for client side cert?
+     */
+    public function hasClientSideCert() {
+        return isset($this->client_cert) && isset($this->client_key);
+    }
+
+    /**
+     * Use Client Side Cert Authentication
+     * @return Response $this
+     * @param string $key file path to client key
+     * @param string $cert file path to client cert
+     * @param string $passphrase for client key
+     * @param string $encoding default PEM
+     */
+    public function clientSideCert($cert, $key, $passphrase = null, $encoding = 'PEM')
+    {
+        $this->client_cert          = $cert;
+        $this->client_key           = $key;
+        $this->client_passphrase    = $passphrase;
+        $this->client_encoding      = $encoding;
+
+        return $this;
+    }
+    // @alias of basicAuth
+    public function authenticateWithCert($cert, $key, $passphrase = null, $encoding = 'PEM')
+    {
+        return $this->clientSideCert($cert, $key, $passphrase, $encoding);
     }
 
     /**
@@ -776,6 +811,22 @@ class Request
 
         if ($this->hasBasicAuth()) {
             curl_setopt($ch, CURLOPT_USERPWD, $this->username . ':' . $this->password);
+        }
+
+        if ($this->hasClientSideCert()) {
+
+            if (!file_exists($this->client_key))
+                throw new \Exception('Could not read Client Key');
+
+            if (!file_exists($this->client_cert))
+                throw new \Exception('Could not read Client Certificate');
+
+            curl_setopt($ch, CURLOPT_SSLCERTTYPE,   $this->client_encoding);
+            curl_setopt($ch, CURLOPT_SSLKEYTYPE,    $this->client_encoding);
+            curl_setopt($ch, CURLOPT_SSLCERT,       $this->client_cert);
+            curl_setopt($ch, CURLOPT_SSLKEY,        $this->client_key);
+            curl_setopt($ch, CURLOPT_SSLKEYPASSWD,  $this->client_passphrase);
+            // curl_setopt($ch, CURLOPT_SSLCERTPASSWD,  $this->client_cert_passphrase);
         }
 
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $this->strict_ssl);
