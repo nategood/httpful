@@ -182,6 +182,41 @@ class Request
     {
         return $this->basicAuth($username, $password);
     }
+    // @alias of basicAuth
+    public function authenticateWithBasic($username, $password)
+    {
+        return $this->basicAuth($username, $password);
+    }
+
+    /**
+     * @return is this request setup for client side cert?
+     */
+    public function hasClientSideCert() {
+        return isset($this->client_cert) && isset($this->client_key);
+    }
+    
+    /**
+     * Use Client Side Cert Authentication
+     * @return Response $this
+     * @param string $key file path to client key
+     * @param string $cert file path to client cert
+     * @param string $passphrase for client key
+     * @param string $encoding default PEM
+     */
+    public function clientSideCert($cert, $key, $passphrase = null, $encoding = 'PEM') 
+    {
+        $this->client_cert          = $cert;
+        $this->client_key           = $key;
+        $this->client_passphrase    = $passphrase;
+        $this->client_encoding      = $encoding;
+        
+        return $this;
+    }
+    // @alias of basicAuth
+    public function authenticateWithCert($cert, $key, $passphrase = null, $encoding = 'PEM')
+    {
+        return $this->clientSideCert($cert, $key, $passphrase, $encoding);
+    }
 
     /**
      * Set the body of the request
@@ -583,6 +618,14 @@ class Request
 
         if ($this->hasBasicAuth()) {
             curl_setopt($ch, CURLOPT_USERPWD, $this->username . ':' . $this->password);
+        }
+        
+        if ($this->hasClientSideCert()) {
+            curl_setopt($ch, CURLOPT_SSLCERTTYPE,   $this->client_encoding);
+            curl_setopt($ch, CURLOPT_SSLKEYTYPE,    $this->client_encoding);
+            curl_setopt($ch, CURLOPT_SSLCERT,       $this->client_cert);
+            curl_setopt($ch, CURLOPT_SSLKEY,        $this->client_key);
+            curl_setopt($ch, CURLOPT_SSLKEYPASSWD,  $this->client_passphrase);
         }
 
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $this->strict_ssl);
