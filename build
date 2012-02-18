@@ -1,0 +1,53 @@
+#!/usr/bin/php
+<?php
+
+/**
+ * Build the whole library into a single file
+ * as an easy drop in solution as opposed to 
+ * relying on autoloader.  Sometimes we just 
+ * want to hack with an API as a one off thing.
+ * Httpful should make this easy.
+ * 
+ * This runs as a git hook.
+ */
+ 
+echo "
+HTTPFUL DOWNLOAD BUILD...";
+
+$base_dir = dirname(__FILE__) . '/src/Httpful/';
+ob_start();
+echo '
+<?php
+/**
+ * DO NOT EDIT
+ * 
+ * THIS FILE WAS AUTOMATICALLY GENERATED.  IT IS A 
+ * CONCATENATION OF THE SOURCE CODE FOR HTTPFUL.  ITS
+ * PURPOSE IS TO HAVE A SIMPLE, SINGLE FILE DOWNLOAD
+ * AVAILABLE FOR EASY ONE OFF, DROP IN USAGE, WITHOUT NEEDING
+ * TO DOWNLOAD AN ENTIRE REPO.  THIS FILE IS AVAILABLE AS A 
+ * STANDALONE DOWNLOAD FROM GITHUB AND THE PROJECT PAGE.
+ *
+ * FOR MORE ABOUT HTTPFUL VISIT 
+ * https://github.com/nategood/httpful
+ */
+
+namespace Httpful;
+';
+
+foreach (scandir($base_dir) as $f) {
+    $path = $base_dir . $f;
+    if ($f === "." || $f === ".." || is_dir($path))
+        continue;
+    // echo preg_replace("/((\<\?(php)?) | (namespace Httpful;))/", "", file_get_contents($path)), "\n";
+    echo preg_replace("/(\<\?(php)?)|(namespace Httpful;)/", "", file_get_contents($path)), "\n";
+}
+$download = dirname(__FILE__) . '/downloads/httpful.php';
+$fh = fopen($download, 'w');
+fwrite($fh, ob_get_clean());
+fclose($fh);
+
+// Add it!
+exec("git add $download");
+
+echo "                  [ OK ]\n";
