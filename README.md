@@ -82,8 +82,21 @@ Often, if we are working with an API, a lot of the headers we send to that API r
     // of our template by default.  We can override
     // any of these settings by settings them on this 
     // new instance as we've done with expected type.
-    $r = \Httpful\Request::init()->expectsJson();
+    $r = \Httpful\Request::get($uri)->expectsJson();
 
+## Client Side Cert Authentication (and Basic)
+
+In addition to Basic Auth support, Httpful supports [client side cert auth support](http://blog.nategood.com/client-side-certificate-authentication-in-ngi) which is an authentication excellent option for APIs that may have more stringent authentication demands.
+
+    use \Httpful\Request;
+    
+    $key        = '/path/to/client/key.pem';
+    $crt        = '/path/to/client/crt.pem';
+    $passphrase = 'for-your-key-if-needed';
+    
+    $request = Request::get($uri)
+        ->authenticateWithCert($cert, $key, $passphrase)
+        ->sendIt();
 
 # Notes about Source Code
 You will see several "alias" methods: more readable method definitions that wrap their more concise counterparts.  You will also notice no public constructor.  This too adds to the readability and "chainabilty" of the library.
@@ -94,8 +107,4 @@ Because this is a HTTP Client library, to thoroughly test it, we need an HTTP se
 
 # Todo
 
- - Add YAML parsing support out of the box
- - Support SSL Client Side Cert Authentication
- - Add support for URI templates
- - Move the unit tests to more standard PHPUnit syntax
-
+See [Issues](https://github.com/nategood/httpful/issues?state=open) for details about the project roadmap and outstanding TODO items
