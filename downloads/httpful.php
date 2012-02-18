@@ -1,4 +1,3 @@
-
 <?php
 /**
  * DO NOT EDIT
@@ -13,7 +12,6 @@
  * FOR MORE ABOUT HTTPFUL VISIT 
  * https://github.com/nategood/httpful
  */
-
 namespace Httpful;
 
 

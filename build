@@ -3,35 +3,33 @@
 
 /**
  * Build the whole library into a single file
- * as an easy drop in solution as opposed to 
- * relying on autoloader.  Sometimes we just 
+ * as an easy drop in solution as opposed to
+ * relying on autoloader.  Sometimes we just
  * want to hack with an API as a one off thing.
  * Httpful should make this easy.
- * 
+ *
  * This runs as a git hook.
  */
- 
+
 echo "
 HTTPFUL DOWNLOAD BUILD...";
 
 $base_dir = dirname(__FILE__) . '/src/Httpful/';
 ob_start();
-echo '
-<?php
+echo '<?php
 /**
  * DO NOT EDIT
- * 
- * THIS FILE WAS AUTOMATICALLY GENERATED.  IT IS A 
+ *
+ * THIS FILE WAS AUTOMATICALLY GENERATED.  IT IS A
  * CONCATENATION OF THE SOURCE CODE FOR HTTPFUL.  ITS
  * PURPOSE IS TO HAVE A SIMPLE, SINGLE FILE DOWNLOAD
  * AVAILABLE FOR EASY ONE OFF, DROP IN USAGE, WITHOUT NEEDING
- * TO DOWNLOAD AN ENTIRE REPO.  THIS FILE IS AVAILABLE AS A 
+ * TO DOWNLOAD AN ENTIRE REPO.  THIS FILE IS AVAILABLE AS A
  * STANDALONE DOWNLOAD FROM GITHUB AND THE PROJECT PAGE.
  *
- * FOR MORE ABOUT HTTPFUL VISIT 
+ * FOR MORE ABOUT HTTPFUL VISIT
  * https://github.com/nategood/httpful
  */
-
 namespace Httpful;
 ';
 
