@@ -37,7 +37,6 @@ foreach (scandir($base_dir) as $f) {
     $path = $base_dir . $f;
     if ($f === "." || $f === ".." || is_dir($path))
         continue;
-    // echo preg_replace("/((\<\?(php)?) | (namespace Httpful;))/", "", file_get_contents($path)), "\n";
     echo preg_replace("/(\<\?(php)?)|(namespace Httpful;)/", "", file_get_contents($path)), "\n";
 }
 $download = dirname(__FILE__) . '/downloads/httpful.php';
