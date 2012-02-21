@@ -39,7 +39,7 @@ Anyone that has used jQuery can attest to the awesomeness and conciseness of "ch
 
 ## Make the Important Stuff Easy
 
-Choosing HTTP methods beyond GET and POST, quickly setting `Content-Type`s, setting request payloads... these are the things we should be able to do quickly.  This library makes those things easy using the aforementioned chaining.  Let's show a quick example doing a few of our favorite things.
+Choosing HTTP methods beyond GET and POST, quickly setting `Content-Type`, setting request payloads, authenticating... these are the things we should be able to do quickly.  Httpful library makes those things easy using the aforementioned chaining.  Let's show a quick example doing a few of our favorite things.
 
     $response = \Httpful\Request::put($uri)         // Build a PUT request...
         ->sendsJson()                               // tell it we're sending (Content-Type) JSON...
@@ -104,7 +104,7 @@ Often, if we are working with an API, a lot of the headers we send to that API r
     // new instance as we've done with expected type.
     $r = \Httpful\Request::get($uri)->expectsJson();
 
-## Client Side Cert Authentication (and Basic)
+## Client Side Cert Authentication
 
 In addition to Basic Auth support, Httpful supports [client side cert auth support](http://blog.nategood.com/client-side-certificate-authentication-in-ngi) which is an authentication excellent option for APIs that may have more stringent authentication demands.
 
