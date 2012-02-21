@@ -2,17 +2,36 @@
 
 Httpful is a simple Http Client library for PHP 5.3+.  There is an emphasis of readability, simplicity, and flexibility – basically provide the features and flexibility to get the job done and make those features really easy to use.
 
-# Use it
+# Sneak Peak
 
-Basic example.  Fire off a GET request to FreeBase API to find albums by The Dead Weather.  Notice, we expect the data returned to be JSON formatted and the library parses it nicely.
+Here's something to whet your appetite.  Fire off a GET request to FreeBase API to find albums by The Dead Weather.  Notice, we expect the data returned to be JSON formatted and the library parses it nicely into a native PHP object.
 
+    use Httpful\Request;
     $uri = "https://www.googleapis.com/freebase/v1/mqlread?query=%7B%22type%22:%22/music/artist%22%2C%22name%22:%22The%20Dead%20Weather%22%2C%22album%22:%5B%5D%7D";
-    $response = \Httpful\Request::get($uri)
-        ->expectsJson()
-        ->sendIt();
+    
+    $response = Request::get($uri)->expectsJson()->sendIt();
     echo 'The Dead Weather has ' . count($response->body->result->album) . ' albums.';
 
-*For more details, checkout the examples directory*
+# Install
+
+There are two options to get up and running.  The first is the usual `git clone` + PSR-0 route and the second is a single file download route perfect for quick hacking.
+
+## Quick Install
+
+For these quick one off scripts, the easiest way to get started is to simply include the library as a single [file available in GitHub downloads](https://github.com/downloads/nategood/httpful/httpful.php). 
+
+    <?php
+    include('./httpful.php');
+    $r = \Httpful\Request::get($uri)->sendIt();
+    ...
+    
+## Usual Install
+
+The library also provides a more traditional PSR-0 compliant option.  `git clone` the repo into your vendors directory.  If your project isn't already using a compatible autoloader, the library includes a very basic autoloader that you can use by just including the `bootstrap.php` file.
+
+*For more examples, checkout the examples directory*
+
+# Features
 
 ## Chaining
 
@@ -22,10 +41,11 @@ Anyone that has used jQuery can attest to the awesomeness and conciseness of "ch
 
 Choosing HTTP methods beyond GET and POST, quickly setting `Content-Type`s, setting request payloads... these are the things we should be able to do quickly.  This library makes those things easy using the aforementioned chaining.  Let's show a quick example doing a few of our favorite things.
 
-    $response = \Httpful\Request::put($uri)        // Build a PUT request...
-        ->sendsJson()                      // let's tell it we're sending (Content-Type) JSON...
-        ->body('{"json":"is awesome", "httpful": "is too"}') // lets attach a body/payload...
-        ->sendIt();                        // and finally, fire that thing off!
+    $response = \Httpful\Request::put($uri)         // Build a PUT request...
+        ->sendsJson()                               // tell it we're sending (Content-Type) JSON...
+        ->authenticateWith('username', 'password')  // authenticate with basic auth...
+        ->body('{"json":"is awesome"}')             // attach a body/payload...
+        ->sendIt();                                 // and finally, fire that thing off!
 
 ## Custom Headers
 
@@ -33,8 +53,8 @@ The library allows for custom headers without sacrificing readability.  Simply c
 
     $response = \Httpful\Request::get($uri)
         ->expectsJson()
-        ->xExampleHeader("My Value")            // Add in a custom header X-Example-Header
-        ->withXAnotherHeader("Another Value")   // Sugar: You can also prefix the method with "with"
+        ->xExampleHeader("My Value")                // Add in a custom header X-Example-Header
+        ->withXAnotherHeader("Another Value")       // Sugar: You can also prefix the method with "with"
         ->sendIt();
 
 ## Smart Parsing
@@ -52,9 +72,9 @@ If you expect (and get) a response in a supported format (JSON, Form Url Encoded
 
 ## Custom Parsing
 
-Best of all, if the library doesn't automatically parse your mime type, or if you aren't happy with how the library parses it, you can add in a custom response parser with the `parseWith` method.  Here's a trvial example:
+Best of all, if the library doesn't automatically parse your mime type, or if you aren't happy with how the library parses it, you can add in a custom response parser with the `parseWith` method.  Here's a trivial example:
 
-    // Attach our own really handler that could naively parse comma 
+    // Attach our own handler that could naively parse comma 
     // separated values into an array
     $response = \Httpful\Request::get($uri)
         ->parseWith(function($body) {
