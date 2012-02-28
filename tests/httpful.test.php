@@ -77,8 +77,8 @@ function testMethods()
   $url = 'http://example.com/';
   foreach ($valid_methods as $method) {
     $r = call_user_func(array('Httpful\Request', $method), $url);
-    assert('Httpful\Request' === get_class($r));
-    assert(strtoupper($method) === $r->method);
+    assert('Httpful\Request'    === get_class($r));
+    assert(strtoupper($method)  === $r->method);
   }
 }
 
@@ -86,28 +86,26 @@ function testDefaults()
 {
     // Our current defaults are as follows
     $r = Request::init();
-    assert(Http::GET === $r->method);
-    assert(Mime::JSON === $r->expected_type);
-    assert(Mime::JSON === $r->content_type);
-    assert(false === $r->strict_ssl);
+    assert(Http::GET    === $r->method);
+    assert(false        === $r->strict_ssl);
 }
 
 function testShortMime()
 {
     // Valid short ones
-    assert(Mime::JSON === Mime::getFullMime('json'));
-    assert(Mime::XML === Mime::getFullMime('xml'));
-    assert(Mime::HTML === Mime::getFullMime('html'));
+    assert(Mime::JSON   === Mime::getFullMime('json'));
+    assert(Mime::XML    === Mime::getFullMime('xml'));
+    assert(Mime::HTML   === Mime::getFullMime('html'));
 
     // Valid long ones
-    assert(Mime::JSON === Mime::getFullMime(Mime::JSON));
-    assert(Mime::XML === Mime::getFullMime(Mime::XML));
-    assert(Mime::HTML === Mime::getFullMime(Mime::HTML));
+    assert(Mime::JSON   === Mime::getFullMime(Mime::JSON));
+    assert(Mime::XML    === Mime::getFullMime(Mime::XML));
+    assert(Mime::HTML   === Mime::getFullMime(Mime::HTML));
 
     // No false positives
-    assert(Mime::XML !== Mime::getFullMime(Mime::HTML));
-    assert(Mime::JSON !== Mime::getFullMime(Mime::XML));
-    assert(Mime::HTML !== Mime::getFullMime(Mime::JSON));
+    assert(Mime::XML    !== Mime::getFullMime(Mime::HTML));
+    assert(Mime::JSON   !== Mime::getFullMime(Mime::XML));
+    assert(Mime::HTML   !== Mime::getFullMime(Mime::JSON));
 }
 
 function testSettingStrictSsl()
@@ -436,11 +434,11 @@ function testStatusCodeParse()
     $res = new Response(SAMPLE_JSON_RESPONSE, SAMPLE_JSON_HEADER, $req);
     assert(200 === $res->code);
 
-    $four_oh_four_headers = "HTTP/1.1 400 OK
+    $four_oh_four_headers = "HTTP/1.1 404 Not Found
 Content-Type: application/json";
 
     $res = new Response(SAMPLE_JSON_RESPONSE, $four_oh_four_headers, $req);
-    assert(400 === $res->code);
+    assert(404 === $res->code);
 
     // Let's make sure we catch malformed HTTP responses
     try {
@@ -452,6 +450,21 @@ Content-Type: application/json";
     assert(true === $yep_caught_it);
 }
 
+function testHasErrors() {
+    $req = Request::get(TEST_URL);
+    
+    $four_oh_four_headers = "HTTP/1.1 404 Not Found
+Content-Type: application/json";
+    
+    $res = new Response(SAMPLE_JSON_RESPONSE, $four_oh_four_headers, $req);
+    assert(true === $res->hasErrors());
+    
+    $two_oh_oh = "HTTP/1.1 200 OK
+Content-Type: application/json";
+
+    $res = new Response(SAMPLE_JSON_RESPONSE, $two_oh_oh, $req);
+    assert(false === $res->hasErrors());
+}
 
 testInit();
 testMethods();
@@ -469,6 +482,7 @@ testExpectsSugar();
 testNoAutoParse();
 testParsingContentTypeCharset();
 testStatusCodeParse();
+testHasErrors(); 
 
 checkForTestServer();
 

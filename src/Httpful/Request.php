@@ -28,8 +28,8 @@ class Request
            $method                  = Http::GET,
            $headers                 = array(),
            $strict_ssl              = false,
-           $content_type            = Mime::JSON,
-           $expected_type           = Mime::JSON,
+           $content_type,
+           $expected_type,
            $additional_curl_opts    = array(),
            $auto_parse              = true,
            $serialize_payload_method = self::SERIALIZE_PAYLOAD_SMART,
@@ -551,8 +551,6 @@ class Request
 
         // This is more like it...
         self::$_template
-            ->sendsType(Mime::JSON)
-            ->expectsType(Mime::JSON)
             ->withoutStrictSSL();
     }
 

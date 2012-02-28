@@ -35,6 +35,21 @@ class Response
 
         $this->body         = $this->_parse($body);
     }
+    
+    /**
+     * @return bool Did we receive a 400 or 500?
+     */
+    public function hasErrors() {
+        return $this->code === 0 || 
+            ($this->code >= 400 && $this->code <= 600);
+    }
+    
+    /**
+     * @return return bool
+     */
+    public function hasBody() {
+        return !empty($this->body);
+    }
 
     /**
      * Parse the response into a clean data structure
@@ -56,8 +71,9 @@ class Response
             return call_user_func($this->request->parse_callback, $body);
         }
 
-        // Fallback to sensible parsing defaults
-        $parse_with = (!$this->request->expected_type && isset($this->content_type)) ?
+        // Use the Content-Type from the response if we didn't explicitly 
+        // specify one as part of our `Request`
+        $parse_with = (empty($this->request->expected_type) && isset($this->content_type)) ?
             $this->content_type :
             $this->request->expected_type;
 

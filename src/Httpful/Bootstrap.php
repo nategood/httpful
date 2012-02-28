@@ -30,14 +30,21 @@ class Bootstrap
         $base       = dirname(dirname(__FILE__));
         $parts      = explode($ns_glue, $classname);
         $path       = $base . $dir_glue . implode($dir_glue, $parts) . '.php';
+
+        if (file_exists($path)) {
+            require_once($path);
+            // echo "included $path\n";
+            return true;
+        }
         
-        require_once($path);
+        return false;
     }
-    
-    /**
-     * Compile the library into a single file
-     */
-    public static function compile() {
-        // @todo 
-    }
+
+    // /**
+    //  * Compile the library into a single file
+    //  */
+    // public static function compile() 
+    // {
+    //     // @todo 
+    // }
 }
