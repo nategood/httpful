@@ -40,8 +40,7 @@ class Response
      * @return bool Did we receive a 400 or 500?
      */
     public function hasErrors() {
-        return $this->code === 0 || 
-            ($this->code >= 400 && $this->code <= 600);
+        return $this->code < 100 || $this->code >= 400;
     }
     
     /**
