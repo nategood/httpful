@@ -466,6 +466,14 @@ Content-Type: application/json";
     assert(false === $res->hasErrors());
 }
 
+function testFollowRedirect() {
+    $req = Request::get(TEST_URL . '/301')->doNotFollowRedirects()->send();
+    assert(301 === $req->code);
+    
+    $req = Request::get(TEST_URL . '/301')->followRedirects()->send();
+    assert(200 === $req->code);
+}
+
 testInit();
 testMethods();
 testDefaults();
@@ -498,3 +506,4 @@ testSerializePayloadOptions();
 testCustomPayloadSerializer('application/json');
 testCustomPayloadSerializer('json');
 testCustomPayloadSerializer('*');
+testFollowRedirect();

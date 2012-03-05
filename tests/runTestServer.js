@@ -5,7 +5,15 @@ var http = require('http');
 http.createServer(function(req, res){
 	var echo = "";
 	var code = req.url == '/400' ? 400 : 200;
-    res.writeHead(code, {"Content-Type":"application/json"});
+	var headers = {"Content-Type":"application/json"};
+	
+	// For the 301
+	if (req.url === '/301') {
+	    headers["Location"] = "http://localhost:8008/";
+	    code = "301";
+	}
+	
+    res.writeHead(code, headers);
     req.on('data', function(data){
         echo += data;
     });

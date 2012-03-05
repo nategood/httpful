@@ -39,6 +39,7 @@ class Request
            $payload,
            $parse_callback,
            $error_callback,
+           $follow_redirects        = false,
            $payload_serializers     = array();
 
     // Options
@@ -127,6 +128,27 @@ class Request
     }
 
     /**
+     * If the response is a 301 or 302 redirect, automatically
+     * send off another request to that location
+     * @return Request $this
+     * @param bool $follow follow or not to follow
+     */
+    public function followRedirects($follow = true)
+    {
+        $this->follow_redirects = $follow;
+        return $this;
+    }
+
+    /**
+     * @return Request $this
+     * @see Request::followRedirects()
+     */
+    public function doNotFollowRedirects()
+    {
+        return $this->followRedirects(false);
+    }
+
+    /**
      * Actually send off the request, and parse the response
      * @return string|associative array of parsed results
      * @throws \Exception when unable to parse or communicate w server
@@ -143,9 +165,13 @@ class Request
             throw new \Exception('Unable to connect.');
         }
 
-        list($header, $body) = explode("\r\n\r\n", $result, 2);
+        $info = curl_getinfo($this->_ch);
+        $response = explode("\r\n\r\n", $result, 2 + $info['redirect_count']);
+        
+        $body = array_pop($response);
+        $headers = array_pop($response);
 
-        return new Response($body, $header, $this);
+        return new Response($body, $headers, $this);
     }
     public function sendIt()
     {
@@ -354,7 +380,7 @@ class Request
     }
 
     /**
-     * See `alwaysSerializePayload`
+     * @see Request::alwaysSerializePayload()
      * @return Request
      */
     public function neverSerializePayload()
@@ -363,8 +389,8 @@ class Request
     }
 
     /**
-     * See `alwaysSerializePayload`
      * This method is the default behavior
+     * @see Request::alwaysSerializePayload()
      * @return Request
      */
     public function smartSerializePayload()
@@ -375,8 +401,9 @@ class Request
     /**
      * Add an additional header to the request
      * Can also use the cleaner syntax of
-     * $Request->withMyHeaderName($my_value);  See the
-     * `__call` method.
+     * $Request->withMyHeaderName($my_value);
+     * @see Request::__call()
+     *
      * @return Request this
      * @param string $header_name
      * @param string $value
@@ -415,10 +442,20 @@ class Request
         $this->auto_parse = $auto_parse;
         return $this;
     }
+    
+    /**
+     * @see Request::autoParse()
+     * @return Request
+     */
     public function withoutAutoParsing()
     {
         return $this->autoParse(false);
     }
+    
+    /**
+     * @see Request::autoParse()
+     * @return Request
+     */
     public function withAutoParsing()
     {
         return $this->autoParse(true);
@@ -427,7 +464,7 @@ class Request
     /**
      * Use a custom function to parse the response.
      * @return Request this
-     * @param Closure $callback Takes the raw body of
+     * @param \Closure $callback Takes the raw body of
      *    the http response and returns a mixed
      */
     public function parseWith(\Closure $callback)
@@ -435,7 +472,12 @@ class Request
         $this->parse_callback = $callback;
         return $this;
     }
-    // @alias parseWith
+    
+    /**
+     * @see Request::parseResponsesWith()
+     * @return Request $this
+     * @param \Closure $callback
+     */
     public function parseResponsesWith(\Closure $callback)
     {
         return $this->parseWith($callback);
@@ -460,7 +502,7 @@ class Request
     }
 
     /**
-     * See`registerPayloadSerializer`
+     * @see Request::registerPayloadSerializer()
      * @return Request $this
      * @param Closure $callback
      */
@@ -633,6 +675,11 @@ class Request
             curl_setopt($ch, CURLOPT_SSLKEYPASSWD,  $this->client_passphrase);
             // curl_setopt($ch, CURLOPT_SSLCERTPASSWD,  $this->client_cert_passphrase);
         }
+        
+        if ($this->follow_redirects) {
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_MAXREDIRS, 25);
+        }
 
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $this->strict_ssl);
 
@@ -676,7 +723,7 @@ class Request
      * that are not otherwise accessible from the rest of the API.
      * @return Request $this
      * @param string $curlopt
-     * @param $curloptval $mixed
+     * @param mixed $curloptval
      */
     public function addOnCurlOption($curlopt, $curloptval)
     {
@@ -692,9 +739,9 @@ class Request
      * Renamed from _detectPayload to _serializePayload as of
      * 2012-02-15.
      *
-     * Added in support for custom payload serializers.  See
-     * `registerPayloadSerializer`.  The serialize_payload_method
-     * stuff still holds true though.
+     * Added in support for custom payload serializers.
+     * The serialize_payload_method stuff still holds true though.
+     * @see Request::registerPayloadSerializer()
      *
      * @return string
      * @param mixed $payload
@@ -728,6 +775,9 @@ class Request
         }
     }
 
+    /**
+     * @author Zack Douglas <zack@zackerydouglas.info>
+     */
     private function _future_serializeAsXml($value, $node = null, $dom = null)
     {
         if (!$dom) {
@@ -756,6 +806,9 @@ class Request
         }
         return array($node, $dom);
     }
+    /**
+     * @author Zack Douglas <zack@zackerydouglas.info>
+     */
     private function _future_serializeArrayAsXml($value, &$parent, &$dom)
     {
         foreach ($value as $k => &$v) {
@@ -769,6 +822,9 @@ class Request
         }
         return array($parent, $dom);
     }
+    /**
+     * @author Zack Douglas <zack@zackerydouglas.info>
+     */
     private function _future_serializeObjectAsXml($value, &$parent, &$dom)
     {
         $refl = new \ReflectionObject($value);
