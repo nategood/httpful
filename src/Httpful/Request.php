@@ -565,7 +565,7 @@ class Request
             $method = substr($method, 4);
 
         // Precede upper case letters with dashes, uppercase the first letter of method
-        $header = ucwords(preg_replace('/[A-Z]/', '-$1', $method));
+        $header =  substr(ucwords(preg_replace('/([A-Z])/', '-$1', $method)), 1);
         $this->addHeader($header, $args[0]);
         return $this;
     }
@@ -876,6 +876,18 @@ class Request
     public static function put($uri, $payload = null, $mime = null)
     {
         return self::init(Http::PUT)->uri($uri)->body($payload, $mime);
+    }
+
+    /**
+     * HTTP Method Patch
+     * @return Request
+     * @param string $uri optional uri to use
+     * @param string $payload data to send in body of request
+     * @param string $mime MIME to use for Content-Type
+     */
+    public static function patch($uri, $payload = null, $mime = null)
+    {
+        return self::init(Http::PATCH)->uri($uri)->body($payload, $mime);
     }
 
     /**

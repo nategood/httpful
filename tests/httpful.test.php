@@ -315,7 +315,9 @@ function testCustomHeader()
     $value = "custom header value";
     $r = Request::init()
         ->withXCustomHeader($value);
-    assert($value, $r->headers['X-Custom-Header']);
+
+    assert(!empty($r->headers['X-Custom-Header']));
+    assert($value == $r->headers['X-Custom-Header']);
 }
 
 // Tests that require the test server to be running
@@ -491,6 +493,7 @@ testNoAutoParse();
 testParsingContentTypeCharset();
 testStatusCodeParse();
 testHasErrors(); 
+testCustomHeader();
 
 checkForTestServer();
 
@@ -507,3 +510,4 @@ testCustomPayloadSerializer('application/json');
 testCustomPayloadSerializer('json');
 testCustomPayloadSerializer('*');
 testFollowRedirect();
+

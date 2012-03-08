@@ -12,6 +12,7 @@ class Http
     const POST      = 'POST';
     const PUT       = 'PUT';
     const DELETE    = 'DELETE';
+    const PATCH     = 'PATCH';
     const OPTIONS   = 'OPTIONS';
     const TRACE     = 'TRACE';
 
@@ -49,7 +50,7 @@ class Http
         // Though it is possible to be idempotent, POST
         // is not guarunteed to be, and more often than
         // not, it is not.
-        return array(self::HEAD, self::GET, self::PUT, self::DELETE, self::OPTIONS, self::TRACE);
+        return array(self::HEAD, self::GET, self::PUT, self::DELETE, self::OPTIONS, self::TRACE, self::PATCH);
     }
 
     /**
@@ -58,7 +59,7 @@ class Http
      */
     public static function isIdempotent($method)
     {
-        return in_array(self::safeidempotentMethodsMethods());
+        return in_array($method, self::safeidempotentMethodsMethods());
     }
 
     /**
@@ -67,15 +68,19 @@ class Http
      */
     public static function isNotIdempotent($method)
     {
-        return !in_array(self::idempotentMethods());
+        return !in_array($method, self::idempotentMethods());
     }
 
     /**
+     * @deprecated Technically anything *can* have a body,
+     * they just don't have semantic meaning.  So say's Roy
+     * http://tech.groups.yahoo.com/group/rest-discuss/message/9962
+     *
      * @return array of HTTP method strings
      */
     public static function canHaveBody()
     {
-        return array(self::POST, self::PUT, self::OPTIONS);
+        return array(self::POST, self::PUT, self::PATCH, self::OPTIONS);
     }
 
 }
