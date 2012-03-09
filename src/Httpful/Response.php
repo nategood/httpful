@@ -127,7 +127,8 @@ class Response
     public function _interpretHeaders()
     {
         // Parse the Content-Type and charset
-        $content_type = explode(';', $this->headers['Content-Type']);
+        $content_type = isset($this->headers['Content-Type']) ? $this->headers['Content-Type'] : '';
+        $content_type = explode(';', $content_type);
 
         $this->content_type = $content_type[0];
         if (count($content_type) == 2 && strpos($content_type[1], '=') !== false) {
