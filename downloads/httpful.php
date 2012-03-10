@@ -77,6 +77,7 @@ class Http
     const POST      = 'POST';
     const PUT       = 'PUT';
     const DELETE    = 'DELETE';
+    const PATCH     = 'PATCH';
     const OPTIONS   = 'OPTIONS';
     const TRACE     = 'TRACE';
 
@@ -114,7 +115,7 @@ class Http
         // Though it is possible to be idempotent, POST
         // is not guarunteed to be, and more often than
         // not, it is not.
-        return array(self::HEAD, self::GET, self::PUT, self::DELETE, self::OPTIONS, self::TRACE);
+        return array(self::HEAD, self::GET, self::PUT, self::DELETE, self::OPTIONS, self::TRACE, self::PATCH);
     }
 
     /**
@@ -123,7 +124,7 @@ class Http
      */
     public static function isIdempotent($method)
     {
-        return in_array(self::safeidempotentMethodsMethods());
+        return in_array($method, self::safeidempotentMethodsMethods());
     }
 
     /**
@@ -132,15 +133,19 @@ class Http
      */
     public static function isNotIdempotent($method)
     {
-        return !in_array(self::idempotentMethods());
+        return !in_array($method, self::idempotentMethods());
     }
 
     /**
+     * @deprecated Technically anything *can* have a body,
+     * they just don't have semantic meaning.  So say's Roy
+     * http://tech.groups.yahoo.com/group/rest-discuss/message/9962
+     *
      * @return array of HTTP method strings
      */
     public static function canHaveBody()
     {
-        return array(self::POST, self::PUT, self::OPTIONS);
+        return array(self::POST, self::PUT, self::PATCH, self::OPTIONS);
     }
 
 }
@@ -765,7 +770,7 @@ class Request
             $method = substr($method, 4);
 
         // Precede upper case letters with dashes, uppercase the first letter of method
-        $header = ucwords(preg_replace('/[A-Z]/', '-$1', $method));
+        $header =  substr(ucwords(preg_replace('/([A-Z])/', '-$1', $method)), 1);
         $this->addHeader($header, $args[0]);
         return $this;
     }
@@ -1079,6 +1084,18 @@ class Request
     }
 
     /**
+     * HTTP Method Patch
+     * @return Request
+     * @param string $uri optional uri to use
+     * @param string $payload data to send in body of request
+     * @param string $mime MIME to use for Content-Type
+     */
+    public static function patch($uri, $payload = null, $mime = null)
+    {
+        return self::init(Http::PATCH)->uri($uri)->body($payload, $mime);
+    }
+
+    /**
      * HTTP Method Delete
      * @return Request
      * @param string $uri optional uri to use
@@ -1237,7 +1254,8 @@ class Response
     public function _interpretHeaders()
     {
         // Parse the Content-Type and charset
-        $content_type = explode(';', $this->headers['Content-Type']);
+        $content_type = isset($this->headers['Content-Type']) ? $this->headers['Content-Type'] : '';
+        $content_type = explode(';', $content_type);
 
         $this->content_type = $content_type[0];
         if (count($content_type) == 2 && strpos($content_type[1], '=') !== false) {
