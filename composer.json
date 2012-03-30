@@ -12,9 +12,12 @@
         }
     ],
     "require": {
-        "php": ">=5.3"
+        "php": ">=5.3",
+        "ext-curl": "*"
     },
     "autoload": {
-        "psr-0": { "Httpful": "src/" }
+        "psr-0": {
+            "Httpful": "src/"
+        }
     }
 }
