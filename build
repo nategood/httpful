@@ -11,10 +11,19 @@
  * This runs as a git hook.
  */
 
-echo "
-HTTPFUL DOWNLOAD BUILD...";
+function exit_unless($condition, $msg = null) {
+    if ($condition)
+        return;
+    echo "[FAIL] $msg";
+    exit(1);
+}
 
-$base_dir = dirname(__FILE__) . '/src/Httpful/';
+
+// Create the single file download (kept around
+// for legacy reasons.  Should use .phar instead.
+echo "\nBuilding Single File Download... ";
+$base_dir = dirname(__FILE__);
+$source_dir = $base_dir . '/src/Httpful/';
 ob_start();
 echo '<?php
 /**
@@ -33,18 +42,44 @@ echo '<?php
 namespace Httpful;
 ';
 
-foreach (scandir($base_dir) as $f) {
-    $path = $base_dir . $f;
+foreach (scandir($source_dir) as $f) {
+    $path = $source_dir . $f;
     if ($f === "." || $f === ".." || is_dir($path))
         continue;
     echo preg_replace("/(\<\?(php)?)|(namespace Httpful;)/", "", file_get_contents($path)), "\n";
 }
-$download = dirname(__FILE__) . '/downloads/httpful.php';
-$fh = fopen($download, 'w');
-fwrite($fh, ob_get_clean());
+$download_path = $base_dir . '/downloads/httpful.php';
+$fh = fopen($download_path, 'w');
+exit_unless($fh && fwrite($fh, ob_get_clean()), "Unable to write to $download_path.");
+echo "[ OK ]\n";
 fclose($fh);
 
-// Add it!
-exec("git add $download");
 
-echo "                  [ OK ]\n";
+
+// Create the Httpful Phar
+echo "Building Phar... ";
+$phar_path = $base_dir . '/downloads/httpful.phar';
+$phar = new Phar($phar_path, 0, 'httpful.phar');
+$stub = <<<HEREDOC
+<?php
+    // Phar Stub File
+    Phar::mapPhar('httpful.phar');
+    include('phar://httpful.phar/Httpful/Bootstrap.php');
+    spl_autoload_register(array('\Httpful\Bootstrap', 'phar_autoload'));
+
+    __HALT_COMPILER();
+HEREDOC;
+$phar->setStub($stub);
+exit_unless($phar, "Unable to create a phar.  Make certain you have phar.readonly=0 set in your ini file.");
+$phar->buildFromDirectory(dirname($source_dir));
+echo "[ OK ]\n";
+
+
+
+// Add it to git!
+echo "Adding httpful.phar and httpful.php to the repo... ";
+$return_code = 0;
+passthru("git add $download_path $phar_path", $return_code);
+exit_unless($return_code === 0, "Unable to add download files to git.");
+echo "[ OK ]\n";
+echo "\nBuild completed sucessfully.\n\n";

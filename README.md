@@ -21,22 +21,30 @@ Here's something to whet your appetite.  Fire off a GET request to FreeBase API 
     $response = Request::get($uri)->expectsJson()->sendIt();
     echo 'The Dead Weather has ' . count($response->body->result->album) . ' albums.';
 
-# Install
+# Installation
 
-There are two options to get up and running.  The first is the usual `git clone` + PSR-0 route and the second is a single file download route perfect for quick hacking.
+## Phar
 
-## Quick Install
-
-For these quick one off scripts, the easiest way to get started is to simply include the library as a single [file available in GitHub downloads](https://github.com/downloads/nategood/httpful/httpful.php). 
+A PHP Archive (or .phar) file is available for [downloading](https://github.com/downloads/nategood/httpful/httpful.phar).  Simply [download](https://github.com/downloads/nategood/httpful/httpful.phar) the .phar, drop it into your project, and include it like you would any other php file.  _This method is ideal smaller projects, one off scripts, and quick API hacking_.
 
     <?php
-    include('./httpful.php');
+    include('httpful.phar');
     $r = \Httpful\Request::get($uri)->sendIt();
     ...
     
-## Usual Install
+## Composer
 
-The library also provides a more traditional PSR-0 compliant option.  `git clone` the repo into your vendors directory.  If your project isn't already using a compatible autoloader, the library includes a very basic autoloader that you can use by just including the `bootstrap.php` file.
+Httpful is PSR-0 compliant and can be installed using [composer](http://getcomposer.org/).  Simply add `nategood/httpful` to your composer.json file.  _Composer is the sane alternative to PEAR.  It is excellent for managing dependancies in larger projects_.
+
+    {
+        "require": {
+            "nategood/httpful": "*"
+        }
+    }
+
+## Install from Source
+
+Because Httpful is PSR-0 compliant, you can also just clone the Httpful repository and use a PSR-0 compatible autoloader to load the library, like [Symfony's](http://symfony.com/doc/current/components/class_loader.html). Alternatively you can use the PSR-0 compliant autoloader included with the Httpful (simply `require("bootstrap.php")`).
 
 # Show Me More!
 

@@ -1,6 +1,8 @@
 <?php
 
-require(__DIR__ . '/../bootstrap.php');
+// Example loading the library using phar
+require(__DIR__ . '/../downloads/httpful.phar');
+
 use \Httpful\Request;
 
 // Get event details for a public event
