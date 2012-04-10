@@ -646,7 +646,7 @@ class Request
      * Note: It does NOT actually send the request
      * @return Request $this;
      */
-    private function _curlPrep()
+    public function _curlPrep()
     {
         // Check for required stuff
         if (!isset($this->uri))

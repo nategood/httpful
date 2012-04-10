@@ -1,25 +1,34 @@
 <?php
-
-require('../../downloads/httpful.phar');
-Bootstrap::init();
-
+/**
+ * Port over the original tests into a more traditional PHPUnit
+ * format.  Still need to hook into a lightweight HTTP server to 
+ * better test some things (e.g. obscure cURL settings).  I've moved
+ * the old tests and node.js server to the tests/.legacy directory.
+ *
+ * @author Nate Good <me@nategood.com>
+ */
 namespace Httpful\Test;
+
+require(dirname(dirname(dirname(__FILE__))) . '/bootstrap.php');
+\Httpful\Bootstrap::init();
 
 use Httpful\Request;
 use Httpful\Mime;
+use Httpful\Http;
+use Httpful\Response;
 
 class HttpfulTest extends \PHPUnit_Framework_TestCase 
 {
     const TEST_SERVER = '127.0.0.1:8008';
-    const TEST_URL = 'http://' . self::TEST_SERVER;
-    const TEST_URL_400 = 'http://' . self::TEST_SERVER . '/400';
+    const TEST_URL = 'http://127.0.0.1:8008';
+    const TEST_URL_400 = 'http://127.0.0.1:8008/400';
     
     const SAMPLE_JSON_RESPONSE = '{"key":"value","object":{"key":"value"},"array":[1,2,3,4]}';
     const SAMPLE_JSON_HEADER = "HTTP/1.1 200 OK
 Content-Type: application/json
 Connection: keep-alive
 Transfer-Encoding: chunked";
-    const SAMPLE_XML_RESPONSE = '<stdClass><arrayProp><array><k1><myClass><intProp>2</intProp></myClass></k1></array></arrayProp><stringProp>a string</stringProp><boolProp>TRUE</boolProp></stdClass>');
+    const SAMPLE_XML_RESPONSE = '<stdClass><arrayProp><array><k1><myClass><intProp>2</intProp></myClass></k1></array></arrayProp><stringProp>a string</stringProp><boolProp>TRUE</boolProp></stdClass>';
     const SAMPLE_XML_HEADER = "HTTP/1.1 200 OK
 Content-Type: application/xml
 Connection: keep-alive
@@ -64,9 +73,9 @@ Transfer-Encoding: chunked";
         $this->assertEquals(Mime::HTML, Mime::getFullMime(Mime::HTML));
 
         // No false positives
-        $this->assertEquals(Mime::XML,  Mime::getFullMime(Mime::HTML));
-        $this->assertEquals(Mime::JSON, Mime::getFullMime(Mime::XML));
-        $this->assertEquals(Mime::HTML, Mime::getFullMime(Mime::JSON));
+        $this->assertNotEquals(Mime::XML,  Mime::getFullMime(Mime::HTML));
+        $this->assertNotEquals(Mime::JSON, Mime::getFullMime(Mime::XML));
+        $this->assertNotEquals(Mime::HTML, Mime::getFullMime(Mime::JSON));
     }
 
     function testSettingStrictSsl()
@@ -105,7 +114,7 @@ Transfer-Encoding: chunked";
         $this->assertEquals(Mime::FORM, $r->content_type);
     }
     
-    function testInit()
+    function testIni()
     {
         // Test setting defaults/templates
 
@@ -198,4 +207,12 @@ Content-Type: text/plain; charset=utf-8", $req);
         $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
         $this->assertInternalType('object', $response->body);
     }
+    
+    function testParseHeaders()
+    {
+        $req = Request::init()->sendsAndExpects(Mime::JSON);
+        $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
+        assert($response->headers['Content-Type'] === 'application/json');
+    }
+
 }

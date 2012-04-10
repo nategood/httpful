@@ -23,8 +23,7 @@
 
 namespace Httpful;
 
-// require(__DIR__ . '/../lib/httpful.php');
-require(__DIR__ . '/../src/Httpful/Bootstrap.php');
+require(dirname(dirname(dirname(__FILE__))) . '/bootstrap.php');
 Bootstrap::init();
 
 define('TEST_SERVER', '127.0.0.1:8008');
