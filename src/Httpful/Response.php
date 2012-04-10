@@ -16,7 +16,10 @@ class Response
            $request,
            $code = 0,
            $content_type,
-           $charset;
+           $parent_type,
+           $charset,
+           $is_mime_vendor_specific,
+           $is_mime_personal;
     /**
      * @param string $body
      * @param string $headers
@@ -39,14 +42,16 @@ class Response
     /**
      * @return bool Did we receive a 400 or 500?
      */
-    public function hasErrors() {
+    public function hasErrors()
+    {
         return $this->code < 100 || $this->code >= 400;
     }
     
     /**
      * @return return bool
      */
-    public function hasBody() {
+    public function hasBody()
+    {
         return !empty($this->body);
     }
 
@@ -134,6 +139,7 @@ class Response
         if (count($content_type) == 2 && strpos($content_type[1], '=') !== false) {
             list($nill, $this->charset) = explode('=', $content_type[1]);
         }
+
         // RFC 2616 states "text/*" Content-Types should have a default
         // charset of ISO-8859-1. "application/*" and other Content-Types
         // are assumed to have UTF-8 unless otherwise specified.
@@ -141,6 +147,18 @@ class Response
         // http://www.w3.org/International/O-HTTP-charset.en.php
         if (!isset($this->charset)) {
             $this->charset = substr($this->content_type, 5) === 'text/' ? 'iso-8859-1' : 'utf-8';
+        }
+
+        // Is vendor type? Is personal type?
+        list($type, $sub_type) = explode('/', $this->content_type);
+        $this->is_mime_vendor_specific = substr($sub_type, 0, 4) === 'vnd.';
+        $this->is_mime_personal = substr($sub_type, 0, 4) === 'prs.';
+
+        // Parent type (e.g. xml for application/vnd.github.message+xml)
+        $this->parent_type = $this->content_type;
+        if (strpos($this->content_type, '+') !== false) {
+            list($vendor, $this->parent_type) = explode('+', $this->content_type, 2);
+            $this->parent_type = Mime::getFullMime($this->parent_type);
         }
     }
 

@@ -142,7 +142,7 @@ Transfer-Encoding: chunked";
 
         Request::resetIni();
     }
-    
+
     function testAuthSetup()
     {
         $username = 'nathan';
@@ -166,7 +166,7 @@ Transfer-Encoding: chunked";
         $this->assertInternalType('array', $response->body->array);
         $this->assertEquals(1, $response->body->array[0]);
     }
-    
+
     function testXMLResponseParse()
     {
         $req = Request::init()->sendsAndExpects(Mime::XML);
@@ -207,12 +207,26 @@ Content-Type: text/plain; charset=utf-8", $req);
         $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
         $this->assertInternalType('object', $response->body);
     }
-    
+
     function testParseHeaders()
     {
         $req = Request::init()->sendsAndExpects(Mime::JSON);
         $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
         assert($response->headers['Content-Type'] === 'application/json');
+    }
+
+    function testParentType()
+    {
+        // Parent type
+        $request = Request::init()->sendsAndExpects(Mime::XML);
+        $response = new Response(self::SAMPLE_XML_RESPONSE, 
+"HTTP/1.1 200 OK
+Content-Type: application/vnd.nategood.message+xml
+Connection: keep-alive
+Transfer-Encoding: chunked", $request);
+
+        $this->assertEquals("application/xml", $response->parent_type);
+        $this->assertTrue($response->is_mime_vendor_specific);
     }
 
 }
