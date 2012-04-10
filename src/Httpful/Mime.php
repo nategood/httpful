@@ -10,6 +10,7 @@ class Mime
 {
     const JSON  = 'application/json';
     const XML   = 'application/xml';
+    const XHTML = 'application/html+xml';
     const FORM  = 'application/x-www-form-urlencoded';
     const PLAIN = 'text/plain';
     const JS    = 'text/javascript';
@@ -27,6 +28,7 @@ class Mime
         'plain'     => self::PLAIN,
         'text'      => self::PLAIN,
         'html'      => self::HTML,
+        'xhtml'     => self::XHTML,
         'js'        => self::JS,
         'javascript'=> self::JS,
         'yaml'      => self::YAML,
