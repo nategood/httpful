@@ -20,6 +20,8 @@ class Response
            $charset,
            $is_mime_vendor_specific,
            $is_mime_personal;
+
+    private $parsers;
     /**
      * @param string $body
      * @param string $headers
@@ -160,6 +162,17 @@ class Response
             list($vendor, $this->parent_type) = explode('+', $this->content_type, 2);
             $this->parent_type = Mime::getFullMime($this->parent_type);
         }
+    }
+
+    /**
+     * Does this particular Mime Type have a parser registered
+     * for it?
+     * @return bool
+     */
+    public function _hasParserRegistered()
+    {
+        // TODO once we break the parsers out to into their own class conforming
+        // to an interface.  see switch statement from the _parse method.
     }
 
     /**

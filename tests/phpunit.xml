@@ -1,0 +1,7 @@
+<phpunit>
+    <testsuites>
+        <testsuite name="Httpful">
+            <directory>Httpful</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>
