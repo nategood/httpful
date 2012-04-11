@@ -77,12 +77,15 @@ class Response
             return call_user_func($this->request->parse_callback, $body);
         }
 
-        // Use the Content-Type from the response if we didn't explicitly 
-        // specify one as part of our `Request`
-        $parse_with = (empty($this->request->expected_type) && isset($this->content_type)) ?
-            $this->content_type :
+        // Decide how to parse the body of the response in the following order
+        //  1. If provided, use the mime type specifically set as part of the `Request`
+        //  2. If provided, use the "parent type" of the mime type from the response
+        //  3. Use the content-type provided in the response
+        $parse_with = (empty($this->request->expected_type) && isset($this->parent_type)) ?
+            $this->parent_type :
             $this->request->expected_type;
 
+        // @todo refactor by breaking these parsers out into own classes and program to an interface
         switch ($parse_with) {
             case Mime::JSON:
                 $parsed = json_decode($body, false);

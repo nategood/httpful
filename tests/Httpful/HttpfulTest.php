@@ -219,14 +219,18 @@ Content-Type: text/plain; charset=utf-8", $req);
     {
         // Parent type
         $request = Request::init()->sendsAndExpects(Mime::XML);
-        $response = new Response(self::SAMPLE_XML_RESPONSE, 
+        $response = new Response('<xml><name>Nathan</name></xml>', 
 "HTTP/1.1 200 OK
 Content-Type: application/vnd.nategood.message+xml
 Connection: keep-alive
 Transfer-Encoding: chunked", $request);
 
         $this->assertEquals("application/xml", $response->parent_type);
+        $this->assertEquals("application/vnd.nategood.message+xml", $response->content_type);
         $this->assertTrue($response->is_mime_vendor_specific);
+        
+        // Make sure we still parsed as if it were plain old XML
+        $this->assertEquals("Nathan", $response->body->name->__toString());
     }
 
 }
