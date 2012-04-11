@@ -104,7 +104,7 @@ class Request
      * @param string|null $attr Name of attribute (e.g. mime, headers)
      *    if null just return the whole template object;
      */
-    public function d($attr)
+    public static function d($attr)
     {
         return isset($attr) ? self::$_template->$attr : self::$_template;
     }
