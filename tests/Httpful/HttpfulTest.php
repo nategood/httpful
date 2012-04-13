@@ -233,4 +233,16 @@ Transfer-Encoding: chunked", $request);
         $this->assertEquals("Nathan", $response->body->name->__toString());
     }
 
+
+    function testMissingContentType()
+    {
+        // Parent type
+        $request = Request::init()->sendsAndExpects(Mime::XML);
+        $response = new Response('<xml><name>Nathan</name></xml>', 
+"HTTP/1.1 200 OK
+Connection: keep-alive
+Transfer-Encoding: chunked", $request);
+
+        $this->assertEquals("", $response->content_type);
+    }
 }

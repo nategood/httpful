@@ -18,8 +18,8 @@ class Response
            $content_type,
            $parent_type,
            $charset,
-           $is_mime_vendor_specific,
-           $is_mime_personal;
+           $is_mime_vendor_specific = false,
+           $is_mime_personal = false;
 
     private $parsers;
     /**
@@ -155,9 +155,11 @@ class Response
         }
 
         // Is vendor type? Is personal type?
-        list($type, $sub_type) = explode('/', $this->content_type);
-        $this->is_mime_vendor_specific = substr($sub_type, 0, 4) === 'vnd.';
-        $this->is_mime_personal = substr($sub_type, 0, 4) === 'prs.';
+        if (strpos($this->content_type, '/') !== false) {
+            list($type, $sub_type) = explode('/', $this->content_type);
+            $this->is_mime_vendor_specific = substr($sub_type, 0, 4) === 'vnd.';
+            $this->is_mime_personal = substr($sub_type, 0, 4) === 'prs.';
+        }
 
         // Parent type (e.g. xml for application/vnd.github.message+xml)
         $this->parent_type = $this->content_type;
