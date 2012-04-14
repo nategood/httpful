@@ -14,12 +14,16 @@ Features
 
 # Sneak Peak
 
-Here's something to whet your appetite.  Fire off a GET request to FreeBase API to find albums by The Dead Weather.  Notice, we expect the data returned to be JSON formatted and the library parses it nicely into a native PHP object.
+Here's something to whet your appetite.  Search the twitter API for tweets containing "#PHP".  Include a trivial header for the heck of it.  Notice that the library automatically interprets the response as JSON (can override this if desired) and parses it as an array of objects.
 
-    $uri = "https://www.googleapis.com/freebase/v1/mqlread?query=%7B%22type%22:%22/music/artist%22%2C%22name%22:%22The%20Dead%20Weather%22%2C%22album%22:%5B%5D%7D";
-    
-    $response = Request::get($uri)->expectsJson()->sendIt();
-    echo 'The Dead Weather has ' . count($response->body->result->album) . ' albums.';
+    $url = "http://search.twitter.com/search.json?q=" . urlencode('#PHP');
+    $response = Request::get($url)
+        ->withXTrivialHeader('Just as a demo')
+        ->send();
+ 
+    foreach ($response->body->results as $tweet) {
+        echo "@{$tweet->from_user} tweets \"{$tweet->text}\"\n";
+    }
 
 # Installation
 

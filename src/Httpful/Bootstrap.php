@@ -14,12 +14,15 @@ class Bootstrap
     const DIR_GLUE = '/';
     const NS_GLUE = '\\';
     
+    public static $registered = false;
+    
     /**
      * Register the autoloader and any other setup needed
      */
     public static function init()
     {
         spl_autoload_register(array('\Httpful\Bootstrap', 'autoload'));
+        self::registerHandlers();
     }
     
     /**
@@ -53,5 +56,28 @@ class Bootstrap
         if (file_exists($path)) {
             require_once($path);
         }
+    }
+    /**
+     * Register default mime handlers.  Is idempotent.
+     */
+    public static function registerHandlers()
+    {
+        if (self::$registered === true) {
+            return;
+        }
+        
+        // @todo check a conf file to load from that instead of 
+        // hardcoding into the library?
+        $handlers = array(
+            \Httpful\Mime::JSON => new \Httpful\Handlers\JsonHandler(),
+            \Httpful\Mime::XML  => new \Httpful\Handlers\XmlHandler(),
+            \Httpful\Mime::FORM => new \Httpful\Handlers\FormHandler(),
+        );
+        
+        foreach ($handlers as $mime => $handler) {
+            Httpful::register($mime => $handler);
+        }
+        
+        self::$registered = true;
     }
 }
