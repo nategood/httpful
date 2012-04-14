@@ -1,10 +1,10 @@
 # Handlers
 
-Handlers are simple classes that are used to parse response bodies and serialize request payloads.  All Handlers must extend the `AbstractHandler` class and implement two methods: `serialize($payload)` and `parse($response)`.  Let's build a very basic Handler to register for the `text/csv` mime type.
+Handlers are simple classes that are used to parse response bodies and serialize request payloads.  All Handlers must extend the `MimeHandlerAdapter` class and implement two methods: `serialize($payload)` and `parse($response)`.  Let's build a very basic Handler to register for the `text/csv` mime type.
 
     <?php
 
-    class SimpleCsvHandler extends \Httpful\Handlers\AbstractHandler
+    class SimpleCsvHandler extends \Httpful\Handlers\MimeHandlerAdapter
     {
         /**
          * Takes a response body, and turns it into 

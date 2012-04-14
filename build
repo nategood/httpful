@@ -7,8 +7,6 @@
  * relying on autoloader.  Sometimes we just
  * want to hack with an API as a one off thing.
  * Httpful should make this easy.
- *
- * This runs as a git hook.
  */
 
 function exit_unless($condition, $msg = null) {
@@ -18,46 +16,10 @@ function exit_unless($condition, $msg = null) {
     exit(1);
 }
 
-
-// Create the single file download (kept around
-// for legacy reasons.  Should use .phar instead.
-echo "\nBuilding Single File Download... ";
-$base_dir = dirname(__FILE__);
-$source_dir = $base_dir . '/src/Httpful/';
-ob_start();
-echo '<?php
-/**
- * DO NOT EDIT
- *
- * THIS FILE WAS AUTOMATICALLY GENERATED.  IT IS A
- * CONCATENATION OF THE SOURCE CODE FOR HTTPFUL.  ITS
- * PURPOSE IS TO HAVE A SIMPLE, SINGLE FILE DOWNLOAD
- * AVAILABLE FOR EASY ONE OFF, DROP IN USAGE, WITHOUT NEEDING
- * TO DOWNLOAD AN ENTIRE REPO.  THIS FILE IS AVAILABLE AS A
- * STANDALONE DOWNLOAD FROM GITHUB AND THE PROJECT PAGE.
- *
- * FOR MORE ABOUT HTTPFUL VISIT
- * https://github.com/nategood/httpful
- */
-namespace Httpful;
-';
-
-foreach (scandir($source_dir) as $f) {
-    $path = $source_dir . $f;
-    if ($f === "." || $f === ".." || is_dir($path))
-        continue;
-    echo preg_replace("/(\<\?(php)?)|(namespace Httpful;)/", "", file_get_contents($path)), "\n";
-}
-$download_path = $base_dir . '/downloads/httpful.php';
-$fh = fopen($download_path, 'w');
-exit_unless($fh && fwrite($fh, ob_get_clean()), "Unable to write to $download_path.");
-echo "[ OK ]\n";
-fclose($fh);
-
-
-
 // Create the Httpful Phar
 echo "Building Phar... ";
+$base_dir = dirname(__FILE__);
+$source_dir = $base_dir . '/src/Httpful/';
 $phar_path = $base_dir . '/downloads/httpful.phar';
 $phar = new Phar($phar_path, 0, 'httpful.phar');
 $stub = <<<HEREDOC
@@ -65,7 +27,7 @@ $stub = <<<HEREDOC
     // Phar Stub File
     Phar::mapPhar('httpful.phar');
     include('phar://httpful.phar/Httpful/Bootstrap.php');
-    spl_autoload_register(array('\Httpful\Bootstrap', 'phar_autoload'));
+    \Httpful\Bootstrap::pharInit();
 
     __HALT_COMPILER();
 HEREDOC;
@@ -77,9 +39,9 @@ echo "[ OK ]\n";
 
 
 // Add it to git!
-echo "Adding httpful.phar and httpful.php to the repo... ";
+echo "Adding httpful.phar to the repo... ";
 $return_code = 0;
-passthru("git add $download_path $phar_path", $return_code);
+passthru("git add $phar_path", $return_code);
 exit_unless($return_code === 0, "Unable to add download files to git.");
 echo "[ OK ]\n";
 echo "\nBuild completed sucessfully.\n\n";

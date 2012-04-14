@@ -6,7 +6,7 @@
 
 namespace Httpful\Handlers;
 
-class JsonHandler extends AbstractMimeHandler 
+class JsonHandler extends MimeHandlerAdapter 
 {
     /**
      * @param string $body

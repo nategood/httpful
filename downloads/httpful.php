@@ -29,12 +29,15 @@ class Bootstrap
     const DIR_GLUE = '/';
     const NS_GLUE = '\\';
     
+    public static $registered = false;
+    
     /**
      * Register the autoloader and any other setup needed
      */
     public static function init()
     {
         spl_autoload_register(array('\Httpful\Bootstrap', 'autoload'));
+        self::registerHandlers();
     }
     
     /**
@@ -45,6 +48,7 @@ class Bootstrap
     public static function autoload($classname) 
     {
         self::_autoload(dirname(dirname(__FILE__)), $classname);
+        self::registerHandlers();
     }
     
     /**
@@ -55,19 +59,44 @@ class Bootstrap
     public static function phar_autoload($classname) 
     {
         self::_autoload('phar://httpful.phar', $classname);
+        self::registerHandlers();
     }
     
     /**
      * @param string base
      * @param string classname
      */
-    private static function _autoload($base, $classname) {
+    private static function _autoload($base, $classname)
+    {
         $parts      = explode(self::NS_GLUE, $classname);
         $path       = $base . self::DIR_GLUE . implode(self::DIR_GLUE, $parts) . '.php';
 
         if (file_exists($path)) {
             require_once($path);
         }
+    }
+    /**
+     * Register default mime handlers.  Is idempotent.
+     */
+    public static function registerHandlers()
+    {
+        if (self::$registered === true) {
+            return;
+        }
+        
+        // @todo check a conf file to load from that instead of 
+        // hardcoding into the library?
+        $handlers = array(
+            \Httpful\Mime::JSON => new \Httpful\Handlers\JsonHandler(),
+            \Httpful\Mime::XML  => new \Httpful\Handlers\XmlHandler(),
+            \Httpful\Mime::FORM => new \Httpful\Handlers\FormHandler(),
+        );
+        
+        foreach ($handlers as $mime => $handler) {
+            Httpful::register($mime, $handler);
+        }
+        
+        self::$registered = true;
     }
 }
 
@@ -160,6 +189,53 @@ class Http
 
 
 
+class Httpful {
+    private static $mimeRegistrar = array();
+    private static $default = null;
+    
+    /**
+     * @param string $mime_type
+     * @param MimeHandlerAdapter $handler
+     */
+    public static function register($mimeType, \Httpful\Handlers\MimeHandlerAdapter $handler)
+    {
+        self::$mimeRegistrar[$mimeType] = $handler;
+    }
+    
+    /**
+     * @param string $mime_type
+     * @return MimeHandlerAdapter
+     */
+    public static function get($mimeType)
+    {
+        
+        var_dump($mimeType);
+        var_dump(self::$mimeRegistrar);
+        if (isset(self::$mimeRegistrar[$mimeType])) {
+            return self::$mimeRegistrar[$mimeType];
+        }
+
+        if (empty(self::$default)) {
+            self::$default = new \Httpful\Handlers\MimeHandlerAdapter();
+        }
+
+        return self::$default;
+    }
+    
+    /**
+     * Does this particular Mime Type have a parser registered
+     * for it?
+     * @return bool
+     */
+    public static function hasParserRegistered($mimeType)
+    {
+        return isset(self::$mimeRegistrar[$mimeType]);
+    }
+}
+
+
+
+
 /**
  * Class to organize the Mime stuff a bit more
  * @author Nate Good <me@nategood.com>
@@ -168,6 +244,7 @@ class Mime
 {
     const JSON  = 'application/json';
     const XML   = 'application/xml';
+    const XHTML = 'application/html+xml';
     const FORM  = 'application/x-www-form-urlencoded';
     const PLAIN = 'text/plain';
     const JS    = 'text/javascript';
@@ -185,6 +262,7 @@ class Mime
         'plain'     => self::PLAIN,
         'text'      => self::PLAIN,
         'html'      => self::HTML,
+        'xhtml'     => self::XHTML,
         'js'        => self::JS,
         'javascript'=> self::JS,
         'yaml'      => self::YAML,
@@ -316,7 +394,7 @@ class Request
      * @param string|null $attr Name of attribute (e.g. mime, headers)
      *    if null just return the whole template object;
      */
-    public function d($attr)
+    public static function d($attr)
     {
         return isset($attr) ? self::$_template->$attr : self::$_template;
     }
@@ -466,7 +544,7 @@ class Request
     {
         $this->mime($mimeType);
         $this->payload = $payload;
-        // Intentially don't call _serializePayload yet.  Wait until
+        // Iserntentially don't call _serializePayload yet.  Wait until
         // we actually send off the request to convert payload to string.
         // At that time, the `serialized_payload` is set accordingly.
         return $this;
@@ -858,7 +936,7 @@ class Request
      * Note: It does NOT actually send the request
      * @return Request $this;
      */
-    private function _curlPrep()
+    public function _curlPrep()
     {
         // Check for required stuff
         if (!isset($this->uri))
@@ -971,86 +1049,10 @@ class Request
             $key = isset($this->payload_serializers[$this->content_type]) ? $this->content_type : '*';
             return call_user_func($this->payload_serializers[$key], $payload);
         }
-
-        switch($this->content_type) {
-            case Mime::JSON:
-                return json_encode($payload);
-            case Mime::FORM:
-                return http_build_query($payload);
-            case Mime::XML:
-                try {
-                   list($_, $dom) = $this->_future_serializeAsXml($payload);
-                   return $dom->saveXml();
-                } catch (Exception $e) {}
-            default:
-                return (string) $payload;
-        }
+        
+        return Httpful::get($parse_with)->serialize($payload);
     }
 
-    /**
-     * @author Zack Douglas <zack@zackerydouglas.info>
-     */
-    private function _future_serializeAsXml($value, $node = null, $dom = null)
-    {
-        if (!$dom) {
-            $dom = new \DOMDocument;
-        }
-        if (!$node) {
-            if (!is_object($value)) {
-                $node = $dom->createElement('response');
-                $dom->appendChild($node);
-            } else {
-                $node = $dom;
-            }
-        }
-        if (is_object($value)) {
-            $objNode = $dom->createElement(get_class($value));
-            $node->appendChild($objNode);
-            $this->_future_serializeObjectAsXml($value, $objNode, $dom);
-        } else if (is_array($value)) {
-            $arrNode = $dom->createElement('array');
-            $node->appendChild($arrNode);
-            $this->_future_serializeArrayAsXml($value, $arrNode, $dom);
-        } else if (is_bool($value)) {
-            $node->appendChild($dom->createTextNode($value?'TRUE':'FALSE'));
-        } else {
-            $node->appendChild($dom->createTextNode($value));
-        }
-        return array($node, $dom);
-    }
-    /**
-     * @author Zack Douglas <zack@zackerydouglas.info>
-     */
-    private function _future_serializeArrayAsXml($value, &$parent, &$dom)
-    {
-        foreach ($value as $k => &$v) {
-            $n = $k;
-            if (is_numeric($k)) {
-                $n = "child-{$n}";
-            }
-            $el = $dom->createElement($n);
-            $parent->appendChild($el);
-            $this->_future_serializeAsXml($v, $el, $dom);
-        }
-        return array($parent, $dom);
-    }
-    /**
-     * @author Zack Douglas <zack@zackerydouglas.info>
-     */
-    private function _future_serializeObjectAsXml($value, &$parent, &$dom)
-    {
-        $refl = new \ReflectionObject($value);
-        foreach ($refl->getProperties() as $pr) {
-            if (!$pr->isPrivate()) {
-                $el = $dom->createElement($pr->getName());
-                $parent->appendChild($el);
-                $this->_future_serializeAsXml($pr->getValue($value), $el, $dom);
-            }
-        }
-        return array($parent, $dom);
-    }
-
-    // Http Method Sugar
     /**
      * HTTP Method Get
      * @return Request
@@ -1150,7 +1152,12 @@ class Response
            $request,
            $code = 0,
            $content_type,
-           $charset;
+           $parent_type,
+           $charset,
+           $is_mime_vendor_specific = false,
+           $is_mime_personal = false;
+
+    private $parsers;
     /**
      * @param string $body
      * @param string $headers
@@ -1173,14 +1180,16 @@ class Response
     /**
      * @return bool Did we receive a 400 or 500?
      */
-    public function hasErrors() {
+    public function hasErrors()
+    {
         return $this->code < 100 || $this->code >= 400;
     }
     
     /**
      * @return return bool
      */
-    public function hasBody() {
+    public function hasBody()
+    {
         return !empty($this->body);
     }
 
@@ -1204,29 +1213,19 @@ class Response
             return call_user_func($this->request->parse_callback, $body);
         }
 
-        // Use the Content-Type from the response if we didn't explicitly 
-        // specify one as part of our `Request`
-        $parse_with = (empty($this->request->expected_type) && isset($this->content_type)) ?
-            $this->content_type :
-            $this->request->expected_type;
-
-        switch ($parse_with) {
-            case Mime::JSON:
-                $parsed = json_decode($body, false);
-                if (!$parsed) throw new \Exception("Unable to parse response as JSON");
-                break;
-            case Mime::XML:
-                $parsed = simplexml_load_string($body);
-                if (!$parsed) throw new \Exception("Unable to parse response as XML");
-                break;
-            case Mime::FORM:
-                $parsed = array();
-                parse_str($body, $parsed);
-                break;
-            default:
-                $parsed = $body;
+        // Decide how to parse the body of the response in the following order
+        //  1. If provided, use the mime type specifically set as part of the `Request`
+        //  2. If a MimeHandler is registered for the content type, use it
+        //  3. If provided, use the "parent type" of the mime type from the response
+        //  4. Default to the content-type provided in the response
+        $parse_with = $this->request->expected_type;
+        if (empty($this->request->expected_type)) {
+            $parse_with = Httpful::hasParserRegistered($this->content_type)
+                ? $this->content_type
+                : $this->parent_type;
         }
-        return $parsed;
+
+       return Httpful::get($parse_with)->parse($body);
     }
 
     /**
@@ -1268,6 +1267,7 @@ class Response
         if (count($content_type) == 2 && strpos($content_type[1], '=') !== false) {
             list($nill, $this->charset) = explode('=', $content_type[1]);
         }
+
         // RFC 2616 states "text/*" Content-Types should have a default
         // charset of ISO-8859-1. "application/*" and other Content-Types
         // are assumed to have UTF-8 unless otherwise specified.
@@ -1275,6 +1275,20 @@ class Response
         // http://www.w3.org/International/O-HTTP-charset.en.php
         if (!isset($this->charset)) {
             $this->charset = substr($this->content_type, 5) === 'text/' ? 'iso-8859-1' : 'utf-8';
+        }
+
+        // Is vendor type? Is personal type?
+        if (strpos($this->content_type, '/') !== false) {
+            list($type, $sub_type) = explode('/', $this->content_type);
+            $this->is_mime_vendor_specific = substr($sub_type, 0, 4) === 'vnd.';
+            $this->is_mime_personal = substr($sub_type, 0, 4) === 'prs.';
+        }
+
+        // Parent type (e.g. xml for application/vnd.github.message+xml)
+        $this->parent_type = $this->content_type;
+        if (strpos($this->content_type, '+') !== false) {
+            list($vendor, $this->parent_type) = explode('+', $this->content_type, 2);
+            $this->parent_type = Mime::getFullMime($this->parent_type);
         }
     }
 

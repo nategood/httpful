@@ -8,7 +8,7 @@
 
 namespace Httpful\Handlers;
 
-abstract class AbstractMimeHandler
+class MimeHandlerAdapter
 {
     /**
      * @param string $body

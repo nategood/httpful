@@ -8,16 +8,16 @@ class Httpful {
     
     /**
      * @param string $mime_type
-     * @param AbstractHandler $handler
+     * @param MimeHandlerAdapter $handler
      */
-    public static function register($mimeType, \Httpful\Handlers\AbstractMimeHandler $handler)
+    public static function register($mimeType, \Httpful\Handlers\MimeHandlerAdapter $handler)
     {
         self::$mimeRegistrar[$mimeType] = $handler;
     }
     
     /**
      * @param string $mime_type
-     * @return AbstractHandler
+     * @return MimeHandlerAdapter
      */
     public static function get($mimeType)
     {
@@ -26,7 +26,7 @@ class Httpful {
         }
 
         if (empty(self::$default)) {
-            self::$default = new \Httpful\Handlers\AbstractMimeHandler();
+            self::$default = new \Httpful\Handlers\MimeHandlerAdapter();
         }
 
         return self::$default;

@@ -36,11 +36,20 @@ class Bootstrap
     }
     
     /**
+     * Register the autoloader and any other setup needed
+     */
+    public static function pharInit()
+    {
+        spl_autoload_register(array('\Httpful\Bootstrap', 'pharAutoload'));
+        self::registerHandlers();
+    }
+    
+    /**
      * Phar specific autoloader
      * 
      * @param string $classname
      */
-    public static function phar_autoload($classname) 
+    public static function pharAutoload($classname) 
     {
         self::_autoload('phar://httpful.phar', $classname);
     }

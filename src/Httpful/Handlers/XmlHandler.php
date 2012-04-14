@@ -8,7 +8,7 @@
 
 namespace Httpful\Handlers;
 
-class XmlHandler extends AbstractMimeHandler 
+class XmlHandler extends MimeHandlerAdapter 
 {
     /**
      * @param string $body
