@@ -254,7 +254,7 @@ class Request
     {
         $this->mime($mimeType);
         $this->payload = $payload;
-        // Intentially don't call _serializePayload yet.  Wait until
+        // Iserntentially don't call _serializePayload yet.  Wait until
         // we actually send off the request to convert payload to string.
         // At that time, the `serialized_payload` is set accordingly.
         return $this;
@@ -759,86 +759,10 @@ class Request
             $key = isset($this->payload_serializers[$this->content_type]) ? $this->content_type : '*';
             return call_user_func($this->payload_serializers[$key], $payload);
         }
-
-        switch($this->content_type) {
-            case Mime::JSON:
-                return json_encode($payload);
-            case Mime::FORM:
-                return http_build_query($payload);
-            case Mime::XML:
-                try {
-                   list($_, $dom) = $this->_future_serializeAsXml($payload);
-                   return $dom->saveXml();
-                } catch (Exception $e) {}
-            default:
-                return (string) $payload;
-        }
+        
+        return Httpful::get($parse_with)->serialize($payload);
     }
 
-    /**
-     * @author Zack Douglas <zack@zackerydouglas.info>
-     */
-    private function _future_serializeAsXml($value, $node = null, $dom = null)
-    {
-        if (!$dom) {
-            $dom = new \DOMDocument;
-        }
-        if (!$node) {
-            if (!is_object($value)) {
-                $node = $dom->createElement('response');
-                $dom->appendChild($node);
-            } else {
-                $node = $dom;
-            }
-        }
-        if (is_object($value)) {
-            $objNode = $dom->createElement(get_class($value));
-            $node->appendChild($objNode);
-            $this->_future_serializeObjectAsXml($value, $objNode, $dom);
-        } else if (is_array($value)) {
-            $arrNode = $dom->createElement('array');
-            $node->appendChild($arrNode);
-            $this->_future_serializeArrayAsXml($value, $arrNode, $dom);
-        } else if (is_bool($value)) {
-            $node->appendChild($dom->createTextNode($value?'TRUE':'FALSE'));
-        } else {
-            $node->appendChild($dom->createTextNode($value));
-        }
-        return array($node, $dom);
-    }
-    /**
-     * @author Zack Douglas <zack@zackerydouglas.info>
-     */
-    private function _future_serializeArrayAsXml($value, &$parent, &$dom)
-    {
-        foreach ($value as $k => &$v) {
-            $n = $k;
-            if (is_numeric($k)) {
-                $n = "child-{$n}";
-            }
-            $el = $dom->createElement($n);
-            $parent->appendChild($el);
-            $this->_future_serializeAsXml($v, $el, $dom);
-        }
-        return array($parent, $dom);
-    }
-    /**
-     * @author Zack Douglas <zack@zackerydouglas.info>
-     */
-    private function _future_serializeObjectAsXml($value, &$parent, &$dom)
-    {
-        $refl = new \ReflectionObject($value);
-        foreach ($refl->getProperties() as $pr) {
-            if (!$pr->isPrivate()) {
-                $el = $dom->createElement($pr->getName());
-                $parent->appendChild($el);
-                $this->_future_serializeAsXml($pr->getValue($value), $el, $dom);
-            }
-        }
-        return array($parent, $dom);
-    }
-
-    // Http Method Sugar
     /**
      * HTTP Method Get
      * @return Request

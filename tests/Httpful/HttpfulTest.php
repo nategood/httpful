@@ -12,6 +12,7 @@ namespace Httpful\Test;
 require(dirname(dirname(dirname(__FILE__))) . '/bootstrap.php');
 \Httpful\Bootstrap::init();
 
+use Httpful\Httpful;
 use Httpful\Request;
 use Httpful\Mime;
 use Httpful\Http;
@@ -23,16 +24,24 @@ class HttpfulTest extends \PHPUnit_Framework_TestCase
     const TEST_URL = 'http://127.0.0.1:8008';
     const TEST_URL_400 = 'http://127.0.0.1:8008/400';
     
-    const SAMPLE_JSON_RESPONSE = '{"key":"value","object":{"key":"value"},"array":[1,2,3,4]}';
-    const SAMPLE_JSON_HEADER = "HTTP/1.1 200 OK
+    const SAMPLE_JSON_HEADER = 
+"HTTP/1.1 200 OK
 Content-Type: application/json
 Connection: keep-alive
 Transfer-Encoding: chunked";
+    const SAMPLE_JSON_RESPONSE = '{"key":"value","object":{"key":"value"},"array":[1,2,3,4]}';
     const SAMPLE_XML_RESPONSE = '<stdClass><arrayProp><array><k1><myClass><intProp>2</intProp></myClass></k1></array></arrayProp><stringProp>a string</stringProp><boolProp>TRUE</boolProp></stdClass>';
-    const SAMPLE_XML_HEADER = "HTTP/1.1 200 OK
+    const SAMPLE_XML_HEADER = 
+"HTTP/1.1 200 OK
 Content-Type: application/xml
 Connection: keep-alive
 Transfer-Encoding: chunked";
+    const SAMPLE_VENDOR_HEADER = 
+"HTTP/1.1 200 OK
+Content-Type: application/vnd.nategood.message+xml
+Connection: keep-alive
+Transfer-Encoding: chunked";
+    const SAMPLE_VENDOR_TYPE = "application/vnd.nategood.message+xml";
     
     function testInit()
     {
@@ -219,18 +228,33 @@ Content-Type: text/plain; charset=utf-8", $req);
     {
         // Parent type
         $request = Request::init()->sendsAndExpects(Mime::XML);
-        $response = new Response('<xml><name>Nathan</name></xml>', 
-"HTTP/1.1 200 OK
-Content-Type: application/vnd.nategood.message+xml
-Connection: keep-alive
-Transfer-Encoding: chunked", $request);
+        $response = new Response('<xml><name>Nathan</name></xml>', self::SAMPLE_VENDOR_HEADER, $request);
 
         $this->assertEquals("application/xml", $response->parent_type);
-        $this->assertEquals("application/vnd.nategood.message+xml", $response->content_type);
+        $this->assertEquals(self::SAMPLE_VENDOR_TYPE, $response->content_type);
         $this->assertTrue($response->is_mime_vendor_specific);
         
         // Make sure we still parsed as if it were plain old XML
         $this->assertEquals("Nathan", $response->body->name->__toString());
     }
 
+    function testCustomMimeRegistering()
+    {
+        // Register new mime type handler for "application/vnd.nategood.message+xml"
+        Httpful::register(self::SAMPLE_VENDOR_TYPE, new DemoMimeHandler());
+        
+        $this->assertTrue(Httpful::hasParserRegistered(self::SAMPLE_VENDOR_TYPE));
+        
+        $request = Request::init();
+        $response = new Response('<xml><name>Nathan</name></xml>', self::SAMPLE_VENDOR_HEADER, $request);
+
+        $this->assertEquals(self::SAMPLE_VENDOR_TYPE, $response->content_type);
+        $this->assertEquals('custom parse', $response->body);
+    }
+}
+
+class DemoMimeHandler extends \Httpful\Handlers\AbstractMimeHandler {
+    public function parse($body) {
+        return 'custom parse';
+    }
 }

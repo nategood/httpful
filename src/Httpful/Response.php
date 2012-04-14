@@ -79,30 +79,17 @@ class Response
 
         // Decide how to parse the body of the response in the following order
         //  1. If provided, use the mime type specifically set as part of the `Request`
-        //  2. If provided, use the "parent type" of the mime type from the response
-        //  3. Use the content-type provided in the response
-        $parse_with = (empty($this->request->expected_type) && isset($this->parent_type)) ?
-            $this->parent_type :
-            $this->request->expected_type;
-
-        // @todo refactor by breaking these parsers out into own classes and program to an interface
-        switch ($parse_with) {
-            case Mime::JSON:
-                $parsed = json_decode($body, false);
-                if (!$parsed) throw new \Exception("Unable to parse response as JSON");
-                break;
-            case Mime::XML:
-                $parsed = simplexml_load_string($body);
-                if (!$parsed) throw new \Exception("Unable to parse response as XML");
-                break;
-            case Mime::FORM:
-                $parsed = array();
-                parse_str($body, $parsed);
-                break;
-            default:
-                $parsed = $body;
+        //  2. If a MimeHandler is registered for the content type, use it
+        //  3. If provided, use the "parent type" of the mime type from the response
+        //  4. Default to the content-type provided in the response
+        $parse_with = $this->request->expected_type;
+        if (empty($this->request->expected_type)) {
+            $parse_with = Httpful::hasParserRegistered($this->content_type)
+                ? $this->content_type
+                : $this->parent_type;
         }
-        return $parsed;
+
+       return Httpful::get($parse_with)->parse($body);
     }
 
     /**
@@ -165,17 +152,6 @@ class Response
             list($vendor, $this->parent_type) = explode('+', $this->content_type, 2);
             $this->parent_type = Mime::getFullMime($this->parent_type);
         }
-    }
-
-    /**
-     * Does this particular Mime Type have a parser registered
-     * for it?
-     * @return bool
-     */
-    public function _hasParserRegistered()
-    {
-        // TODO once we break the parsers out to into their own class conforming
-        // to an interface.  see switch statement from the _parse method.
     }
 
     /**

@@ -49,7 +49,8 @@ class Bootstrap
      * @param string base
      * @param string classname
      */
-    private static function _autoload($base, $classname) {
+    private static function _autoload($base, $classname)
+    {
         $parts      = explode(self::NS_GLUE, $classname);
         $path       = $base . self::DIR_GLUE . implode(self::DIR_GLUE, $parts) . '.php';
 
@@ -75,7 +76,7 @@ class Bootstrap
         );
         
         foreach ($handlers as $mime => $handler) {
-            Httpful::register($mime => $handler);
+            Httpful::register($mime, $handler);
         }
         
         self::$registered = true;

@@ -4,6 +4,7 @@
     "homepage": "http://github.com/nategood/httpful",
     "license": "MIT",
     "keywords": ["http", "curl", "rest", "restful"],
+    "version": "0.1.0",
     "authors": [
         {
             "name": "Nate Good",
