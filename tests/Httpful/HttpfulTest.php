@@ -238,13 +238,25 @@ Content-Type: text/plain; charset=utf-8", $req);
         $this->assertEquals("Nathan", $response->body->name->__toString());
     }
 
+    function testMissingContentType()
+    {
+        // Parent type
+        $request = Request::init()->sendsAndExpects(Mime::XML);
+        $response = new Response('<xml><name>Nathan</name></xml>', 
+"HTTP/1.1 200 OK
+Connection: keep-alive
+Transfer-Encoding: chunked", $request);
+
+        $this->assertEquals("", $response->content_type);
+    }
+
     function testCustomMimeRegistering()
     {
         // Register new mime type handler for "application/vnd.nategood.message+xml"
         Httpful::register(self::SAMPLE_VENDOR_TYPE, new DemoMimeHandler());
         
         $this->assertTrue(Httpful::hasParserRegistered(self::SAMPLE_VENDOR_TYPE));
-        
+
         $request = Request::init();
         $response = new Response('<xml><name>Nathan</name></xml>', self::SAMPLE_VENDOR_HEADER, $request);
 
