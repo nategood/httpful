@@ -37,7 +37,7 @@ class Httpful {
      * for it?
      * @return bool
      */
-    public function hasParserRegistered($mimeType)
+    public static function hasParserRegistered($mimeType)
     {
         return isset(self::$mimeRegistrar[$mimeType]);
     }
