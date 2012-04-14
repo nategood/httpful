@@ -265,7 +265,7 @@ Transfer-Encoding: chunked", $request);
     }
 }
 
-class DemoMimeHandler extends \Httpful\Handlers\AbstractMimeHandler {
+class DemoMimeHandler extends \Httpful\Handlers\MimeHandlerAdapter {
     public function parse($body) {
         return 'custom parse';
     }
