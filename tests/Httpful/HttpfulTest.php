@@ -1,7 +1,7 @@
 <?php
 /**
  * Port over the original tests into a more traditional PHPUnit
- * format.  Still need to hook into a lightweight HTTP server to 
+ * format.  Still need to hook into a lightweight HTTP server to
  * better test some things (e.g. obscure cURL settings).  I've moved
  * the old tests and node.js server to the tests/.legacy directory.
  *
@@ -18,38 +18,38 @@ use Httpful\Mime;
 use Httpful\Http;
 use Httpful\Response;
 
-class HttpfulTest extends \PHPUnit_Framework_TestCase 
+class HttpfulTest extends \PHPUnit_Framework_TestCase
 {
     const TEST_SERVER = '127.0.0.1:8008';
     const TEST_URL = 'http://127.0.0.1:8008';
     const TEST_URL_400 = 'http://127.0.0.1:8008/400';
-    
-    const SAMPLE_JSON_HEADER = 
+
+    const SAMPLE_JSON_HEADER =
 "HTTP/1.1 200 OK
 Content-Type: application/json
 Connection: keep-alive
 Transfer-Encoding: chunked";
     const SAMPLE_JSON_RESPONSE = '{"key":"value","object":{"key":"value"},"array":[1,2,3,4]}';
     const SAMPLE_XML_RESPONSE = '<stdClass><arrayProp><array><k1><myClass><intProp>2</intProp></myClass></k1></array></arrayProp><stringProp>a string</stringProp><boolProp>TRUE</boolProp></stdClass>';
-    const SAMPLE_XML_HEADER = 
+    const SAMPLE_XML_HEADER =
 "HTTP/1.1 200 OK
 Content-Type: application/xml
 Connection: keep-alive
 Transfer-Encoding: chunked";
-    const SAMPLE_VENDOR_HEADER = 
+    const SAMPLE_VENDOR_HEADER =
 "HTTP/1.1 200 OK
 Content-Type: application/vnd.nategood.message+xml
 Connection: keep-alive
 Transfer-Encoding: chunked";
     const SAMPLE_VENDOR_TYPE = "application/vnd.nategood.message+xml";
-    
+
     function testInit()
     {
       $r = Request::init();
       // Did we get a 'Request' object?
-      assert('Httpful\Request' === get_class($r));
+      $this->assertEquals('Httpful\Request', get_class($r));
     }
-    
+
     function testMethods()
     {
       $valid_methods = array('get', 'post', 'delete', 'put', 'options', 'head');
@@ -68,7 +68,7 @@ Transfer-Encoding: chunked";
         $this->assertEquals(Http::GET, $r->method);
         $this->assertFalse($r->strict_ssl);
     }
-    
+
     function testShortMime()
     {
         // Valid short ones
@@ -99,7 +99,7 @@ Transfer-Encoding: chunked";
 
         $this->assertFalse($r->strict_ssl);
     }
-    
+
     function testSendsAndExpectsType()
     {
         $r = Request::init()
@@ -122,7 +122,7 @@ Transfer-Encoding: chunked";
         $this->assertEquals(Mime::FORM, $r->expected_type);
         $this->assertEquals(Mime::FORM, $r->content_type);
     }
-    
+
     function testIni()
     {
         // Test setting defaults/templates
@@ -193,7 +193,7 @@ Transfer-Encoding: chunked";
         list( , $string ) = each($strings);
         $this->assertEquals("a string", (string) $string);
     }
-    
+
     function testParsingContentTypeCharset()
     {
         $req = Request::init()->sendsAndExpects(Mime::JSON);
@@ -221,7 +221,21 @@ Content-Type: text/plain; charset=utf-8", $req);
     {
         $req = Request::init()->sendsAndExpects(Mime::JSON);
         $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
-        assert($response->headers['Content-Type'] === 'application/json');
+        $this->assertEquals('application/json', $response->headers['Content-Type']);
+    }
+
+    function testDetectContentType()
+    {
+        $req = Request::init();
+        $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
+        $this->assertEquals('application/json', $response->headers['Content-Type']);
+    }
+
+    function testMissingBodyContentType()
+    {
+        $body = 'A string';
+        $request = Request::post(HttpfulTest::TEST_URL, $body)->_curlPrep();
+        $this->assertEquals($body, $request->serialized_payload);
     }
 
     function testParentType()
@@ -233,7 +247,7 @@ Content-Type: text/plain; charset=utf-8", $req);
         $this->assertEquals("application/xml", $response->parent_type);
         $this->assertEquals(self::SAMPLE_VENDOR_TYPE, $response->content_type);
         $this->assertTrue($response->is_mime_vendor_specific);
-        
+
         // Make sure we still parsed as if it were plain old XML
         $this->assertEquals("Nathan", $response->body->name->__toString());
     }
@@ -242,7 +256,7 @@ Content-Type: text/plain; charset=utf-8", $req);
     {
         // Parent type
         $request = Request::init()->sendsAndExpects(Mime::XML);
-        $response = new Response('<xml><name>Nathan</name></xml>', 
+        $response = new Response('<xml><name>Nathan</name></xml>',
 "HTTP/1.1 200 OK
 Connection: keep-alive
 Transfer-Encoding: chunked", $request);
@@ -254,7 +268,7 @@ Transfer-Encoding: chunked", $request);
     {
         // Register new mime type handler for "application/vnd.nategood.message+xml"
         Httpful::register(self::SAMPLE_VENDOR_TYPE, new DemoMimeHandler());
-        
+
         $this->assertTrue(Httpful::hasParserRegistered(self::SAMPLE_VENDOR_TYPE));
 
         $request = Request::init();
@@ -262,6 +276,15 @@ Transfer-Encoding: chunked", $request);
 
         $this->assertEquals(self::SAMPLE_VENDOR_TYPE, $response->content_type);
         $this->assertEquals('custom parse', $response->body);
+    }
+
+    public function testShorthandMimeDefinition()
+    {
+        $r = Request::init()->expects('json');
+        $this->assertEquals(Mime::JSON, $r->expected_type);
+
+        $r = Request::init()->expectsJson();
+        $this->assertEquals(Mime::JSON, $r->expected_type);
     }
 }
 

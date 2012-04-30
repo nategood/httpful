@@ -167,7 +167,7 @@ class Request
 
         $info = curl_getinfo($this->_ch);
         $response = explode("\r\n\r\n", $result, 2 + $info['redirect_count']);
-        
+
         $body = array_pop($response);
         $headers = array_pop($response);
 
@@ -442,7 +442,7 @@ class Request
         $this->auto_parse = $auto_parse;
         return $this;
     }
-    
+
     /**
      * @see Request::autoParse()
      * @return Request
@@ -451,7 +451,7 @@ class Request
     {
         return $this->autoParse(false);
     }
-    
+
     /**
      * @see Request::autoParse()
      * @return Request
@@ -472,7 +472,7 @@ class Request
         $this->parse_callback = $callback;
         return $this;
     }
-    
+
     /**
      * @see Request::parseResponsesWith()
      * @return Request $this
@@ -675,7 +675,7 @@ class Request
             curl_setopt($ch, CURLOPT_SSLKEYPASSWD,  $this->client_passphrase);
             // curl_setopt($ch, CURLOPT_SSLCERTPASSWD,  $this->client_cert_passphrase);
         }
-        
+
         if ($this->follow_redirects) {
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
             curl_setopt($ch, CURLOPT_MAXREDIRS, 25);
@@ -732,7 +732,7 @@ class Request
     }
 
     /**
-     * Turn payload from structure data into
+     * Turn payload from structured data into
      * a string based on the current Mime type.
      * This uses the auto_serialize option to determine
      * it's course of action.  See serialize method for more.
@@ -755,12 +755,13 @@ class Request
         if ($this->serialize_payload_method === self::SERIALIZE_PAYLOAD_SMART && is_scalar($payload))
             return $payload;
 
+        // Use a custom serializer if one is registered for this mime type
         if (isset($this->payload_serializers['*']) || isset($this->payload_serializers[$this->content_type])) {
             $key = isset($this->payload_serializers[$this->content_type]) ? $this->content_type : '*';
             return call_user_func($this->payload_serializers[$key], $payload);
         }
-        
-        return Httpful::get($parse_with)->serialize($payload);
+
+        return Httpful::get($this->content_type)->serialize($payload);
     }
 
     /**

@@ -3,8 +3,8 @@
     "description": "A Readable, Chainable, REST friendly, PHP HTTP Client",
     "homepage": "http://github.com/nategood/httpful",
     "license": "MIT",
-    "keywords": ["http", "curl", "rest", "restful"],
-    "version": "0.1.0",
+    "keywords": ["http", "curl", "rest", "restful", "api", "requests"],
+    "version": "0.1.1",
     "authors": [
         {
             "name": "Nate Good",

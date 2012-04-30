@@ -5,7 +5,7 @@ namespace Httpful;
 class Httpful {
     private static $mimeRegistrar = array();
     private static $default = null;
-    
+
     /**
      * @param string $mime_type
      * @param MimeHandlerAdapter $handler
@@ -14,12 +14,12 @@ class Httpful {
     {
         self::$mimeRegistrar[$mimeType] = $handler;
     }
-    
+
     /**
-     * @param string $mime_type
+     * @param string $mime_type defaults to MimeHandlerAdapter
      * @return MimeHandlerAdapter
      */
-    public static function get($mimeType)
+    public static function get($mimeType = null)
     {
         if (isset(self::$mimeRegistrar[$mimeType])) {
             return self::$mimeRegistrar[$mimeType];
@@ -31,7 +31,7 @@ class Httpful {
 
         return self::$default;
     }
-    
+
     /**
      * Does this particular Mime Type have a parser registered
      * for it?
