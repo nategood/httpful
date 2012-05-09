@@ -40,7 +40,7 @@ class Response
 
         $this->body         = $this->_parse($body);
     }
-    
+
     /**
      * @return bool Did we receive a 400 or 500?
      */
@@ -48,7 +48,7 @@ class Response
     {
         return $this->code < 100 || $this->code >= 400;
     }
-    
+
     /**
      * @return return bool
      */

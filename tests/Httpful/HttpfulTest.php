@@ -286,6 +286,17 @@ Transfer-Encoding: chunked", $request);
         $r = Request::init()->expectsJson();
         $this->assertEquals(Mime::JSON, $r->expected_type);
     }
+
+    public function testOverrideXmlHandler()
+    {
+        // Lazy test...
+        $prev = \Httpful\Httpful::get(\Httpful\Mime::XML);
+        $this->assertEquals($prev, new \Httpful\Handlers\XmlHandler());
+        $conf = array('namespace' => 'http://example.com');
+        \Httpful\Httpful::register(\Httpful\Mime::XML, new \Httpful\Handlers\XmlHandler($conf));
+        $new = \Httpful\Httpful::get(\Httpful\Mime::XML);
+        $this->assertNotEquals($prev, $new);
+    }
 }
 
 class DemoMimeHandler extends \Httpful\Handlers\MimeHandlerAdapter {

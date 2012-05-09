@@ -18,7 +18,7 @@ class MimeHandlerAdapter
     {
         return $body;
     }
-    
+
     /**
      * @param mixed $payload
      * @return string

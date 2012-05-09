@@ -10,12 +10,12 @@ namespace Httpful;
  */
 class Bootstrap
 {
-    
+
     const DIR_GLUE = '/';
     const NS_GLUE = '\\';
-    
+
     public static $registered = false;
-    
+
     /**
      * Register the autoloader and any other setup needed
      */
@@ -24,17 +24,17 @@ class Bootstrap
         spl_autoload_register(array('\Httpful\Bootstrap', 'autoload'));
         self::registerHandlers();
     }
-    
+
     /**
-     * The autoload magic (PSR-0 style) 
-     * 
+     * The autoload magic (PSR-0 style)
+     *
      * @param string $classname
      */
-    public static function autoload($classname) 
+    public static function autoload($classname)
     {
         self::_autoload(dirname(dirname(__FILE__)), $classname);
     }
-    
+
     /**
      * Register the autoloader and any other setup needed
      */
@@ -43,17 +43,17 @@ class Bootstrap
         spl_autoload_register(array('\Httpful\Bootstrap', 'pharAutoload'));
         self::registerHandlers();
     }
-    
+
     /**
      * Phar specific autoloader
-     * 
+     *
      * @param string $classname
      */
-    public static function pharAutoload($classname) 
+    public static function pharAutoload($classname)
     {
         self::_autoload('phar://httpful.phar', $classname);
     }
-    
+
     /**
      * @param string base
      * @param string classname
@@ -75,19 +75,19 @@ class Bootstrap
         if (self::$registered === true) {
             return;
         }
-        
-        // @todo check a conf file to load from that instead of 
+
+        // @todo check a conf file to load from that instead of
         // hardcoding into the library?
         $handlers = array(
             \Httpful\Mime::JSON => new \Httpful\Handlers\JsonHandler(),
             \Httpful\Mime::XML  => new \Httpful\Handlers\XmlHandler(),
             \Httpful\Mime::FORM => new \Httpful\Handlers\FormHandler(),
         );
-        
+
         foreach ($handlers as $mime => $handler) {
             Httpful::register($mime, $handler);
         }
-        
+
         self::$registered = true;
     }
 }

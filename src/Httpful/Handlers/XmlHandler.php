@@ -8,8 +8,27 @@
 
 namespace Httpful\Handlers;
 
-class XmlHandler extends MimeHandlerAdapter 
+class XmlHandler extends MimeHandlerAdapter
 {
+    /**
+     *  @var string $namespace xml namespace to use with simple_load_string
+     */
+    private $namespace;
+
+    /**
+     * @var int $libxml_opts see http://www.php.net/manual/en/libxml.constants.php
+     */
+    private $libxml_opts;
+
+    /**
+     * @param array $conf sets configuration options
+     */
+    public function __construct(array $conf = array())
+    {
+        $this->namespace =      isset($conf['namespace']) ? $conf['namespace'] : '';
+        $this->libxml_opts =    isset($conf['libxml_opts']) ? $conf['libxml_opts'] : 0;
+    }
+
     /**
      * @param string $body
      * @return mixed
@@ -17,12 +36,12 @@ class XmlHandler extends MimeHandlerAdapter
      */
     public function parse($body)
     {
-        $parsed = simplexml_load_string($body);
+        $parsed = simplexml_load_string($body, null, $this->libxml_opts, $this->namespace);
         if (!$parsed)
             throw new \Exception("Unable to parse response as XML");
         return $parsed;
     }
-    
+
     /**
      * @param mixed $payload
      * @return string
@@ -33,7 +52,7 @@ class XmlHandler extends MimeHandlerAdapter
         list($_, $dom) = $this->_future_serializeAsXml($payload);
         return $dom->saveXml();
     }
-    
+
     /**
      * @author Zack Douglas <zack@zackerydouglas.info>
      */

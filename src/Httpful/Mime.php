@@ -40,7 +40,7 @@ class Mime
      * @return string full mime type (e.g. application/json)
      * @param string common name for mime type (e.g. json)
      */
-    public static function getFullMime($short_name) 
+    public static function getFullMime($short_name)
     {
         return array_key_exists($short_name, self::$mimes) ? self::$mimes[$short_name] : $short_name;
     }
@@ -49,7 +49,7 @@ class Mime
      * @return bool
      * @param string $short_name
      */
-    public static function supportsMimeType($short_name) 
+    public static function supportsMimeType($short_name)
     {
         return array_key_exists($short_name, self::$mimes);
     }

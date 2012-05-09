@@ -22,7 +22,7 @@ Here's something to whet your appetite.  Search the twitter API for tweets conta
     $response = Request::get($url)
         ->withXTrivialHeader('Just as a demo')
         ->send();
- 
+
     foreach ($response->body->results as $tweet) {
         echo "@{$tweet->from_user} tweets \"{$tweet->text}\"\n";
     }
@@ -37,7 +37,7 @@ A [PHP Archive](http://php.net/manual/en/book.phar.php) (or .phar) file is avail
     include('httpful.phar');
     $r = \Httpful\Request::get($uri)->sendIt();
     ...
-    
+
 ## Composer
 
 Httpful is PSR-0 compliant and can be installed using [composer](http://getcomposer.org/).  Simply add `nategood/httpful` to your composer.json file.  _Composer is the sane alternative to PEAR.  It is excellent for managing dependancies in larger projects_.
@@ -55,3 +55,22 @@ Because Httpful is PSR-0 compliant, you can also just clone the Httpful reposito
 # Show Me More!
 
 You can checkout the [Httpful Landing Page](http://phphttpclient.com) for more info including many examples and  [documentation](http:://phphttpclient.com/docs).
+
+# Changelog
+
+## 0.1.2
+
+ - Added support for setting XMLHandler configuration options
+ - Added examples for overriding XmlHandler and registering a custom parser
+ - Removed the httpful.php download (deprecated in favor of httpful.phar)
+
+## 0.1.1
+
+ - Bug fix serialization default case and phpunit tests
+
+## 0.1.0
+
+ - Added Support for Registering Mime Handlers
+  - Created AbstractMimeHandler type that all Mime Handlers must extend
+  - Pulled out the parsing/serializing logic from the Request/Response classes into their own MimeHandler classes
+  - Added ability to register new mime handlers for mime types
