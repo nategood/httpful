@@ -176,6 +176,13 @@ Transfer-Encoding: chunked";
         $this->assertEquals(1, $response->body->array[0]);
     }
 
+    function testEmptyJsonResponseParse()
+    {
+        $req = Request::init()->sendsAndExpects(Mime::JSON);
+        $response = new Response("", self::SAMPLE_JSON_HEADER, $req);
+        $this->assertEquals("", $response->body);
+    }
+
     function testXMLResponseParse()
     {
         $req = Request::init()->sendsAndExpects(Mime::XML);

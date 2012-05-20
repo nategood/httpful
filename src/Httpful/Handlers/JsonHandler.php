@@ -6,7 +6,7 @@
 
 namespace Httpful\Handlers;
 
-class JsonHandler extends MimeHandlerAdapter 
+class JsonHandler extends MimeHandlerAdapter
 {
     /**
      * @param string $body
@@ -14,12 +14,14 @@ class JsonHandler extends MimeHandlerAdapter
      */
     public function parse($body)
     {
+        if (empty($body))
+            return "";
         $parsed = json_decode($body, false);
         if (is_null($parsed))
             throw new \Exception("Unable to parse response as JSON");
         return $parsed;
     }
-    
+
     /**
      * @param mixed $payload
      * @return string
