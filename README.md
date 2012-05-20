@@ -58,6 +58,10 @@ You can checkout the [Httpful Landing Page](http://phphttpclient.com) for more i
 
 # Changelog
 
+## 0.1.3
+
+ - Handle empty responses in JsonParser and XmlParser
+
 ## 0.1.2
 
  - Added support for setting XMLHandler configuration options
