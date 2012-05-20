@@ -176,13 +176,6 @@ Transfer-Encoding: chunked";
         $this->assertEquals(1, $response->body->array[0]);
     }
 
-    function testEmptyJsonResponseParse()
-    {
-        $req = Request::init()->sendsAndExpects(Mime::JSON);
-        $response = new Response("", self::SAMPLE_JSON_HEADER, $req);
-        $this->assertEquals("", $response->body);
-    }
-
     function testXMLResponseParse()
     {
         $req = Request::init()->sendsAndExpects(Mime::XML);
@@ -212,6 +205,17 @@ Content-Type: text/plain; charset=utf-8", $req);
         $this->assertEquals($response->headers['Content-Type'], 'text/plain; charset=utf-8');
         $this->assertEquals($response->content_type, 'text/plain');
         $this->assertEquals($response->charset, 'utf-8');
+    }
+
+    function testEmptyResponseParse()
+    {
+        $req = Request::init()->sendsAndExpects(Mime::JSON);
+        $response = new Response("", self::SAMPLE_JSON_HEADER, $req);
+        $this->assertEquals(null, $response->body);
+
+        $reqXml = Request::init()->sendsAndExpects(Mime::XML);
+        $responseXml = new Response("", self::SAMPLE_XML_HEADER, $reqXml);
+        $this->assertEquals(null, $responseXml->body);
     }
 
     function testNoAutoParse()
