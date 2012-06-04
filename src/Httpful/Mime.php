@@ -16,6 +16,7 @@ class Mime
     const JS    = 'text/javascript';
     const HTML  = 'text/html';
     const YAML  = 'application/x-yaml';
+    const CSV   = 'text/csv';
 
     /**
      * Map short name for a mime type
@@ -32,6 +33,7 @@ class Mime
         'js'        => self::JS,
         'javascript'=> self::JS,
         'yaml'      => self::YAML,
+        'csv'       => self::CSV,
     );
 
     /**

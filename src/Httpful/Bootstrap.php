@@ -82,6 +82,7 @@ class Bootstrap
             \Httpful\Mime::JSON => new \Httpful\Handlers\JsonHandler(),
             \Httpful\Mime::XML  => new \Httpful\Handlers\XmlHandler(),
             \Httpful\Mime::FORM => new \Httpful\Handlers\FormHandler(),
+            \Httpful\Mime::CSV  => new \Httpful\Handlers\CsvHandler(),
         );
 
         foreach ($handlers as $mime => $handler) {
