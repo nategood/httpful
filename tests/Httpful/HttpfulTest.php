@@ -30,6 +30,15 @@ Content-Type: application/json
 Connection: keep-alive
 Transfer-Encoding: chunked";
     const SAMPLE_JSON_RESPONSE = '{"key":"value","object":{"key":"value"},"array":[1,2,3,4]}';
+    const SAMPLE_CSV_HEADER =
+"HTTP/1.1 200 OK
+Content-Type: text/csv
+Connection: keep-alive
+Transfer-Encoding: chunked";
+    const SAMPLE_CSV_RESPONSE = 
+"Key1,Key2
+Value1,Value2
+\"40.0\",\"Forty\"";
     const SAMPLE_XML_RESPONSE = '<stdClass><arrayProp><array><k1><myClass><intProp>2</intProp></myClass></k1></array></arrayProp><stringProp>a string</stringProp><boolProp>TRUE</boolProp></stdClass>';
     const SAMPLE_XML_HEADER =
 "HTTP/1.1 200 OK
@@ -75,16 +84,19 @@ Transfer-Encoding: chunked";
         $this->assertEquals(Mime::JSON,  Mime::getFullMime('json'));
         $this->assertEquals(Mime::XML,   Mime::getFullMime('xml'));
         $this->assertEquals(Mime::HTML,  Mime::getFullMime('html'));
+        $this->assertEquals(Mime::CSV,  Mime::getFullMime('csv'));
 
         // Valid long ones
         $this->assertEquals(Mime::JSON, Mime::getFullMime(Mime::JSON));
         $this->assertEquals(Mime::XML,  Mime::getFullMime(Mime::XML));
         $this->assertEquals(Mime::HTML, Mime::getFullMime(Mime::HTML));
+        $this->assertEquals(Mime::CSV, Mime::getFullMime(Mime::CSV));
 
         // No false positives
         $this->assertNotEquals(Mime::XML,  Mime::getFullMime(Mime::HTML));
         $this->assertNotEquals(Mime::JSON, Mime::getFullMime(Mime::XML));
         $this->assertNotEquals(Mime::HTML, Mime::getFullMime(Mime::JSON));
+        $this->assertNotEquals(Mime::XML, Mime::getFullMime(Mime::CSV));
     }
 
     function testSettingStrictSsl()
@@ -121,6 +133,11 @@ Transfer-Encoding: chunked";
             ->sendsAndExpectsType('application/x-www-form-urlencoded');
         $this->assertEquals(Mime::FORM, $r->expected_type);
         $this->assertEquals(Mime::FORM, $r->content_type);
+
+        $r = Request::init()
+            ->sendsAndExpectsType(Mime::CSV);
+        $this->assertEquals(Mime::CSV, $r->expected_type);
+        $this->assertEquals(Mime::CSV, $r->content_type);
     }
 
     function testIni()
@@ -192,6 +209,17 @@ Transfer-Encoding: chunked";
         $strings = $sxe->xpath('/stdClass/stringProp');
         list( , $string ) = each($strings);
         $this->assertEquals("a string", (string) $string);
+    }
+
+    function testCsvResponseParse()
+    {
+        $req = Request::init()->sendsAndExpects(Mime::CSV);
+        $response = new Response(self::SAMPLE_CSV_RESPONSE, self::SAMPLE_CSV_HEADER, $req);
+
+        $this->assertEquals("Key1", $response->body[0][0]);
+        $this->assertEquals("Value1", $response->body[1][0]);
+        $this->assertInternalType('string', $response->body[2][0]);
+        $this->assertEquals("40.0", $response->body[2][0]);
     }
 
     function testParsingContentTypeCharset()
