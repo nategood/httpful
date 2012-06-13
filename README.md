@@ -58,6 +58,10 @@ You can checkout the [Httpful Landing Page](http://phphttpclient.com) for more i
 
 # Changelog
 
+## 0.1.4
+
+ - Add support for CSV Handling [PR #32](https://github.com/nategood/httpful/pull/32)
+
 ## 0.1.3
 
  - Handle empty responses in JsonParser and XmlParser
