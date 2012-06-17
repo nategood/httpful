@@ -685,9 +685,6 @@ class Request
 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-        $headers[] = !empty($this->expected_type) ?
-            "Accept: {$this->expected_type}, text/plain" :
-            "Accept: */*";
         $headers = array();
         if (!isset($this->headers['User-Agent'])) {
             $user_agent = 'User-Agent: HttpFul/1.0 (cURL/';
@@ -712,6 +709,12 @@ class Request
 		}
         $headers[] = "Content-Type: {$this->content_type}";
 
+        // http://pretty-rfc.herokuapp.com/RFC2616#header.accept
+        $accept = "Accept: */*; q=0.5, text/plain; q=0.8,\r\n\t" .
+                       'text/html;level=3; q=0.9';
+        if (!empty($this->expected_type))
+            $accept .= ", {$this->expected_type}";
+        $headers[] = $accept;
 
         foreach ($this->headers as $header => $value) {
             $headers[] = "$header: $value";
