@@ -169,7 +169,35 @@ Transfer-Encoding: chunked\r\n";
         Request::resetIni();
     }
 
-    function testAuthSetup()
+    function testAccept()
+    {
+        $r = Request::get('http://example.com/')
+            ->expectsType(Mime::JSON);
+
+        $this->assertEquals(Mime::JSON, $r->expected_type);
+        $r->_curlPrep();
+		$this->assertContains('application/json', $r->raw_headers);
+    }
+    function testUserAgent()
+    {
+        $r = Request::get('http://example.com/')
+            ->withUserAgent('ACME/1.2.3');
+
+        $this->assertArrayHasKey('User-Agent', $r->headers);
+        $r->_curlPrep();
+		$this->assertContains('User-Agent: ACME/1.2.3', $r->raw_headers);
+        $this->assertNotContains('User-Agent: HttpFul/1.0', $r->raw_headers);
+
+        $r = Request::get('http://example.com/')
+            ->withUserAgent('');
+
+        $this->assertArrayHasKey('User-Agent', $r->headers);
+        $r->_curlPrep();
+        $this->assertContains('User-Agent:', $r->raw_headers);
+        $this->assertNotContains('User-Agent: HttpFul/1.0', $r->raw_headers);
+    }
+
+	function testAuthSetup()
     {
         $username = 'nathan';
         $password = 'opensesame';
