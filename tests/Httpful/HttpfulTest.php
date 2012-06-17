@@ -343,3 +343,4 @@ class DemoMimeHandler extends \Httpful\Handlers\MimeHandlerAdapter {
         return 'custom parse';
     }
 }
+
