@@ -111,7 +111,8 @@ class Response
      */
     public function _parseHeaders($headers)
     {
-        $headers = preg_split("/(\r|\n)+/", $headers);
+        $headers = preg_split("/(\r|\n)+/", $headers, -1, \PREG_SPLIT_NO_EMPTY);
+        $parse_headers = array();
         for ($i = 1; $i < count($headers); $i++) {
             list($key, $raw_value) = explode(':', $headers[$i], 2);
             $parse_headers[trim($key)] = trim($raw_value);
