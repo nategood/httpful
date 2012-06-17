@@ -43,11 +43,21 @@ class Response
     }
 
     /**
-     * @return bool Did we receive a 400 or 500?
+     * Status Code Definitions
+     *
+     * Informational 1xx
+     * Successful    2xx
+     * Redirection   3xx
+     * Client Error  4xx
+     * Server Error  5xx
+     *
+     * http://pretty-rfc.herokuapp.com/RFC2616#status.codes
+     *
+     * @return bool Did we receive a 4xx or 5xx?
      */
     public function hasErrors()
     {
-        return $this->code < 100 || $this->code >= 400;
+        return $this->code >= 400;
     }
 
     /**
