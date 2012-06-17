@@ -27,6 +27,7 @@ class Request
     public $uri,
            $method                  = Http::GET,
            $headers                 = array(),
+           $raw_headers             = '',
            $strict_ssl              = false,
            $content_type,
            $expected_type,
@@ -719,6 +720,15 @@ class Request
         foreach ($this->headers as $header => $value) {
             $headers[] = "$header: $value";
         }
+
+        $url = \parse_url($this->uri);
+        $path = (isset($url['path']) ? $url['path'] : '/').(isset($url['query']) ? '?'.$url['query'] : '');
+        $this->raw_headers = "{$this->method} $path HTTP/1.1\r\n";
+        $host = (isset($url['host']) ? $url['host'] : 'localhost').(isset($url['port']) ? ':'.$url['port'] : '');
+        $this->raw_headers .= "Host: $host\r\n";
+        $this->raw_headers .= \implode("\r\n", $headers);
+        $this->raw_headers .= "\r\n";
+
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         if (isset($this->payload)) {
