@@ -13,6 +13,7 @@ class Response
     public $body,
            $raw_body,
            $headers,
+           $raw_headers,
            $request,
            $code = 0,
            $content_type,
