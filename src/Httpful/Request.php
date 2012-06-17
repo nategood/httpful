@@ -685,11 +685,33 @@ class Request
 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-        $headers = array("Content-Type: {$this->content_type}");
-
         $headers[] = !empty($this->expected_type) ?
             "Accept: {$this->expected_type}, text/plain" :
             "Accept: */*";
+        $headers = array();
+        if (!isset($this->headers['User-Agent'])) {
+            $user_agent = 'User-Agent: HttpFul/1.0 (cURL/';
+	        $curl = \curl_version();
+            if (isset($curl['version']))
+                $user_agent .= $curl['version'];
+            else
+                $user_agent .= '?.?.?';
+            $user_agent .= ' PHP/'.PHP_VERSION.' ('.PHP_OS.')';
+		    if (isset($_SERVER['SERVER_SOFTWARE']))
+		        $user_agent .= ' '.\preg_replace('~PHP/[\d\.]+~U', '', $_SERVER['SERVER_SOFTWARE']);
+            else {
+                if (isset($_SERVER['TERM_PROGRAM']))
+                    $user_agent .= " {$_SERVER['TERM_PROGRAM']}";
+                if (isset($_SERVER['TERM_PROGRAM_VERSION']))
+                    $user_agent .= "/{$_SERVER['TERM_PROGRAM_VERSION']}";
+            }
+            if (isset($_SERVER['HTTP_USER_AGENT']))
+                $user_agent .= " {$_SERVER['HTTP_USER_AGENT']}";
+            $user_agent .= ')';
+            $headers[] = $user_agent;
+		}
+        $headers[] = "Content-Type: {$this->content_type}";
+
 
         foreach ($this->headers as $header => $value) {
             $headers[] = "$header: $value";
