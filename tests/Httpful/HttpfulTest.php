@@ -291,6 +291,53 @@ Content-Type: text/plain; charset=utf-8\r\n", $req);
         $this->assertEquals('application/json', $response->headers['Content-Type']);
     }
 
+    function testRawHeaders()
+    {
+        $req = Request::init()->sendsAndExpects(Mime::JSON);
+        $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
+        $this->assertContains('Content-Type: application/json', $response->raw_headers);
+    }
+
+    function testHasErrors()
+    {
+        $req = Request::init()->sendsAndExpects(Mime::JSON);
+        $response = new Response('', "HTTP/1.1 100 Continue\r\n", $req);
+        $this->assertFalse($response->hasErrors());
+        $response = new Response('', "HTTP/1.1 200 OK\r\n", $req);
+        $this->assertFalse($response->hasErrors());
+        $response = new Response('', "HTTP/1.1 300 Multiple Choices\r\n", $req);
+        $this->assertFalse($response->hasErrors());
+        $response = new Response('', "HTTP/1.1 400 Bad Request\r\n", $req);
+        $this->assertTrue($response->hasErrors());
+        $response = new Response('', "HTTP/1.1 500 Internal Server Error\r\n", $req);
+        $this->assertTrue($response->hasErrors());
+    }
+
+    function test_parseCode()
+    {
+        $req = Request::init()->sendsAndExpects(Mime::JSON);
+        $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
+        $code = $response->_parseCode("HTTP/1.1 406 Not Acceptable\r\n");
+        $this->assertEquals(406, $code);
+    }
+
+    function testToString()
+    {
+        $req = Request::init()->sendsAndExpects(Mime::JSON);
+        $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
+        $this->assertEquals(self::SAMPLE_JSON_RESPONSE, (string)$response);
+    }
+
+    function test_parseHeaders()
+    {
+        $req = Request::init();
+        $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
+        $parse_headers = $response->_parseHeaders(self::SAMPLE_JSON_HEADER);
+        $this->assertEquals(3, count($parse_headers));
+        $this->assertEquals('application/json', $parse_headers['Content-Type']);
+        $this->assertArrayHasKey('Connection', $parse_headers);
+    }
+
     function testDetectContentType()
     {
         $req = Request::init();
