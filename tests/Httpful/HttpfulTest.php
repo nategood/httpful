@@ -176,7 +176,7 @@ Transfer-Encoding: chunked\r\n";
 
         $this->assertEquals(Mime::JSON, $r->expected_type);
         $r->_curlPrep();
-		$this->assertContains('application/json', $r->raw_headers);
+        $this->assertContains('application/json', $r->raw_headers);
     }
     function testUserAgent()
     {
@@ -185,7 +185,7 @@ Transfer-Encoding: chunked\r\n";
 
         $this->assertArrayHasKey('User-Agent', $r->headers);
         $r->_curlPrep();
-		$this->assertContains('User-Agent: ACME/1.2.3', $r->raw_headers);
+        $this->assertContains('User-Agent: ACME/1.2.3', $r->raw_headers);
         $this->assertNotContains('User-Agent: HttpFul/1.0', $r->raw_headers);
 
         $r = Request::get('http://example.com/')
