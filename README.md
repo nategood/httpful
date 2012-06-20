@@ -56,6 +56,17 @@ Because Httpful is PSR-0 compliant, you can also just clone the Httpful reposito
 
 You can checkout the [Httpful Landing Page](http://phphttpclient.com) for more info including many examples and  [documentation](http:://phphttpclient.com/docs).
 
+## Pull Requests
+
+Httpful highly encourages sending in pull requests.  When submitting a pull request please:
+
+ - All pull requests should target the `dev` branch (not `master`)
+ - Make sure your code follows the [coding conventions](http://pear.php.net/manual/en/standards.php)
+ - Please use soft tabs (four spaces) instead of hard tabs
+ - Make sure you add appropriate test coverage for your changes
+ - Run all unit tests in the test directory via `phpunit ./tests`
+ - Include commenting where appropriate and add a descriptive pull request message
+
 # Changelog
 
 ## 0.1.4
