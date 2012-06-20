@@ -71,7 +71,8 @@ Httpful highly encourages sending in pull requests.  When submitting a pull requ
 
 ## 0.1.5
 
- - Use `DIRECTORY_SEPARATOR` constant [PR #33]((https://github.com/nategood/httpful/pull/32))
+ - Use `DIRECTORY_SEPARATOR` constant [PR #33](https://github.com/nategood/httpful/pull/32)
+ - [PR #35](https://github.com/nategood/httpful/pull/35)
  - Added the raw_headers property reference to response
  - Compose request header and added raw_header to Request object.
  - Fixed response has errors and added more comments for clarity.
