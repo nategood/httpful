@@ -11,7 +11,7 @@ namespace Httpful;
 class Bootstrap
 {
 
-    const DIR_GLUE = '/';
+    const DIR_GLUE = DIRECTORY_SEPARATOR;
     const NS_GLUE = '\\';
 
     public static $registered = false;
