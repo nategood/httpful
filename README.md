@@ -71,21 +71,17 @@ Httpful highly encourages sending in pull requests.  When submitting a pull requ
 
 ## 0.1.5
 
- - Use `DIRECTORY_SEPARATOR` constant [PR #33]((https://github.com/nategood/httpful/pull/32))
- - Added the raw_headers property reference to response
+ - Use `DIRECTORY_SEPARATOR` constant [PR #33](https://github.com/nategood/httpful/pull/32)
+ - [PR #35](https://github.com/nategood/httpful/pull/35)
+ - Added the raw_headers property reference to response.
  - Compose request header and added raw_header to Request object.
  - Fixed response has errors and added more comments for clarity.
  - Fixed header parsing to allow the minimum (status line only) and also cater for the actual CRLF ended headers as per RFC2616.
  - Added the perfect test Accept: header for all Acceptable scenarios see  @b78e9e82cd9614fbe137c01bde9439c4e16ca323 for details.
- - Added default User-Agent header.
-  - `User-Agent: HttpFul/1.0` you might want to tweak the name and version number.
-  - `(cURL/?.?.? (host) if all else fails but it should be able to find the curl version from uhm curl_version() I guess.
-  - Then we get PHP/5.3.8 for example which should get populated from the core provided PHP_VERSION constant.
-  - Then we check if we have `$_SERVER['SERVER_SOFTWARE']` and remove PHP from there should it exist.
-  - If SERVER_SOFTWARE is unavailable we are more than likely using CLI so check for `TERM_PROGRAM` and `TERM_PROGRAM_VERSION` from $_SERVER.
-  - Finally add the HTTP_USER_AGENT string if it exists and close the support software section with ')' to wrap this up as the perfect User-Agent string to verify any issues we might have.
+ - Added default User-Agent header
+  - `User-Agent: Httpful/0.1.5` + curl version + server software + PHP version
  - To bypass this "default" operation simply add a User-Agent to the request headers even a blank User-Agent is sufficient and more than simple enough to produce me thinks.
- - Completed test units for all the additions and a few extra ones see @a23e8c301dbe501ccb934c0ff7e690a334bd81b4 and @1741fd8427f8015c391023fcca844fa0641cc6b7 for details.
+ - Completed test units for additions.
  - Added phpunit coverage reporting and helped phpunit auto locate the tests a bit easier.
 
 ## 0.1.4

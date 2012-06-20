@@ -688,7 +688,7 @@ class Request
         $headers = array();
 
         if (!isset($this->headers['User-Agent'])) {
-            $user_agent = 'User-Agent: HttpFul/1.0 (cURL/';
+            $user_agent = 'User-Agent: Httpful/' . Httpful::VERSION . ' (cURL/';
             $curl = \curl_version();
 
             if (isset($curl['version'])) {
@@ -697,10 +697,10 @@ class Request
                 $user_agent .= '?.?.?';
             }
 
-            $user_agent .= ' PHP/'.PHP_VERSION.' ('.PHP_OS.')';
+            $user_agent .= ' PHP/'. PHP_VERSION . ' (' . PHP_OS . ')';
 
             if (isset($_SERVER['SERVER_SOFTWARE'])) {
-                $user_agent .= ' '.\preg_replace('~PHP/[\d\.]+~U', '',
+                $user_agent .= ' ' . \preg_replace('~PHP/[\d\.]+~U', '',
                     $_SERVER['SERVER_SOFTWARE']);
             } else {
                 if (isset($_SERVER['TERM_PROGRAM'])) {
