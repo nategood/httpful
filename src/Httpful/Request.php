@@ -689,14 +689,14 @@ class Request
         $headers = array();
         if (!isset($this->headers['User-Agent'])) {
             $user_agent = 'User-Agent: HttpFul/1.0 (cURL/';
-	        $curl = \curl_version();
+            $curl = \curl_version();
             if (isset($curl['version']))
                 $user_agent .= $curl['version'];
             else
                 $user_agent .= '?.?.?';
             $user_agent .= ' PHP/'.PHP_VERSION.' ('.PHP_OS.')';
-		    if (isset($_SERVER['SERVER_SOFTWARE']))
-		        $user_agent .= ' '.\preg_replace('~PHP/[\d\.]+~U', '', $_SERVER['SERVER_SOFTWARE']);
+            if (isset($_SERVER['SERVER_SOFTWARE']))
+                $user_agent .= ' '.\preg_replace('~PHP/[\d\.]+~U', '', $_SERVER['SERVER_SOFTWARE']);
             else {
                 if (isset($_SERVER['TERM_PROGRAM']))
                     $user_agent .= " {$_SERVER['TERM_PROGRAM']}";
@@ -707,7 +707,7 @@ class Request
                 $user_agent .= " {$_SERVER['HTTP_USER_AGENT']}";
             $user_agent .= ')';
             $headers[] = $user_agent;
-		}
+        }
         $headers[] = "Content-Type: {$this->content_type}";
 
         // http://pretty-rfc.herokuapp.com/RFC2616#header.accept
