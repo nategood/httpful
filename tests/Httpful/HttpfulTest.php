@@ -35,7 +35,7 @@ Transfer-Encoding: chunked\r\n";
 Content-Type: text/csv
 Connection: keep-alive
 Transfer-Encoding: chunked\r\n";
-    const SAMPLE_CSV_RESPONSE = 
+    const SAMPLE_CSV_RESPONSE =
 "Key1,Key2
 Value1,Value2
 \"40.0\",\"Forty\"";
@@ -197,7 +197,7 @@ Transfer-Encoding: chunked\r\n";
         $this->assertNotContains('User-Agent: HttpFul/1.0', $r->raw_headers);
     }
 
-	function testAuthSetup()
+    function testAuthSetup()
     {
         $username = 'nathan';
         $password = 'opensesame';
