@@ -629,6 +629,9 @@ class Request
      */
     public static function init($method = null, $mime = null)
     {
+        // Setup our handlers, can call it here as it's idempotent
+        Bootstrap::init();
+	
         // Setup the default template if need be
         if (!isset(self::$_template))
             self::_initializeDefaults();
