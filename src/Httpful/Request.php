@@ -570,7 +570,7 @@ class Request
             $method = substr($method, 4);
 
         // Precede upper case letters with dashes, uppercase the first letter of method
-        $header =  substr(ucwords(preg_replace('/([A-Z])/', '-$1', $method)), 1);
+        $header = ucwords(preg_replace('/([a-z0-9])([A-Z])/', '$1-$2', $method));
         $this->addHeader($header, $args[0]);
         return $this;
     }
