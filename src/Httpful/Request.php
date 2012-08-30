@@ -629,6 +629,9 @@ class Request
      */
     public static function init($method = null, $mime = null)
     {
+        // Setup our handlers, can call it here as it's idempotent
+        Bootstrap::init();
+	
         // Setup the default template if need be
         if (!isset(self::$_template))
             self::_initializeDefaults();
@@ -688,7 +691,7 @@ class Request
         $headers = array();
 
         if (!isset($this->headers['User-Agent'])) {
-            $user_agent = 'User-Agent: HttpFul/1.0 (cURL/';
+            $user_agent = 'User-Agent: Httpful/' . Httpful::VERSION . ' (cURL/';
             $curl = \curl_version();
 
             if (isset($curl['version'])) {
@@ -697,10 +700,10 @@ class Request
                 $user_agent .= '?.?.?';
             }
 
-            $user_agent .= ' PHP/'.PHP_VERSION.' ('.PHP_OS.')';
+            $user_agent .= ' PHP/'. PHP_VERSION . ' (' . PHP_OS . ')';
 
             if (isset($_SERVER['SERVER_SOFTWARE'])) {
-                $user_agent .= ' '.\preg_replace('~PHP/[\d\.]+~U', '',
+                $user_agent .= ' ' . \preg_replace('~PHP/[\d\.]+~U', '',
                     $_SERVER['SERVER_SOFTWARE']);
             } else {
                 if (isset($_SERVER['TERM_PROGRAM'])) {
@@ -723,11 +726,10 @@ class Request
         $headers[] = "Content-Type: {$this->content_type}";
 
         // http://pretty-rfc.herokuapp.com/RFC2616#header.accept
-        $accept = "Accept: */*; q=0.5, text/plain; q=0.8,\r\n\t" .
-                    'text/html;level=3; q=0.9';
+        $accept = 'Accept: */*; q=0.5, text/plain; q=0.8, text/html;level=3;';
 
         if (!empty($this->expected_type)) {
-            $accept .= ", {$this->expected_type}";
+            $accept .= "q=0.9, {$this->expected_type}";
         }
 
         $headers[] = $accept;
