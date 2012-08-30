@@ -35,7 +35,7 @@ class Response
         $this->raw_body     = $body;
 
         $this->code         = $this->_parseCode($headers);
-        $this->headers      = $this->_parseHeaders($headers);
+        $this->headers      = Headers::fromString($headers);
 
         $this->_interpretHeaders();
 
@@ -101,23 +101,6 @@ class Response
         }
 
        return Httpful::get($parse_with)->parse($body);
-    }
-
-    /**
-     * Parse text headers from response into
-     * array of key value pairs
-     * @return array parse headers
-     * @param string $headers raw headers
-     */
-    public function _parseHeaders($headers)
-    {
-        $headers = preg_split("/(\r|\n)+/", $headers, -1, \PREG_SPLIT_NO_EMPTY);
-        $parse_headers = array();
-        for ($i = 1; $i < count($headers); $i++) {
-            list($key, $raw_value) = explode(':', $headers[$i], 2);
-            $parse_headers[trim($key)] = trim($raw_value);
-        }
-        return $parse_headers;
     }
 
     public function _parseCode($headers)
