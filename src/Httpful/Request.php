@@ -24,6 +24,8 @@ class Request
     const SERIALIZE_PAYLOAD_ALWAYS  = 1;
     const SERIALIZE_PAYLOAD_SMART   = 2;
 
+    const MAX_REDIRECTS_DEFAULT     = 25;
+
     public $uri,
            $method                  = Http::GET,
            $headers                 = array(),
@@ -41,6 +43,7 @@ class Request
            $parse_callback,
            $error_callback,
            $follow_redirects        = false,
+           $max_redirects           = self::MAX_REDIRECTS_DEFAULT,
            $payload_serializers     = array();
 
     // Options
@@ -132,11 +135,12 @@ class Request
      * If the response is a 301 or 302 redirect, automatically
      * send off another request to that location
      * @return Request $this
-     * @param bool $follow follow or not to follow
+     * @param bool|int $follow follow or not to follow or maximal number of redirects
      */
     public function followRedirects($follow = true)
     {
-        $this->follow_redirects = $follow;
+    	$this->max_redirects = $follow === true ? self::MAX_REDIRECTS_DEFAULT : max(0, $follow);
+        $this->follow_redirects = (bool) $follow;
         return $this;
     }
 
@@ -682,7 +686,7 @@ class Request
 
         if ($this->follow_redirects) {
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-            curl_setopt($ch, CURLOPT_MAXREDIRS, 25);
+            curl_setopt($ch, CURLOPT_MAXREDIRS, $this->max_redirects);
         }
 
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $this->strict_ssl);
