@@ -139,7 +139,7 @@ class Request
      */
     public function followRedirects($follow = true)
     {
-    	$this->max_redirects = $follow === true ? self::MAX_REDIRECTS_DEFAULT : max(0, $follow);
+        $this->max_redirects = $follow === true ? self::MAX_REDIRECTS_DEFAULT : max(0, $follow);
         $this->follow_redirects = (bool) $follow;
         return $this;
     }
@@ -635,7 +635,7 @@ class Request
     {
         // Setup our handlers, can call it here as it's idempotent
         Bootstrap::init();
-	
+
         // Setup the default template if need be
         if (!isset(self::$_template))
             self::_initializeDefaults();

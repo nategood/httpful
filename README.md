@@ -69,6 +69,12 @@ Httpful highly encourages sending in pull requests.  When submitting a pull requ
 
 # Changelog
 
+## 0.1.6
+
+ - Ability to set the number of max redirects via overloading `followRedirects(int max_redirects)`
+ - Standards Compliant fix to `Accepts` header
+ - Bug fix for bootstrap process when installed via Composer
+
 ## 0.1.5
 
  - Use `DIRECTORY_SEPARATOR` constant [PR #33](https://github.com/nategood/httpful/pull/32)
