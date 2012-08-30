@@ -257,7 +257,7 @@ Transfer-Encoding: chunked\r\n";
         // // Check default content type of iso-8859-1
         $response = new Response(self::SAMPLE_JSON_RESPONSE, "HTTP/1.1 200 OK
 Content-Type: text/plain; charset=utf-8\r\n", $req);
-        $this->assertInternalType('array', $response->headers);
+        $this->assertInstanceOf('Httpful\Response\Headers', $response->headers);
         $this->assertEquals($response->headers['Content-Type'], 'text/plain; charset=utf-8');
         $this->assertEquals($response->content_type, 'text/plain');
         $this->assertEquals($response->charset, 'utf-8');
@@ -330,12 +330,10 @@ Content-Type: text/plain; charset=utf-8\r\n", $req);
 
     function test_parseHeaders()
     {
-        $req = Request::init();
-        $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
-        $parse_headers = $response->_parseHeaders(self::SAMPLE_JSON_HEADER);
-        $this->assertEquals(3, count($parse_headers));
+        $parse_headers = Response\Headers::fromString(self::SAMPLE_JSON_HEADER);
+        $this->assertCount(3, $parse_headers);
         $this->assertEquals('application/json', $parse_headers['Content-Type']);
-        $this->assertArrayHasKey('Connection', $parse_headers);
+        $this->assertTrue(isset($parse_headers['Connection']));
     }
 
     function testDetectContentType()
