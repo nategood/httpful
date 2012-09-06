@@ -115,7 +115,12 @@ class Response
         $parse_headers = array();
         for ($i = 1; $i < count($headers); $i++) {
             list($key, $raw_value) = explode(':', $headers[$i], 2);
-            $parse_headers[trim($key)] = trim($raw_value);
+            if (array_key_exists($key, $parse_headers)) {
+                $parse_headers[trim($key)] = $parse_headers[trim($key)].trim($raw_value);
+            }
+            else {
+                $parse_headers[trim($key)] = trim($raw_value);
+            }
         }
         return $parse_headers;
     }
