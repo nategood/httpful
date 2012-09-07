@@ -378,14 +378,14 @@ class Request
      * @return Request $this
      * @param int $mode
      */
-    public function alwaysSerializePayload($mode = self::SERIALIZE_PAYLOAD_ALWAYS)
+    public function serializePayload($mode)
     {
         $this->serialize_payload_method = $mode;
         return $this;
     }
 
     /**
-     * @see Request::alwaysSerializePayload()
+     * @see Request::serializePayload()
      * @return Request
      */
     public function neverSerializePayload()
@@ -395,12 +395,21 @@ class Request
 
     /**
      * This method is the default behavior
-     * @see Request::alwaysSerializePayload()
+     * @see Request::serializePayload()
      * @return Request
      */
     public function smartSerializePayload()
     {
         return $this->serializePayload(self::SERIALIZE_PAYLOAD_SMART);
+    }
+    
+    /**
+     * @see Request::serializePayload()
+     * @return Request
+     */
+    public function alwaysSerializePayload()
+    {
+        return $this->serializePayload(self::SERIALIZE_PAYLOAD_ALWAYS);
     }
 
     /**
