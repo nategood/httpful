@@ -51,7 +51,13 @@ Content-Type: application/vnd.nategood.message+xml
 Connection: keep-alive
 Transfer-Encoding: chunked\r\n";
     const SAMPLE_VENDOR_TYPE = "application/vnd.nategood.message+xml";
-
+    const SAMPLE_MULTI_HEADER =
+"HTTP/1.1 200 OK
+Content-Type: application/json
+Connection: keep-alive
+Transfer-Encoding: chunked
+X-My-Header:Value1
+X-My-Header:Value2\r\n";
     function testInit()
     {
       $r = Request::init();
@@ -336,6 +342,14 @@ Content-Type: text/plain; charset=utf-8\r\n", $req);
         $this->assertEquals(3, count($parse_headers));
         $this->assertEquals('application/json', $parse_headers['Content-Type']);
         $this->assertArrayHasKey('Connection', $parse_headers);
+    }
+
+    function testMultiHeaders()
+    {
+        $req = Request::init();
+        $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_MULTI_HEADER, $req);
+        $parse_headers = $response->_parseHeaders(self::SAMPLE_MULTI_HEADER);
+        $this->assertEquals('Value1,Value2', $parse_headers['X-My-Header']);
     }
 
     function testDetectContentType()
