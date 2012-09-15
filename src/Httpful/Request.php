@@ -402,7 +402,7 @@ class Request
     {
         return $this->serializePayload(self::SERIALIZE_PAYLOAD_SMART);
     }
-    
+
     /**
      * @see Request::serializePayload()
      * @return Request
@@ -629,6 +629,7 @@ class Request
     private function _error($error)
     {
         // Default actions write to error log
+        // TODO add in support for various Loggers
         error_log($error);
     }
 
@@ -704,36 +705,7 @@ class Request
         $headers = array();
 
         if (!isset($this->headers['User-Agent'])) {
-            $user_agent = 'User-Agent: Httpful/' . Httpful::VERSION . ' (cURL/';
-            $curl = \curl_version();
-
-            if (isset($curl['version'])) {
-                $user_agent .= $curl['version'];
-            } else {
-                $user_agent .= '?.?.?';
-            }
-
-            $user_agent .= ' PHP/'. PHP_VERSION . ' (' . PHP_OS . ')';
-
-            if (isset($_SERVER['SERVER_SOFTWARE'])) {
-                $user_agent .= ' ' . \preg_replace('~PHP/[\d\.]+~U', '',
-                    $_SERVER['SERVER_SOFTWARE']);
-            } else {
-                if (isset($_SERVER['TERM_PROGRAM'])) {
-                    $user_agent .= " {$_SERVER['TERM_PROGRAM']}";
-                }
-
-                if (isset($_SERVER['TERM_PROGRAM_VERSION'])) {
-                    $user_agent .= "/{$_SERVER['TERM_PROGRAM_VERSION']}";
-                }
-            }
-
-            if (isset($_SERVER['HTTP_USER_AGENT'])) {
-                $user_agent .= " {$_SERVER['HTTP_USER_AGENT']}";
-            }
-
-            $user_agent .= ')';
-            $headers[] = $user_agent;
+            $headers[] = $this->buildUserAgent();
         }
 
         $headers[] = "Content-Type: {$this->content_type}";
@@ -781,6 +753,40 @@ class Request
         $this->_ch = $ch;
 
         return $this;
+    }
+
+    public function buildUserAgent() {
+        $user_agent = 'User-Agent: Httpful/' . Httpful::VERSION . ' (cURL/';
+        $curl = \curl_version();
+
+        if (isset($curl['version'])) {
+            $user_agent .= $curl['version'];
+        } else {
+            $user_agent .= '?.?.?';
+        }
+
+        $user_agent .= ' PHP/'. PHP_VERSION . ' (' . PHP_OS . ')';
+
+        if (isset($_SERVER['SERVER_SOFTWARE'])) {
+            $user_agent .= ' ' . \preg_replace('~PHP/[\d\.]+~U', '',
+                $_SERVER['SERVER_SOFTWARE']);
+        } else {
+            if (isset($_SERVER['TERM_PROGRAM'])) {
+                $user_agent .= " {$_SERVER['TERM_PROGRAM']}";
+            }
+
+            if (isset($_SERVER['TERM_PROGRAM_VERSION'])) {
+                $user_agent .= "/{$_SERVER['TERM_PROGRAM_VERSION']}";
+            }
+        }
+
+        if (isset($_SERVER['HTTP_USER_AGENT'])) {
+            $user_agent .= " {$_SERVER['HTTP_USER_AGENT']}";
+        }
+
+        $user_agent .= ')';
+
+        return $user_agent;
     }
 
     /**
