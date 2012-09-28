@@ -39,7 +39,7 @@ class XmlHandler extends MimeHandlerAdapter
         if (empty($body))
             return null;
         $parsed = simplexml_load_string($body, null, $this->libxml_opts, $this->namespace);
-        if (!$parsed)
+        if ($parsed === false)
             throw new \Exception("Unable to parse response as XML");
         return $parsed;
     }
