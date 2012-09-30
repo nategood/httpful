@@ -3,6 +3,8 @@
 namespace Httpful;
 
 class Httpful {
+    const VERSION = '0.1.7';
+
     private static $mimeRegistrar = array();
     private static $default = null;
 

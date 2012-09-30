@@ -24,6 +24,8 @@ class Request
     const SERIALIZE_PAYLOAD_ALWAYS  = 1;
     const SERIALIZE_PAYLOAD_SMART   = 2;
 
+    const MAX_REDIRECTS_DEFAULT     = 25;
+
     public $uri,
            $method                  = Http::GET,
            $headers                 = array(),
@@ -41,6 +43,7 @@ class Request
            $parse_callback,
            $error_callback,
            $follow_redirects        = false,
+           $max_redirects           = self::MAX_REDIRECTS_DEFAULT,
            $payload_serializers     = array();
 
     // Options
@@ -132,11 +135,12 @@ class Request
      * If the response is a 301 or 302 redirect, automatically
      * send off another request to that location
      * @return Request $this
-     * @param bool $follow follow or not to follow
+     * @param bool|int $follow follow or not to follow or maximal number of redirects
      */
     public function followRedirects($follow = true)
     {
-        $this->follow_redirects = $follow;
+        $this->max_redirects = $follow === true ? self::MAX_REDIRECTS_DEFAULT : max(0, $follow);
+        $this->follow_redirects = (bool) $follow;
         return $this;
     }
 
@@ -374,14 +378,14 @@ class Request
      * @return Request $this
      * @param int $mode
      */
-    public function alwaysSerializePayload($mode = self::SERIALIZE_PAYLOAD_ALWAYS)
+    public function serializePayload($mode)
     {
         $this->serialize_payload_method = $mode;
         return $this;
     }
 
     /**
-     * @see Request::alwaysSerializePayload()
+     * @see Request::serializePayload()
      * @return Request
      */
     public function neverSerializePayload()
@@ -391,12 +395,21 @@ class Request
 
     /**
      * This method is the default behavior
-     * @see Request::alwaysSerializePayload()
+     * @see Request::serializePayload()
      * @return Request
      */
     public function smartSerializePayload()
     {
         return $this->serializePayload(self::SERIALIZE_PAYLOAD_SMART);
+    }
+
+    /**
+     * @see Request::serializePayload()
+     * @return Request
+     */
+    public function alwaysSerializePayload()
+    {
+        return $this->serializePayload(self::SERIALIZE_PAYLOAD_ALWAYS);
     }
 
     /**
@@ -566,7 +579,7 @@ class Request
             $method = substr($method, 4);
 
         // Precede upper case letters with dashes, uppercase the first letter of method
-        $header =  substr(ucwords(preg_replace('/([A-Z])/', '-$1', $method)), 1);
+        $header = ucwords(implode('-', preg_split('/([A-Z][^A-Z]*)/', $method, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY)));
         $this->addHeader($header, $args[0]);
         return $this;
     }
@@ -616,6 +629,7 @@ class Request
     private function _error($error)
     {
         // Default actions write to error log
+        // TODO add in support for various Loggers
         error_log($error);
     }
 
@@ -629,6 +643,9 @@ class Request
      */
     public static function init($method = null, $mime = null)
     {
+        // Setup our handlers, can call it here as it's idempotent
+        Bootstrap::init();
+
         // Setup the default template if need be
         if (!isset(self::$_template))
             self::_initializeDefaults();
@@ -679,7 +696,7 @@ class Request
 
         if ($this->follow_redirects) {
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-            curl_setopt($ch, CURLOPT_MAXREDIRS, 25);
+            curl_setopt($ch, CURLOPT_MAXREDIRS, $this->max_redirects);
         }
 
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $this->strict_ssl);
@@ -688,46 +705,16 @@ class Request
         $headers = array();
 
         if (!isset($this->headers['User-Agent'])) {
-            $user_agent = 'User-Agent: HttpFul/1.0 (cURL/';
-            $curl = \curl_version();
-
-            if (isset($curl['version'])) {
-                $user_agent .= $curl['version'];
-            } else {
-                $user_agent .= '?.?.?';
-            }
-
-            $user_agent .= ' PHP/'.PHP_VERSION.' ('.PHP_OS.')';
-
-            if (isset($_SERVER['SERVER_SOFTWARE'])) {
-                $user_agent .= ' '.\preg_replace('~PHP/[\d\.]+~U', '',
-                    $_SERVER['SERVER_SOFTWARE']);
-            } else {
-                if (isset($_SERVER['TERM_PROGRAM'])) {
-                    $user_agent .= " {$_SERVER['TERM_PROGRAM']}";
-                }
-
-                if (isset($_SERVER['TERM_PROGRAM_VERSION'])) {
-                    $user_agent .= "/{$_SERVER['TERM_PROGRAM_VERSION']}";
-                }
-            }
-
-            if (isset($_SERVER['HTTP_USER_AGENT'])) {
-                $user_agent .= " {$_SERVER['HTTP_USER_AGENT']}";
-            }
-
-            $user_agent .= ')';
-            $headers[] = $user_agent;
+            $headers[] = $this->buildUserAgent();
         }
 
         $headers[] = "Content-Type: {$this->content_type}";
 
         // http://pretty-rfc.herokuapp.com/RFC2616#header.accept
-        $accept = "Accept: */*; q=0.5, text/plain; q=0.8,\r\n\t" .
-                    'text/html;level=3; q=0.9';
+        $accept = 'Accept: */*; q=0.5, text/plain; q=0.8, text/html;level=3;';
 
         if (!empty($this->expected_type)) {
-            $accept .= ", {$this->expected_type}";
+            $accept .= "q=0.9, {$this->expected_type}";
         }
 
         $headers[] = $accept;
@@ -766,6 +753,40 @@ class Request
         $this->_ch = $ch;
 
         return $this;
+    }
+
+    public function buildUserAgent() {
+        $user_agent = 'User-Agent: Httpful/' . Httpful::VERSION . ' (cURL/';
+        $curl = \curl_version();
+
+        if (isset($curl['version'])) {
+            $user_agent .= $curl['version'];
+        } else {
+            $user_agent .= '?.?.?';
+        }
+
+        $user_agent .= ' PHP/'. PHP_VERSION . ' (' . PHP_OS . ')';
+
+        if (isset($_SERVER['SERVER_SOFTWARE'])) {
+            $user_agent .= ' ' . \preg_replace('~PHP/[\d\.]+~U', '',
+                $_SERVER['SERVER_SOFTWARE']);
+        } else {
+            if (isset($_SERVER['TERM_PROGRAM'])) {
+                $user_agent .= " {$_SERVER['TERM_PROGRAM']}";
+            }
+
+            if (isset($_SERVER['TERM_PROGRAM_VERSION'])) {
+                $user_agent .= "/{$_SERVER['TERM_PROGRAM_VERSION']}";
+            }
+        }
+
+        if (isset($_SERVER['HTTP_USER_AGENT'])) {
+            $user_agent .= " {$_SERVER['HTTP_USER_AGENT']}";
+        }
+
+        $user_agent .= ')';
+
+        return $user_agent;
     }
 
     /**

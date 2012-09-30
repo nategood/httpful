@@ -103,6 +103,34 @@ class Response
        return Httpful::get($parse_with)->parse($body);
     }
 
+    /**
+     * Parse text headers from response into
+     * array of key value pairs
+     * @return array parse headers
+     * @param string $headers raw headers
+     */
+    public function _parseHeaders($headers)
+    {
+        $headers = preg_split("/(\r|\n)+/", $headers, -1, \PREG_SPLIT_NO_EMPTY);
+        $parse_headers = array();
+        for ($i = 1; $i < count($headers); $i++) {
+            list($key, $raw_value) = explode(':', $headers[$i], 2);
+            $key = trim($key);
+            $value = trim($raw_value);
+            if (array_key_exists($key, $parse_headers)) {
+                // See HTTP RFC Sec 4.2 Paragraph 5
+                // http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
+                // If a header appears more than once, it must also be able to
+                // be represented as a single header with a comma-separated
+                // list of values.  We transform accordingly.
+                $parse_headers[$key] .= ',' . $value;
+            } else {
+                $parse_headers[$key] = $value;
+            }
+        }
+        return $parse_headers;
+    }
+
     public function _parseCode($headers)
     {
         $parts = explode(' ', substr($headers, 0, strpos($headers, "\n")));

@@ -12,7 +12,7 @@
 function exit_unless($condition, $msg = null) {
     if ($condition)
         return;
-    echo "[FAIL] $msg";
+    echo "[FAIL]\n$msg\n";
     exit(1);
 }
 
@@ -31,7 +31,11 @@ $stub = <<<HEREDOC
 
     __HALT_COMPILER();
 HEREDOC;
-$phar->setStub($stub);
+try {
+    $phar->setStub($stub);
+} catch(Exception $e) {
+    $phar = false;
+}
 exit_unless($phar, "Unable to create a phar.  Make certain you have phar.readonly=0 set in your ini file.");
 $phar->buildFromDirectory(dirname($source_dir));
 echo "[ OK ]\n";
