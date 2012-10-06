@@ -134,6 +134,14 @@ class Request
     }
 
     /**
+     * @return bool Is this request setup for digest auth?
+     */
+    public function hasDigestAuth()
+    {
+        return isset($this->password) && isset($this->username) && $this->additional_curl_opts['CURLOPT_HTTPAUTH'] = CURLAUTH_DIGEST;
+    }    
+
+    /**
      * If the response is a 301 or 302 redirect, automatically
      * send off another request to that location
      * @return Request $this
@@ -220,6 +228,24 @@ class Request
     {
         return $this->basicAuth($username, $password);
     }
+
+    /**
+     * User Digest Auth.
+     * @return Request this
+     * @param string $username
+     * @param string $password
+     */
+    public function digestAuth($username, $password)
+    {
+        $this->addOnCurlOption(CURLOPT_HTTPAUTH, CURLAUTH_DIGEST);
+        return $this->basicAuth($username, $password);
+    }
+
+    // @alias of digestAuth
+    public function authenticateWithDigest($username, $password)
+    {
+        return $this->digestAuth($username, $password);
+    } 
 
     /**
      * @return is this request setup for client side cert?
