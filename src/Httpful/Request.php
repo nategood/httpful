@@ -2,6 +2,8 @@
 
 namespace Httpful;
 
+use Httpful\Exception\ConnectionErrorException;
+
 /**
  * Clean, simple class for sending HTTP requests
  * in PHP.
@@ -156,7 +158,7 @@ class Request
     /**
      * Actually send off the request, and parse the response
      * @return string|associative array of parsed results
-     * @throws \Exception when unable to parse or communicate w server
+     * @throws ConnectionErrorException when unable to parse or communicate w server
      */
     public function send()
     {
@@ -167,7 +169,7 @@ class Request
 
         if ($result === false) {
             $this->_error(curl_error($this->_ch));
-            throw new \Exception('Unable to connect.');
+            throw new ConnectionErrorException('Unable to connect.');
         }
 
         $info = curl_getinfo($this->_ch);
