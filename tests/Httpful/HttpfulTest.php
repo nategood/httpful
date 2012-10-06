@@ -216,6 +216,19 @@ X-My-Header:Value2\r\n";
         $this->assertTrue($r->hasBasicAuth());
     }
 
+    function testDigestAuthSetup()
+    {
+        $username = 'nathan';
+        $password = 'opensesame';
+
+        $r = Request::get('http://example.com/')
+            ->authenticateWithDigest($username, $password);
+
+        $this->assertEquals($username, $r->username);
+        $this->assertEquals($password, $r->password);
+        $this->assertTrue($r->hasDigestAuth());
+    } 
+
     function testJsonResponseParse()
     {
         $req = Request::init()->sendsAndExpects(Mime::JSON);

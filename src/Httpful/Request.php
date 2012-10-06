@@ -2,6 +2,8 @@
 
 namespace Httpful;
 
+use Httpful\Exception\ConnectionErrorException;
+
 /**
  * Clean, simple class for sending HTTP requests
  * in PHP.
@@ -132,6 +134,14 @@ class Request
     }
 
     /**
+     * @return bool Is this request setup for digest auth?
+     */
+    public function hasDigestAuth()
+    {
+        return isset($this->password) && isset($this->username) && $this->additional_curl_opts['CURLOPT_HTTPAUTH'] = CURLAUTH_DIGEST;
+    }    
+
+    /**
      * If the response is a 301 or 302 redirect, automatically
      * send off another request to that location
      * @return Request $this
@@ -156,7 +166,7 @@ class Request
     /**
      * Actually send off the request, and parse the response
      * @return string|associative array of parsed results
-     * @throws \Exception when unable to parse or communicate w server
+     * @throws ConnectionErrorException when unable to parse or communicate w server
      */
     public function send()
     {
@@ -167,7 +177,7 @@ class Request
 
         if ($result === false) {
             $this->_error(curl_error($this->_ch));
-            throw new \Exception('Unable to connect.');
+            throw new ConnectionErrorException('Unable to connect.');
         }
 
         $info = curl_getinfo($this->_ch);
@@ -218,6 +228,24 @@ class Request
     {
         return $this->basicAuth($username, $password);
     }
+
+    /**
+     * User Digest Auth.
+     * @return Request this
+     * @param string $username
+     * @param string $password
+     */
+    public function digestAuth($username, $password)
+    {
+        $this->addOnCurlOption(CURLOPT_HTTPAUTH, CURLAUTH_DIGEST);
+        return $this->basicAuth($username, $password);
+    }
+
+    // @alias of digestAuth
+    public function authenticateWithDigest($username, $password)
+    {
+        return $this->digestAuth($username, $password);
+    } 
 
     /**
      * @return is this request setup for client side cert?
