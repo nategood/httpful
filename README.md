@@ -69,6 +69,13 @@ Httpful highly encourages sending in pull requests.  When submitting a pull requ
 
 # Changelog
 
+## 0.2.0
+
+ - REFACTOR [PR #49](https://github.com/nategood/httpful/pull/49) Broke headers out into their own class
+ - REFACTOR [PR #54](https://github.com/nategood/httpful/pull/54) Added more specific Exceptions
+ - FIX [PR #58](https://github.com/nategood/httpful/pull/58) Fixes throwing an error on an empty xml response
+ - FEATURE [PR #57](https://github.com/nategood/httpful/pull/57) Adds support for digest authentication
+
 ## 0.1.6
 
  - Ability to set the number of max redirects via overloading `followRedirects(int max_redirects)`
@@ -79,8 +86,8 @@ Httpful highly encourages sending in pull requests.  When submitting a pull requ
 
  - Use `DIRECTORY_SEPARATOR` constant [PR #33](https://github.com/nategood/httpful/pull/32)
  - [PR #35](https://github.com/nategood/httpful/pull/35)
- - Added the raw_headers property reference to response.
- - Compose request header and added raw_header to Request object.
+ - Added the raw\_headers property reference to response.
+ - Compose request header and added raw\_header to Request object.
  - Fixed response has errors and added more comments for clarity.
  - Fixed header parsing to allow the minimum (status line only) and also cater for the actual CRLF ended headers as per RFC2616.
  - Added the perfect test Accept: header for all Acceptable scenarios see  @b78e9e82cd9614fbe137c01bde9439c4e16ca323 for details.
