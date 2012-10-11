@@ -744,7 +744,6 @@ class Request
         if ($this->hasTimeout()) {
             curl_setopt($ch, CURLOPT_TIMEOUT, $this->timeout);
         }
-
         
         if ($this->follow_redirects) {
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
