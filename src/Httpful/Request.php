@@ -754,6 +754,9 @@ class Request
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
         $headers = array();
+        // https://github.com/nategood/httpful/issues/37
+        // Except header removes any HTTP 1.1 Continue from response headers
+        $headers[] = 'Except:';
 
         if (!isset($this->headers['User-Agent'])) {
             $headers[] = $this->buildUserAgent();
