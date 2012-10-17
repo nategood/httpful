@@ -748,7 +748,7 @@ class Request
         $headers[] = $accept;
 	// https://github.com/nategood/httpful/issues/37
 	// Except header removes any HTTP 1.1 Continue from response headers 
-        $headers[] = 'Except:'; 
+        $headers[] = 'Expect:'; 
 
         foreach ($this->headers as $header => $value) {
             $headers[] = "$header: $value";
