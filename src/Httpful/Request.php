@@ -756,7 +756,7 @@ class Request
         $headers = array();
         // https://github.com/nategood/httpful/issues/37
         // Except header removes any HTTP 1.1 Continue from response headers
-        $headers[] = 'Except:';
+        $headers[] = 'Expect:';
 
         if (!isset($this->headers['User-Agent'])) {
             $headers[] = $this->buildUserAgent();
