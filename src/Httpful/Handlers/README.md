@@ -41,4 +41,4 @@ Finally, you must register this handler for a particular mime type.
 
     Httpful::register('text/csv', new SimpleCsvHandler());
 
-After this registering the handler in your source code, by default, any 
+After this registering the handler in your source code, by default, any responses with a mime type of text/csv should be parsed by this handler.
