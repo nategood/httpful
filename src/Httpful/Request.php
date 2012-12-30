@@ -860,11 +860,21 @@ class Request
             \parse_str($url["query"], $originalParams);
         }
 
-        $params = \array_merge($originalParams, $this->params);
+        $params = \array_merge($originalParams, (array)$this->params);
 
         $queryString = \http_build_query($params);
 
-        $this->uri .= "?" . $queryString;
+        if (strpos($this->uri, "?") !== false) {
+            $this->uri = substr(
+                $this->uri,
+                0,
+                strpos($this->uri, "?")
+            );
+        }
+
+        if (sizeof($params)) {
+            $this->uri .= "?" . $queryString;
+        }
     }
 
     public function buildUserAgent() {
