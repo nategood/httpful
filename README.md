@@ -31,7 +31,7 @@ Here's something to whet your appetite.  Search the twitter API for tweets conta
 
 ## Phar
 
-A [PHP Archive](http://php.net/manual/en/book.phar.php) (or .phar) file is available for [downloading](https://github.com/downloads/nategood/httpful/httpful.phar).  Simply [download](https://github.com/downloads/nategood/httpful/httpful.phar) the .phar, drop it into your project, and include it like you would any other php file.  _This method is ideal smaller projects, one off scripts, and quick API hacking_.
+A [PHP Archive](http://php.net/manual/en/book.phar.php) (or .phar) file is available for [downloading](https://github.com/nategood/httpful/downloads).  Simply [download](https://github.com/nategood/httpful/downloads) the .phar, drop it into your project, and include it like you would any other php file.  _This method is ideal smaller projects, one off scripts, and quick API hacking_.
 
     <?php
     include('httpful.phar');

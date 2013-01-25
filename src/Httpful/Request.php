@@ -118,6 +118,14 @@ class Request
     // Accessors
 
     /**
+     * @return bool does the request have a timeout?
+     */
+    public function hasTimeout()
+    {
+        return isset($this->timeout);
+    }
+
+    /**
      * @return bool has the internal curl request been initialized?
      */
     public function hasBeenInitialized()
@@ -140,6 +148,17 @@ class Request
     {
         return isset($this->password) && isset($this->username) && $this->additional_curl_opts['CURLOPT_HTTPAUTH'] = CURLAUTH_DIGEST;
     }    
+
+    /**
+     * Specify a HTTP timeout
+     * @return Request $this
+     * @param |int $timeout seconds to timeout the HTTP call
+     */
+    public function timeout($timeout)
+    {
+        $this->timeout = $timeout;
+        return $this;
+    }
 
     /**
      * If the response is a 301 or 302 redirect, automatically
@@ -722,6 +741,10 @@ class Request
             // curl_setopt($ch, CURLOPT_SSLCERTPASSWD,  $this->client_cert_passphrase);
         }
 
+        if ($this->hasTimeout()) {
+            curl_setopt($ch, CURLOPT_TIMEOUT, $this->timeout);
+        }
+        
         if ($this->follow_redirects) {
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
             curl_setopt($ch, CURLOPT_MAXREDIRS, $this->max_redirects);
@@ -731,6 +754,9 @@ class Request
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
         $headers = array();
+        // https://github.com/nategood/httpful/issues/37
+        // Except header removes any HTTP 1.1 Continue from response headers
+        $headers[] = 'Expect:';
 
         if (!isset($this->headers['User-Agent'])) {
             $headers[] = $this->buildUserAgent();
