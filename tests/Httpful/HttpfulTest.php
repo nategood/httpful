@@ -184,6 +184,18 @@ X-My-Header:Value2\r\n";
         $r->_curlPrep();
         $this->assertContains('application/json', $r->raw_headers);
     }
+
+    function testCustomAccept()
+    {
+        $accept = 'application/api-1.0+json';
+        $r = Request::get('http://example.com/')
+            ->addHeader('Accept', $accept);
+
+        $r->_curlPrep();
+        $this->assertContains($accept, $r->raw_headers);
+        $this->assertEquals($accept, $r->headers['Accept']);
+    }
+
     function testUserAgent()
     {
         $r = Request::get('http://example.com/')

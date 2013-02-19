@@ -764,14 +764,17 @@ class Request
 
         $headers[] = "Content-Type: {$this->content_type}";
 
-        // http://pretty-rfc.herokuapp.com/RFC2616#header.accept
-        $accept = 'Accept: */*; q=0.5, text/plain; q=0.8, text/html;level=3;';
+        // allow custom Accept header if set
+        if (!isset($this->headers['Accept'])) {
+            // http://pretty-rfc.herokuapp.com/RFC2616#header.accept
+            $accept = 'Accept: */*; q=0.5, text/plain; q=0.8, text/html;level=3;';
 
-        if (!empty($this->expected_type)) {
-            $accept .= "q=0.9, {$this->expected_type}";
+            if (!empty($this->expected_type)) {
+                $accept .= "q=0.9, {$this->expected_type}";
+            }
+
+            $headers[] = $accept;
         }
-
-        $headers[] = $accept;
 
         foreach ($this->headers as $header => $value) {
             $headers[] = "$header: $value";
