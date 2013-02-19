@@ -69,6 +69,10 @@ Httpful highly encourages sending in pull requests.  When submitting a pull requ
 
 # Changelog
 
+## 0.2.1
+
+ - FEATURE [PR #72](https://github.com/nategood/httpful/pull/72) Allow support for custom Accept header
+
 ## 0.2.0
 
  - REFACTOR [PR #49](https://github.com/nategood/httpful/pull/49) Broke headers out into their own class
