@@ -239,7 +239,7 @@ X-My-Header:Value2\r\n";
         $this->assertEquals($username, $r->username);
         $this->assertEquals($password, $r->password);
         $this->assertTrue($r->hasDigestAuth());
-    } 
+    }
 
     function testJsonResponseParse()
     {
@@ -448,6 +448,32 @@ Transfer-Encoding: chunked\r\n", $request);
         $new = \Httpful\Httpful::get(\Httpful\Mime::XML);
         $this->assertNotEquals($prev, $new);
     }
+
+    public function testParams()
+    {
+        $r = Request::get("http://google.com");
+        $r->_curlPrep();
+        $r->_uriPrep();
+        $this->assertEquals("http://google.com", $r->uri);
+
+        $r = Request::get("http://google.com?q=query");
+        $r->_curlPrep();
+        $r->_uriPrep();
+        $this->assertEquals("http://google.com?q=query", $r->uri);
+
+        $r = Request::get("http://google.com");
+        $r->param("a", "b");
+        $r->_curlPrep();
+        $r->_uriPrep();
+        $this->assertEquals("http://google.com?a=b", $r->uri);
+
+        $r = Request::get("http://google.com?a=b");
+        $r->param("c", "d");
+        $r->_curlPrep();
+        $r->_uriPrep();
+
+        $this->assertEquals("http://google.com?a=b&c=d", $r->uri);
+    }
 }
 
 class DemoMimeHandler extends \Httpful\Handlers\MimeHandlerAdapter {
@@ -455,4 +481,3 @@ class DemoMimeHandler extends \Httpful\Handlers\MimeHandlerAdapter {
         return 'custom parse';
     }
 }
-
