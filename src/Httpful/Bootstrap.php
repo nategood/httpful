@@ -86,6 +86,9 @@ class Bootstrap
         );
 
         foreach ($handlers as $mime => $handler) {
+            // Don't overwrite if the handler has already been registered
+            if (Httpful::hasParserRegistered($mime))
+                continue;
             Httpful::register($mime, $handler);
         }
 
