@@ -69,6 +69,16 @@ Httpful highly encourages sending in pull requests.  When submitting a pull requ
 
 # Changelog
 
+## 0.2.3
+
+ - FIX Overriding default Mime Handlers
+ - FIX [PR #73](https://github.com/nategood/httpful/pull/73) Parsing http status codes
+
+## 0.2.2
+
+ - FEATURE Add support for parsing JSON responses as associative arrays instead of objects
+ - FEATURE Better support for setting constructor arguments on Mime Handlers
+
 ## 0.2.1
 
  - FEATURE [PR #72](https://github.com/nategood/httpful/pull/72) Allow support for custom Accept header
