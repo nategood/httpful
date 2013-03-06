@@ -30,7 +30,7 @@ class Http
      */
     public static function isSafeMethod($method)
     {
-        return in_array(self::safeMethods());
+        return in_array($method, self::safeMethods());
     }
 
     /**
@@ -39,7 +39,7 @@ class Http
      */
     public static function isUnsafeMethod($method)
     {
-        return !in_array(self::safeMethods());
+        return !in_array($method, self::safeMethods());
     }
 
     /**
