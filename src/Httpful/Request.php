@@ -146,7 +146,7 @@ class Request
      */
     public function hasDigestAuth()
     {
-        return isset($this->password) && isset($this->username) && $this->additional_curl_opts['CURLOPT_HTTPAUTH'] = CURLAUTH_DIGEST;
+        return isset($this->password) && isset($this->username) && $this->additional_curl_opts['CURLOPT_HTTPAUTH'] == CURLAUTH_DIGEST;
     }    
 
     /**
