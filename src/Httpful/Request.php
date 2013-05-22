@@ -160,6 +160,12 @@ class Request
         return $this;
     }
 
+    // alias timeout
+    public function timeoutIn($seconds)
+    {
+        return $this->timeout($seconds);
+    }
+
     /**
      * If the response is a 301 or 302 redirect, automatically
      * send off another request to that location
@@ -294,21 +300,6 @@ class Request
     public function authenticateWithCert($cert, $key, $passphrase = null, $encoding = 'PEM')
     {
         return $this->clientSideCert($cert, $key, $passphrase, $encoding);
-    }
-
-    /**
-     * @return Request $this
-     * @param int $seconds number of seconds before timeout
-     */
-    public function timeoutIn($seconds)
-    {
-        $this->addOnCurlOption(CURLOPT_TIMEOUT, $seconds);
-        return $this;
-    }
-    // alias of timeoutIn
-    public function timeout($seconds)
-    {
-        return $this->timeoutIn($seconds);
     }
 
     /**
