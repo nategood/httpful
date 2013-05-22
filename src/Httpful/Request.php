@@ -146,8 +146,8 @@ class Request
      */
     public function hasDigestAuth()
     {
-        return isset($this->password) && isset($this->username) && $this->additional_curl_opts['CURLOPT_HTTPAUTH'] = CURLAUTH_DIGEST;
-    }    
+        return isset($this->password) && isset($this->username) && $this->additional_curl_opts[CURLOPT_HTTPAUTH] == CURLAUTH_DIGEST;
+    }
 
     /**
      * Specify a HTTP timeout
@@ -264,7 +264,7 @@ class Request
     public function authenticateWithDigest($username, $password)
     {
         return $this->digestAuth($username, $password);
-    } 
+    }
 
     /**
      * @return is this request setup for client side cert?
@@ -275,7 +275,7 @@ class Request
 
     /**
      * Use Client Side Cert Authentication
-     * @return Response $this
+     * @return Request $this
      * @param string $key file path to client key
      * @param string $cert file path to client cert
      * @param string $passphrase for client key
@@ -294,6 +294,21 @@ class Request
     public function authenticateWithCert($cert, $key, $passphrase = null, $encoding = 'PEM')
     {
         return $this->clientSideCert($cert, $key, $passphrase, $encoding);
+    }
+
+    /**
+     * @return Request $this
+     * @param int $seconds number of seconds before timeout
+     */
+    public function timeoutIn($seconds)
+    {
+        $this->addOnCurlOption(CURLOPT_TIMEOUT, $seconds);
+        return $this;
+    }
+    // alias of timeoutIn
+    public function timeout($seconds)
+    {
+        return $this->timeoutIn($seconds);
     }
 
     /**
@@ -744,7 +759,7 @@ class Request
         if ($this->hasTimeout()) {
             curl_setopt($ch, CURLOPT_TIMEOUT, $this->timeout);
         }
-        
+
         if ($this->follow_redirects) {
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
             curl_setopt($ch, CURLOPT_MAXREDIRS, $this->max_redirects);
