@@ -823,7 +823,7 @@ class Request
         $this->raw_headers .= "Host: $host\r\n";
         $this->raw_headers .= \implode("\r\n", $headers);
         $this->raw_headers .= "\r\n";
-debug($headers);
+
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         if (isset($this->payload)) {
