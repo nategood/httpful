@@ -197,7 +197,7 @@ class Request
     {
         if (!$this->hasBeenInitialized())
             $this->_curlPrep();
-
+		
         $result = curl_exec($this->_ch);
 
         if ($result === false) {
@@ -805,6 +805,11 @@ class Request
             }
 
             $headers[] = $accept;
+        }
+		
+		//Solve a bug on squid proxy, NONE/411 when miss content length
+		if (!isset($this->headers['Content-Length'])) {
+            $this->headers['Content-Length'] = 0;
         }
 
         foreach ($this->headers as $header => $value) {
