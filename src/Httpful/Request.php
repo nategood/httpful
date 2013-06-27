@@ -197,7 +197,7 @@ class Request
     {
         if (!$this->hasBeenInitialized())
             $this->_curlPrep();
-		
+
         $result = curl_exec($this->_ch);
 
         if ($result === false) {
@@ -409,31 +409,31 @@ class Request
     {
         return $this->strictSSL(true);
     }
-	
-	/**
-	 * Use proxy configuration
-	 * @return Request this
-	 * @param string $proxy_host Hostname or address of the proxy
-	 * @param number $proxy_port Port of the proxy. Default 80
-	 * @param string $auth_type Authentication type or null. Accepted values are CURLAUTH_BASIC, CURLAUTH_NTLM. Default null, no authentication
-	 * @param string $auth_username Authentication username. Default null
-	 * @param string $auth_password Authentication password. Default null
-	 */
-	public function useProxy($proxy_host, $proxy_port = 80, $auth_type = null, $auth_username = null, $auth_password = null){
-		$this->addOnCurlOption(CURLOPT_PROXY, "{$proxy_host}:{$proxy_port}");
-		if(in_array($auth_type, array(CURLAUTH_BASIC,CURLAUTH_NTLM)) ){
-			$this->addOnCurlOption(CURLOPT_PROXYAUTH, $auth_type)
-				->addOnCurlOption(CURLOPT_PROXYUSERPWD, "{$auth_username}:{$auth_password}");
-		}
-		return $this;
-	}
-	
-	/**
+
+    /**
+     * Use proxy configuration
+     * @return Request this
+     * @param string $proxy_host Hostname or address of the proxy
+     * @param number $proxy_port Port of the proxy. Default 80
+     * @param string $auth_type Authentication type or null. Accepted values are CURLAUTH_BASIC, CURLAUTH_NTLM. Default null, no authentication
+     * @param string $auth_username Authentication username. Default null
+     * @param string $auth_password Authentication password. Default null
+     */
+    public function useProxy($proxy_host, $proxy_port = 80, $auth_type = null, $auth_username = null, $auth_password = null){
+        $this->addOnCurlOption(CURLOPT_PROXY, "{$proxy_host}:{$proxy_port}");
+        if(in_array($auth_type, array(CURLAUTH_BASIC,CURLAUTH_NTLM)) ){
+            $this->addOnCurlOption(CURLOPT_PROXYAUTH, $auth_type)
+                ->addOnCurlOption(CURLOPT_PROXYUSERPWD, "{$auth_username}:{$auth_password}");
+        }
+        return $this;
+    }
+
+    /**
      * @return is this request setup for using proxy?
      */
-	public function hasProxy(){
-		return is_string($this->additional_curl_opts[CURLOPT_PROXY]);
-	}
+    public function hasProxy(){
+        return is_string($this->additional_curl_opts[CURLOPT_PROXY]);
+    }
 
     /**
      * Determine how/if we use the built in serialization by
@@ -806,9 +806,9 @@ class Request
 
             $headers[] = $accept;
         }
-		
-		//Solve a bug on squid proxy, NONE/411 when miss content length
-		if (!isset($this->headers['Content-Length'])) {
+
+        //Solve a bug on squid proxy, NONE/411 when miss content length
+        if (!isset($this->headers['Content-Length'])) {
             $this->headers['Content-Length'] = 0;
         }
 
