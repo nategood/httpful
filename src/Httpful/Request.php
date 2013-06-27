@@ -809,7 +809,7 @@ class Request
 		
 		//Solve a bug on squid proxy, NONE/411 when miss content length
 		if (!isset($this->headers['Content-Length'])) {
-            $this->headers['Content-Length'] = 0;
+            $this->headers['Content-Length'] = is_null($this->payload) ? 0 : strlen($this->payload);
         }
 
         foreach ($this->headers as $header => $value) {
