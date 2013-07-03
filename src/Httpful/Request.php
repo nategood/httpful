@@ -784,6 +784,14 @@ class Request
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $this->strict_ssl);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
+        // https://github.com/nategood/httpful/issues/84
+        // set Content-Length to the size of the payload if present
+        if (isset($this->payload)) {
+            $this->serialized_payload = $this->_serializePayload($this->payload);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $this->serialized_payload);
+            $this->headers['Content-Length'] = strlen($this->serialized_payload);
+        }
+
         $headers = array();
         // https://github.com/nategood/httpful/issues/37
         // Except header removes any HTTP 1.1 Continue from response headers
@@ -807,7 +815,7 @@ class Request
             $headers[] = $accept;
         }
 
-        //Solve a bug on squid proxy, NONE/411 when miss content length
+        // Solve a bug on squid proxy, NONE/411 when miss content length
         if (!isset($this->headers['Content-Length'])) {
             $this->headers['Content-Length'] = 0;
         }
@@ -825,11 +833,6 @@ class Request
         $this->raw_headers .= "\r\n";
 
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-
-        if (isset($this->payload)) {
-            $this->serialized_payload = $this->_serializePayload($this->payload);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $this->serialized_payload);
-        }
 
         if ($this->_debug) {
             curl_setopt($ch, CURLOPT_VERBOSE, true);
