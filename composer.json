@@ -20,5 +20,8 @@
         "psr-0": {
             "Httpful": "src/"
         }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "*"
     }
 }
