@@ -206,6 +206,11 @@ class Request
         }
 
         $info = curl_getinfo($this->_ch);
+
+        //Remove the "HTTP/1.0 200 Connection established" string
+        if ($this->hasProxy() && false !== stripos($result, "HTTP/1.0 200 Connection established\r\n\r\n")) {
+            $result = str_ireplace("HTTP/1.0 200 Connection established\r\n\r\n", '', $result);
+        }
         $response = explode("\r\n\r\n", $result, 2 + $info['redirect_count']);
 
         $body = array_pop($response);
