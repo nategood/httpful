@@ -69,6 +69,10 @@ Httpful highly encourages sending in pull requests.  When submitting a pull requ
 
 # Changelog
 
+## 0.2.7
+
+ - FIX [I #86](https://github.com/nategood/httpful/pull/86) Remove Connection Established header when using a proxy
+
 ## 0.2.6
 
  - FIX [I #85](https://github.com/nategood/httpful/issues/85) Empty Content Length issue resolved
