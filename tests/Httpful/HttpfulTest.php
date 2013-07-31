@@ -91,12 +91,14 @@ X-My-Header:Value2\r\n";
         $this->assertEquals(Mime::XML,   Mime::getFullMime('xml'));
         $this->assertEquals(Mime::HTML,  Mime::getFullMime('html'));
         $this->assertEquals(Mime::CSV,  Mime::getFullMime('csv'));
+        $this->assertEquals(Mime::UPLOAD,  Mime::getFullMime('upload'));
 
         // Valid long ones
         $this->assertEquals(Mime::JSON, Mime::getFullMime(Mime::JSON));
         $this->assertEquals(Mime::XML,  Mime::getFullMime(Mime::XML));
         $this->assertEquals(Mime::HTML, Mime::getFullMime(Mime::HTML));
         $this->assertEquals(Mime::CSV, Mime::getFullMime(Mime::CSV));
+        $this->assertEquals(Mime::UPLOAD, Mime::getFullMime(Mime::UPLOAD));
 
         // No false positives
         $this->assertNotEquals(Mime::XML,  Mime::getFullMime(Mime::HTML));
@@ -296,17 +298,33 @@ Content-Type: text/plain; charset=utf-8\r\n", $req);
     
     function testParsingContentTypeUpload()
     {
-        $req = Request::init()->sendsAndExpects(Mime::UPLOAD);
+        $req = Request::init();
+        
+        $req->sendsType(Mime::UPLOAD);
         // $response = new Response(SAMPLE_JSON_RESPONSE, "", $req);
         // // Check default content type of iso-8859-1
-        $response = new Response(self::SAMPLE_JSON_RESPONSE, "HTTP/1.1 200 OK
-Content-Type: text/plain; charset=utf-8\r\n", $req);
-        $this->assertInstanceOf('Httpful\Response\Headers', $response->headers);
-        $this->assertEquals($response->headers['Content-Type'], 'multipart/form-data');
-        $this->assertEquals($response->content_type, 'multipart/form-data');
-        $this->assertEquals($response->charset, 'utf-8');
+        $this->assertEquals($req->content_type, 'multipart/form-data');
     }
-
+    
+    function testAttach() {
+        $req = Request::init();
+        
+        $req->attach(array('index' => '/dir/filename'));
+        // $response = new Response(SAMPLE_JSON_RESPONSE, "", $req);
+        // // Check default content type of iso-8859-1
+        $this->assertEquals($req->payload['index'], '@/dir/filename');
+        $this->assertEquals($req->content_type, Mime::UPLOAD);
+        $this->assertEquals($req->serialize_payload_method, Request::SERIALIZE_PAYLOAD_NEVER);
+    }
+    
+    function testIsUpload() {
+        $req = Request::init();
+        
+        $req->sendsType(Mime::UPLOAD);
+        
+        $this->assertTrue($req->isUpload());
+    }
+    
     function testEmptyResponseParse()
     {
         $req = Request::init()->sendsAndExpects(Mime::JSON);
