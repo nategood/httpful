@@ -27,7 +27,6 @@ class Mime
         'json'      => self::JSON,
         'xml'       => self::XML,
         'form'      => self::FORM,
-        'data'      => self::UPLOAD,
         'plain'     => self::PLAIN,
         'text'      => self::PLAIN,
         'upload'      => self::UPLOAD,
