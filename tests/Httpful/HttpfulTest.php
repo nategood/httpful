@@ -448,6 +448,17 @@ Transfer-Encoding: chunked\r\n", $request);
         $new = \Httpful\Httpful::get(\Httpful\Mime::XML);
         $this->assertNotEquals($prev, $new);
     }
+
+    public function testHasProxyWithoutProxy() {
+        $r = Request::get('someUrl');
+        $this->assertFalse($r->hasProxy());
+    }
+
+    public function testHasProxyWithProxy() {
+        $r = Request::get('some_other_url');
+        $r->useProxy('proxy.com');
+        $this->assertTrue($r->hasProxy());
+    }
 }
 
 class DemoMimeHandler extends \Httpful\Handlers\MimeHandlerAdapter {

@@ -437,7 +437,7 @@ class Request
      * @return is this request setup for using proxy?
      */
     public function hasProxy(){
-        return is_string($this->additional_curl_opts[CURLOPT_PROXY]);
+        return isset($this->additional_curl_opts[CURLOPT_PROXY]) && is_string($this->additional_curl_opts[CURLOPT_PROXY]);
     }
 
     /**
