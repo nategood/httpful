@@ -199,7 +199,7 @@ class Request
             $this->_curlPrep();
 
         $result = curl_exec($this->_ch);
-
+        
         if ($result === false) {
             $this->_error(curl_error($this->_ch));
             throw new ConnectionErrorException('Unable to connect.');
@@ -328,6 +328,9 @@ class Request
     {
         if (empty($mime)) return $this;
         $this->content_type = $this->expected_type = Mime::getFullMime($mime);
+        if($mime == Mime::UPLOAD) {
+            $this->neverSerializePayload();
+        }
         return $this;
     }
     // @alias of mime
@@ -789,7 +792,8 @@ class Request
         if (isset($this->payload)) {
             $this->serialized_payload = $this->_serializePayload($this->payload);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $this->serialized_payload);
-            $this->headers['Content-Length'] = strlen($this->serialized_payload);
+            if($this->content_type != Mime::UPLOAD)
+                $this->headers['Content-Length'] = strlen($this->serialized_payload) ;
         }
 
         $headers = array();

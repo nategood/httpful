@@ -293,6 +293,19 @@ Content-Type: text/plain; charset=utf-8\r\n", $req);
         $this->assertEquals($response->content_type, 'text/plain');
         $this->assertEquals($response->charset, 'utf-8');
     }
+    
+    function testParsingContentTypeUpload()
+    {
+        $req = Request::init()->sendsAndExpects(Mime::UPLOAD);
+        // $response = new Response(SAMPLE_JSON_RESPONSE, "", $req);
+        // // Check default content type of iso-8859-1
+        $response = new Response(self::SAMPLE_JSON_RESPONSE, "HTTP/1.1 200 OK
+Content-Type: text/plain; charset=utf-8\r\n", $req);
+        $this->assertInstanceOf('Httpful\Response\Headers', $response->headers);
+        $this->assertEquals($response->headers['Content-Type'], 'multipart/form-data');
+        $this->assertEquals($response->content_type, 'multipart/form-data');
+        $this->assertEquals($response->charset, 'utf-8');
+    }
 
     function testEmptyResponseParse()
     {
