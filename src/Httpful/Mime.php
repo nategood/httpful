@@ -8,15 +8,16 @@ namespace Httpful;
  */
 class Mime
 {
-    const JSON  = 'application/json';
-    const XML   = 'application/xml';
-    const XHTML = 'application/html+xml';
-    const FORM  = 'application/x-www-form-urlencoded';
-    const PLAIN = 'text/plain';
-    const JS    = 'text/javascript';
-    const HTML  = 'text/html';
-    const YAML  = 'application/x-yaml';
-    const CSV   = 'text/csv';
+    const JSON    = 'application/json';
+    const XML     = 'application/xml';
+    const XHTML   = 'application/html+xml';
+    const FORM    = 'application/x-www-form-urlencoded';
+    const UPLOAD  = 'multipart/form-data';
+    const PLAIN   = 'text/plain';
+    const JS      = 'text/javascript';
+    const HTML    = 'text/html';
+    const YAML    = 'application/x-yaml';
+    const CSV     = 'text/csv';
 
     /**
      * Map short name for a mime type
@@ -28,6 +29,7 @@ class Mime
         'form'      => self::FORM,
         'plain'     => self::PLAIN,
         'text'      => self::PLAIN,
+        'upload'      => self::UPLOAD,
         'html'      => self::HTML,
         'xhtml'     => self::XHTML,
         'js'        => self::JS,
