@@ -199,7 +199,7 @@ class Request
             $this->_curlPrep();
 
         $result = curl_exec($this->_ch);
-
+        
         if ($result === false) {
             $this->_error(curl_error($this->_ch));
             throw new ConnectionErrorException('Unable to connect.');
@@ -333,6 +333,9 @@ class Request
     {
         if (empty($mime)) return $this;
         $this->content_type = $this->expected_type = Mime::getFullMime($mime);
+        if($this->isUpload()) {
+            $this->neverSerializePayload();
+        }
         return $this;
     }
     // @alias of mime
@@ -374,6 +377,15 @@ class Request
     {
         return $this->expects($mime);
     }
+    
+    public function attach($files) {
+        foreach ($files as $key => $file) {
+            $this->payload[$key] = "@{$file}";
+        }
+
+        $this->sendsType(Mime::UPLOAD);
+        return $this;
+    }
 
     /**
      * @return Request this
@@ -383,6 +395,9 @@ class Request
     {
         if (empty($mime)) return $this;
         $this->content_type  = Mime::getFullMime($mime);
+        if($this->isUpload()) {
+            $this->neverSerializePayload();
+        }
         return $this;
     }
     // @alias of contentType
@@ -794,7 +809,8 @@ class Request
         if (isset($this->payload)) {
             $this->serialized_payload = $this->_serializePayload($this->payload);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $this->serialized_payload);
-            $this->headers['Content-Length'] = strlen($this->serialized_payload);
+            if(!$this->isUpload())
+                $this->headers['Content-Length'] = strlen($this->serialized_payload) ;
         }
 
         $headers = array();
@@ -821,7 +837,7 @@ class Request
         }
 
         // Solve a bug on squid proxy, NONE/411 when miss content length
-        if (!isset($this->headers['Content-Length'])) {
+        if (!isset($this->headers['Content-Length']) && !$this->isUpload()) {
             $this->headers['Content-Length'] = 0;
         }
 
@@ -850,10 +866,14 @@ class Request
         foreach ($this->additional_curl_opts as $curlopt => $curlval) {
             curl_setopt($ch, $curlopt, $curlval);
         }
-
+        
         $this->_ch = $ch;
 
         return $this;
+    }
+    
+    public function isUpload() {
+        return Mime::UPLOAD == $this->content_type;
     }
 
     public function buildUserAgent() {
