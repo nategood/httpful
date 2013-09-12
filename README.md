@@ -68,6 +68,10 @@ Httpful highly encourages sending in pull requests.  When submitting a pull requ
  - Include commenting where appropriate and add a descriptive pull request message
 
 # Changelog
+## 0.2.9
+
+ - FEATURE multipart/form-data support (a.k.a. file uploads)! Thanks @dtelaroli! [PR #89](https://github.com/nategood/httpful/pull/89)
+
 ## 0.2.8
 
  - FIX Notice fix for Pull Request 86
