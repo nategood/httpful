@@ -58,11 +58,22 @@ Connection: keep-alive
 Transfer-Encoding: chunked
 X-My-Header:Value1
 X-My-Header:Value2\r\n";
+
     function testInit()
     {
       $r = Request::init();
       // Did we get a 'Request' object?
       $this->assertEquals('Httpful\Request', get_class($r));
+    }
+
+    function testDetermineLength()
+    {
+      $r = Request::init();
+      $this->assertEquals(1, $r->_determineLength('A'));
+      $this->assertEquals(2, $r->_determineLength('À'));
+      $this->assertEquals(2, $r->_determineLength('Ab'));
+      $this->assertEquals(3, $r->_determineLength('Àb'));
+      $this->assertEquals(6, $r->_determineLength('世界'));
     }
 
     function testMethods()
@@ -241,7 +252,7 @@ X-My-Header:Value2\r\n";
         $this->assertEquals($username, $r->username);
         $this->assertEquals($password, $r->password);
         $this->assertTrue($r->hasDigestAuth());
-    } 
+    }
 
     function testJsonResponseParse()
     {
@@ -295,20 +306,20 @@ Content-Type: text/plain; charset=utf-8\r\n", $req);
         $this->assertEquals($response->content_type, 'text/plain');
         $this->assertEquals($response->charset, 'utf-8');
     }
-    
+
     function testParsingContentTypeUpload()
     {
         $req = Request::init();
-        
+
         $req->sendsType(Mime::UPLOAD);
         // $response = new Response(SAMPLE_JSON_RESPONSE, "", $req);
         // // Check default content type of iso-8859-1
         $this->assertEquals($req->content_type, 'multipart/form-data');
     }
-    
+
     function testAttach() {
         $req = Request::init();
-        
+
         $req->attach(array('index' => '/dir/filename'));
         // $response = new Response(SAMPLE_JSON_RESPONSE, "", $req);
         // // Check default content type of iso-8859-1
@@ -316,15 +327,15 @@ Content-Type: text/plain; charset=utf-8\r\n", $req);
         $this->assertEquals($req->content_type, Mime::UPLOAD);
         $this->assertEquals($req->serialize_payload_method, Request::SERIALIZE_PAYLOAD_NEVER);
     }
-    
+
     function testIsUpload() {
         $req = Request::init();
-        
+
         $req->sendsType(Mime::UPLOAD);
-        
+
         $this->assertTrue($req->isUpload());
     }
-    
+
     function testEmptyResponseParse()
     {
         $req = Request::init()->sendsAndExpects(Mime::JSON);

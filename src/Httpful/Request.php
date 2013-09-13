@@ -809,13 +809,10 @@ class Request
         if (isset($this->payload)) {
             $this->serialized_payload = $this->_serializePayload($this->payload);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $this->serialized_payload);
-            if(!$this->isUpload())
-                if (function_exists('mb_strlen')) {
-                    $length = mb_strlen($this->serialized_payload, '8bit');
-                } else {
-                    $length = strlen($this->serialized_payload);
-                }
-                $this->headers['Content-Length'] = $length ;
+            if(!$this->isUpload()) {
+                $this->headers['Content-Length'] =
+                    $this->_determineLength($this->serialized_payload);
+            }
         }
 
         $headers = array();
@@ -877,11 +874,32 @@ class Request
         return $this;
     }
 
-    public function isUpload() {
+    /**
+     * @return int length of payload in bytes
+     * @param string $str payload
+     */
+    public function _determineLength($str)
+    {
+        if (function_exists('mb_strlen')) {
+            return mb_strlen($str, '8bit');
+        } else {
+            return strlen($str);
+        }
+    }
+
+    /**
+     * @return bool
+     */
+    public function isUpload()
+    {
         return Mime::UPLOAD == $this->content_type;
     }
 
-    public function buildUserAgent() {
+    /**
+     * @return string
+     */
+    public function buildUserAgent()
+    {
         $user_agent = 'User-Agent: Httpful/' . Httpful::VERSION . ' (cURL/';
         $curl = \curl_version();
 
