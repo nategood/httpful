@@ -199,7 +199,7 @@ class Request
             $this->_curlPrep();
 
         $result = curl_exec($this->_ch);
-        
+
         if ($result === false) {
             $this->_error(curl_error($this->_ch));
             throw new ConnectionErrorException('Unable to connect.');
@@ -377,7 +377,7 @@ class Request
     {
         return $this->expects($mime);
     }
-    
+
     public function attach($files) {
         foreach ($files as $key => $file) {
             $this->payload[$key] = "@{$file}";
@@ -866,12 +866,12 @@ class Request
         foreach ($this->additional_curl_opts as $curlopt => $curlval) {
             curl_setopt($ch, $curlopt, $curlval);
         }
-        
+
         $this->_ch = $ch;
 
         return $this;
     }
-    
+
     public function isUpload() {
         return Mime::UPLOAD == $this->content_type;
     }
