@@ -810,7 +810,12 @@ class Request
             $this->serialized_payload = $this->_serializePayload($this->payload);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $this->serialized_payload);
             if(!$this->isUpload())
-                $this->headers['Content-Length'] = strlen($this->serialized_payload) ;
+                if (function_exists('mb_strlen')) {
+                    $length = mb_strlen($this->serialized_payload, '8bit');
+                } else {
+                    $length = strlen($this->serialized_payload);
+                }
+                $this->headers['Content-Length'] = $length ;
         }
 
         $headers = array();
