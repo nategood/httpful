@@ -18,14 +18,16 @@ Features
 
 Here's something to whet your appetite.  Search the twitter API for tweets containing "#PHP".  Include a trivial header for the heck of it.  Notice that the library automatically interprets the response as JSON (can override this if desired) and parses it as an array of objects.
 
-    $url = "http://search.twitter.com/search.json?q=" . urlencode('#PHP');
-    $response = Request::get($url)
-        ->withXTrivialHeader('Just as a demo')
-        ->send();
+```php
+$url = "http://search.twitter.com/search.json?q=" . urlencode('#PHP');
+$response = Request::get($url)
+    ->withXTrivialHeader('Just as a demo')
+    ->send();
 
-    foreach ($response->body->results as $tweet) {
-        echo "@{$tweet->from_user} tweets \"{$tweet->text}\"\n";
-    }
+foreach ($response->body->results as $tweet) {
+    echo "@{$tweet->from_user} tweets \"{$tweet->text}\"\n";
+}
+```
 
 # Installation
 
@@ -33,10 +35,11 @@ Here's something to whet your appetite.  Search the twitter API for tweets conta
 
 A [PHP Archive](http://php.net/manual/en/book.phar.php) (or .phar) file is available for [downloading](http://phphttpclient.com/httpful.phar).  Simply [download](http://phphttpclient.com/httpful.phar) the .phar, drop it into your project, and include it like you would any other php file.  _This method is ideal smaller projects, one off scripts, and quick API hacking_.
 
-    <?php
-    include('httpful.phar');
-    $r = \Httpful\Request::get($uri)->sendIt();
-    ...
+```php
+include('httpful.phar');
+$r = \Httpful\Request::get($uri)->sendIt();
+...
+```
 
 ## Composer
 
