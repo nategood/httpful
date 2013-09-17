@@ -23,6 +23,10 @@ class JsonHandler extends MimeHandlerAdapter
     {
         if (empty($body))
             return null;
+
+        if ( substr($body,0,3) == "\xef\xbb\xbf" )
+            $body = substr($body,3);
+
         $parsed = json_decode($body, $this->decode_as_array);
         if (is_null($parsed))
             throw new \Exception("Unable to parse response as JSON");
