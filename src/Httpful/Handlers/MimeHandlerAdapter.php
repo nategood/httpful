@@ -41,7 +41,7 @@ class MimeHandlerAdapter
         return (string) $payload;
     }
 
-    private function _strip_bom($body)
+    protected function _strip_bom($body)
     {
         if ( substr($body,0,3) == "\xef\xbb\xbf" )
             $body = substr($body,3);
