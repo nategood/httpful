@@ -771,6 +771,9 @@ class Request
         $ch = curl_init($this->uri);
 
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $this->method);
+        if ($this->method==HTTP::HEAD) {
+            curl_setopt($ch, CURLOPT_NOBODY, true);
+        }        
 
         if ($this->hasBasicAuth()) {
             curl_setopt($ch, CURLOPT_USERPWD, $this->username . ':' . $this->password);
