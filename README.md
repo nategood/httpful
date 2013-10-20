@@ -71,6 +71,10 @@ Httpful highly encourages sending in pull requests.  When submitting a pull requ
  - Include commenting where appropriate and add a descriptive pull request message
 
 # Changelog
+## 0.2.11
+
+ - FIX [I #99](https://github.com/nategood/httpful/pull/99) Prevent hanging on HEAD requests
+
 ## 0.2.10
 
  - FIX [I #93](https://github.com/nategood/httpful/pull/86) Fixes edge case where content-length would be set incorrectly
