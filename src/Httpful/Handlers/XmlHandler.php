@@ -36,6 +36,7 @@ class XmlHandler extends MimeHandlerAdapter
      */
     public function parse($body)
     {
+        $body = $this->stripBom($body);
         if (empty($body))
             return null;
         $parsed = simplexml_load_string($body, null, $this->libxml_opts, $this->namespace);
