@@ -216,6 +216,8 @@ class Request
         $body = array_pop($response);
         $headers = array_pop($response);
 
+        curl_close($this->_ch);
+
         return new Response($body, $headers, $this);
     }
     public function sendIt()
