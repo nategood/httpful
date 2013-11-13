@@ -17,6 +17,7 @@ use Httpful\Request;
 use Httpful\Mime;
 use Httpful\Http;
 use Httpful\Response;
+use Httpful\Handlers\JsonHandler;
 
 class HttpfulTest extends \PHPUnit_Framework_TestCase
 {
@@ -500,6 +501,28 @@ Transfer-Encoding: chunked\r\n", $request);
         $r = Request::get('some_other_url');
         $r->useProxy('proxy.com');
         $this->assertTrue($r->hasProxy());
+    }
+
+    public function testParseJSON() {
+        $handler = new JsonHandler();
+
+        $bodies = [
+            'foo',
+            array(),
+            array('foo', 'bar'),
+            null
+        ];
+        foreach ($bodies as $body) {
+            $this->assertEquals($body, $handler->parse(json_encode($body)));
+        }
+
+        try {
+            $result = $handler->parse('invalid{json');
+        } catch(\Exception $e) {
+            $this->assertEquals('Unable to parse response as JSON', $e->getMessage());
+            return;
+        }
+        $this->fail('Expected an exception to be thrown due to invalid json');
     }
 }
 
