@@ -807,6 +807,11 @@ class Request
         }
 
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $this->strict_ssl);
+        // zero is safe for all curl versions
+        $verifyValue = $this->strict_ssl + 0;
+        //Support for value 1 removed in cURL 7.28.1 value 2 valid in all versions
+        if ($verifyValue > 0) $verifyValue++;
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $verifyValue);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
         // https://github.com/nategood/httpful/issues/84
