@@ -506,12 +506,12 @@ Transfer-Encoding: chunked\r\n", $request);
     public function testParseJSON() {
         $handler = new JsonHandler();
 
-        $bodies = [
+        $bodies = array(
             'foo',
             array(),
             array('foo', 'bar'),
             null
-        ];
+        );
         foreach ($bodies as $body) {
             $this->assertEquals($body, $handler->parse(json_encode($body)));
         }
