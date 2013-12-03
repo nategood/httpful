@@ -622,7 +622,7 @@ class Request
      */
     public function serializePayloadWith(\Closure $callback)
     {
-        return $this->regregisterPayloadSerializer('*', $callback);
+        return $this->registerPayloadSerializer('*', $callback);
     }
 
     /**
