@@ -28,6 +28,9 @@ class Request
 
     const MAX_REDIRECTS_DEFAULT     = 25;
 
+    const LOGIDENT                  = 'httpful';
+    const LOG_LEVEL                 = LOG_LOCAL7;
+
     public $uri,
            $method                  = Http::GET,
            $headers                 = array(),
@@ -46,7 +49,8 @@ class Request
            $error_callback,
            $follow_redirects        = false,
            $max_redirects           = self::MAX_REDIRECTS_DEFAULT,
-           $payload_serializers     = array();
+           $payload_serializers     = array(),
+           $logging_enabled         = false;
 
     // Options
     // private $_options = array(
@@ -70,6 +74,17 @@ class Request
      */
     private function __construct($attrs = null)
     {
+        if (!openlog(self::LOGIDENT, LOG_PID, self::LOG_LEVEL))
+            throw new \Exception("Could not open syslog");
+
+        $this->_logFxn = function($contents)
+        {
+            // default log fxn is to log to syslog
+            syslog(LOG_DEBUG, $contents);
+
+            return $this;
+        };
+
         if (!is_array($attrs)) return;
         foreach ($attrs as $attr => $value) {
             $this->$attr = $value;
@@ -212,11 +227,13 @@ class Request
             $result = str_ireplace("HTTP/1.0 200 Connection established\r\n\r\n", '', $result);
         }
         $response = explode("\r\n\r\n", $result, 2 + $info['redirect_count']);
+        $this->log('curlinfo', print_r($info, true));
 
         $body = array_pop($response);
         $headers = array_pop($response);
 
         curl_close($this->_ch);
+        $this->log('Raw Response', $body);
 
         return new Response($body, $headers, $this);
     }
@@ -430,6 +447,25 @@ class Request
     public function withStrictSSL()
     {
         return $this->strictSSL(true);
+    }
+
+    /**
+     * Is logging enabled?
+     * @return Request this
+     * @param bool $logging_enabled
+     */
+    public function logging($logging_enabled)
+    {
+        $this->logging_enabled = $logging_enabled;
+        return $this;
+    }
+    public function withoutLogging()
+    {
+        return $this->logging(false);
+    }
+    public function withLogging()
+    {
+        return $this->logging(true);
     }
 
     /**
@@ -770,6 +806,7 @@ class Request
         if (!isset($this->uri))
             throw new \Exception('Attempting to send a request before defining a URI endpoint.');
 
+        $this->log("Resource", $this->method . " " . $this->uri);
         $ch = curl_init($this->uri);
 
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $this->method);
@@ -818,6 +855,7 @@ class Request
         // set Content-Length to the size of the payload if present
         if (isset($this->payload)) {
             $this->serialized_payload = $this->_serializePayload($this->payload);
+            $this->log('Serialized Payload', print_r($this->serialized_payload, true));
             curl_setopt($ch, CURLOPT_POSTFIELDS, $this->serialized_payload);
             if(!$this->isUpload()) {
                 $this->headers['Content-Length'] =
@@ -1077,5 +1115,40 @@ class Request
     public static function options($uri)
     {
         return self::init(Http::OPTIONS)->uri($uri);
+    }
+
+    /**
+     * Method for logging to debug logs
+     * @return Request this
+     * @param string $key keyname for logged information
+     * @param string $contents value to log for key
+     */
+    private function log($key, $contents)
+    {
+        if (!$this->logging_enabled)
+        {
+            return $this;
+        }
+
+        $logFxn = $this->_logFxn;
+        return $logFxn("$key:\n $contents\n\n");
+    }
+
+    /**
+     * Method for setting internal logging function,
+     * for supplying a different logging facility.
+     * @return Request this
+     * @param object $fxn anonymous function that performs logging operation
+     */
+    public function logFxn($fxn)
+    {
+        if (is_callable($fxn))
+        {
+            $this->_logFxn = function($contents) use ($fxn) { $fxn($contents); return $this; };
+        }
+        else
+            throw new \Exception("Received non-callable logging function");
+
+        return $this;
     }
 }
