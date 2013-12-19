@@ -19,7 +19,7 @@ use Httpful\Http;
 use Httpful\Response;
 use Httpful\Handlers\JsonHandler;
 
-define ('TEST_SERVER', '127.0.0.1:' . WEB_SERVER_PORT);
+define ('TEST_SERVER', WEB_SERVER_HOST . ':' . WEB_SERVER_PORT);
 
 class HttpfulTest extends \PHPUnit_Framework_TestCase
 {
