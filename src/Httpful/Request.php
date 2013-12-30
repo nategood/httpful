@@ -1144,11 +1144,65 @@ class Request
     {
         if (is_callable($fxn))
         {
-            $this->_logFxn = function($contents) use ($fxn) { $fxn($contents); return $this; };
+            $self = giveAccess($this);
+            $this->_logFxn = function($contents) use ($fxn, $self) { $fxn($contents); return $self; };
         }
         else
             throw new \Exception("Received non-callable logging function");
 
         return $this;
     }
+}
+
+// PHP 5.3 does not allow accessing "$this" in closure context
+// created within an object method like PHP 5.4 does. we can
+// instead use a ReflectionObject in PHP 5.3 to accomplish
+// something similar.
+class FullAccessWrapper
+{
+    protected $_self;
+    protected $_refl;
+
+    public function __construct($self)
+    {
+        $this->_self = $self;
+        $this->_refl = new \ReflectionObject($self);
+    }
+
+    public function __call($method, $args)
+    {
+        $mrefl = $this->_refl->getMethod($method);
+        $mrefl->setAccessible(true);
+        return $mrefl->invokeArgs($this->_self, $args);
+    }
+
+    public function __set($name, $value)
+    {
+        $prefl = $this->_refl->getProperty($name);
+        $prefl->setAccessible(true);
+        $prefl->setValue($this->_self, $value);
+    }
+
+    public function __get($name)
+    {
+        $prefl = $this->_refl->getProperty($name);
+        $prefl->setAccessible(true);
+        return $prefl->getValue($this->_self);
+    }
+
+    public function __isset($name)
+    {
+        $value = $this->__get($name);
+        return isset($value);
+    }
+}
+
+/** 
+ * Usage:
+ * $self = giveAccess($this);
+ * function() use ($self) { $self->privateMember... }
+ */
+function giveAccess($obj)
+{
+    return new FullAccessWrapper($obj);
 }

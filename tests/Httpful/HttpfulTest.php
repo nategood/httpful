@@ -525,34 +525,40 @@ Transfer-Encoding: chunked\r\n", $request);
             return;
         }
         $this->fail('Expected an exception to be thrown due to invalid json');
-	}
+    }
 
     public function testLogging()
     {
-        // PHP test server seems to always set content type to application/octet-stream
-        // so force parsing as JSON here
-        Httpful::register('application/octet-stream', new \Httpful\Handlers\JsonHandler());
-        $response = Request::get(TEST_SERVER . '/test.json')->sendsAndExpects(MIME::JSON)->withLogging()->logFxn(function($msg){file_put_contents("./test.log", $msg, FILE_APPEND);})->send();
-        $this->assertTrue(file_exists("./test.log"));
+        // this test doesn't work well without the test server running
+        // which unfortunately is only supported on php >= 5.4
+        if (!defined('WITHOUT_SERVER') || (defined('WITHOUT_SERVER') && !WITHOUT_SERVER))
+        {
+            // PHP test server seems to always set content type to application/octet-stream
+            // so force parsing as JSON here
+            Httpful::register('application/octet-stream', new \Httpful\Handlers\JsonHandler());
+            $response = Request::get(TEST_SERVER . '/test.json')->sendsAndExpects(MIME::JSON)->withLogging()->logFxn(function($msg){file_put_contents("./test.log", $msg, FILE_APPEND);});
+            $response->send();
+            $this->assertTrue(file_exists("./test.log"));
 
-        $contents = file_get_contents("./test.log");
-        // verify the request appears in the log -- strpos will return a non-false integer value
-        // if so
-        $this->assertInternalType('integer', strpos($contents, "GET " . TEST_SERVER . "/test.json"));
+            $contents = file_get_contents("./test.log");
+            // verify the request appears in the log -- strpos will return a non-false integer value
+            // if so
+            $this->assertInternalType('integer', strpos($contents, "GET " . TEST_SERVER . "/test.json"));
 
-        // verify the contents of the test.json file are found in the log
-        $json = file_get_contents(dirname(dirname(__FILE__)) . "/static/test.json");
-        $this->assertInternalType('integer', strpos($contents, $json));
+            // verify the contents of the test.json file are found in the log
+            $json = file_get_contents(dirname(dirname(__FILE__)) . "/static/test.json");
+            $this->assertInternalType('integer', strpos($contents, $json));
 
-        // now let's see if a POST records its parameters
-        $req = Request::post(TEST_SERVER . '/test.json')->sendsAndExpects(MIME::JSON)->withLogging()->logFxn(function($msg){file_put_contents("./test.log", $msg, FILE_APPEND);});
-        $req->body(array("foo" => "bar", "test" => true))->send();
-        $contents = file_get_contents("./test.log");
-        $this->assertInternalType('integer', strpos($contents, '{"foo":"bar","test":true}'));
+            // now let's see if a POST records its parameters
+            $req = Request::post(TEST_SERVER . '/test.json')->sendsAndExpects(MIME::JSON)->withLogging()->logFxn(function($msg){file_put_contents("./test.log", $msg, FILE_APPEND);});
+            $req->body(array("foo" => "bar", "test" => true))->send();
+            $contents = file_get_contents("./test.log");
+            $this->assertInternalType('integer', strpos($contents, '{"foo":"bar","test":true}'));
 
-        // clean up
-        unlink("./test.log");
-        $this->assertFalse(file_exists("./test.log"));
+            // clean up
+            unlink("./test.log");
+            $this->assertFalse(file_exists("./test.log"));
+        }
     }
 }
 
