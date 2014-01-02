@@ -64,6 +64,7 @@ class Request
 
     // Template Request object
     private static $_template;
+    private $_logFxn;
 
     /**
      * We made the constructor private to force the factory style.  This was
@@ -74,15 +75,18 @@ class Request
      */
     private function __construct($attrs = null)
     {
-        if (!openlog(self::LOGIDENT, LOG_PID, self::LOG_LEVEL))
-            throw new \Exception("Could not open syslog");
-
-        $this->_logFxn = function($contents)
+        $self = giveAccess($this);
+        $this->_logFxn = function($contents) use ($self)
         {
+            if (!openlog(self::LOGIDENT, LOG_PID, self::LOG_LEVEL))
+                throw new \Exception("Could not open syslog");
+
             // default log fxn is to log to syslog
             syslog(LOG_DEBUG, $contents);
 
-            return $this;
+            closelog();
+
+            return $self;
         };
 
         if (!is_array($attrs)) return;
