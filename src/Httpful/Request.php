@@ -78,7 +78,7 @@ class Request
         $self = giveAccess($this);
         $this->_logFxn = function($contents) use ($self)
         {
-            if (!openlog(self::LOGIDENT, LOG_PID, self::LOG_LEVEL))
+            if (!openlog(Request::LOGIDENT, LOG_PID, Request::LOG_LEVEL))
                 throw new \Exception("Could not open syslog");
 
             // default log fxn is to log to syslog
