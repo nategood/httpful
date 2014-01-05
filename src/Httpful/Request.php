@@ -29,14 +29,14 @@ class Request
     const MAX_REDIRECTS_DEFAULT     = 25;
 
     public $uri,
-           $method                  = Http::GET,
-           $headers                 = array(),
-           $raw_headers             = '',
-           $strict_ssl              = false,
+           $method                   = Http::GET,
+           $headers                  = array(),
+           $raw_headers              = '',
+           $strict_ssl               = false,
            $content_type,
            $expected_type,
-           $additional_curl_opts    = array(),
-           $auto_parse              = true,
+           $additional_curl_opts     = array(),
+           $auto_parse               = true,
            $serialize_payload_method = self::SERIALIZE_PAYLOAD_SMART,
            $username,
            $password,
@@ -44,9 +44,10 @@ class Request
            $payload,
            $parse_callback,
            $error_callback,
-           $follow_redirects        = false,
-           $max_redirects           = self::MAX_REDIRECTS_DEFAULT,
-           $payload_serializers     = array();
+           $return_headers           = true,
+           $follow_redirects         = false,
+           $max_redirects            = self::MAX_REDIRECTS_DEFAULT,
+           $payload_serializers      = array();
 
     // Options
     // private $_options = array(
@@ -545,6 +546,17 @@ class Request
     }
 
     /**
+     * Determines value of CURLOPT_HEADER
+     * @return Response $this
+     * @param bool $return
+     */
+    public function returnHeaders($return)
+    {
+        $this->return_headers = ($return) ? true : false;
+        return $this;
+    }
+
+    /**
      * @return Request
      * @param bool $auto_parse perform automatic "smart"
      *    parsing based on Content-Type or "expectedType"
@@ -871,7 +883,7 @@ class Request
             curl_setopt($ch, CURLOPT_VERBOSE, true);
         }
 
-        curl_setopt($ch, CURLOPT_HEADER, 1);
+        curl_setopt($ch, CURLOPT_HEADER, $this->return_headers);
 
         // If there are some additional curl opts that the user wants
         // to set, we can tack them in here
