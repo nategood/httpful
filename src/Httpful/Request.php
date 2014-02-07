@@ -64,7 +64,8 @@ class Request
 
     // Template Request object
     private static $_template;
-    private $_logFxn;
+    private $_logFxn = null;
+    private $_cleanupFxn = null;
 
     /**
      * We made the constructor private to force the factory style.  This was
@@ -76,18 +77,43 @@ class Request
     private function __construct($attrs = null)
     {
         $self = giveAccess($this);
-        $this->_logFxn = function($contents) use ($self)
+        if (is_null($this->_logFxn))
         {
-            if (!openlog(Request::LOGIDENT, LOG_PID, Request::LOG_LEVEL))
-                throw new \Exception("Could not open syslog");
+            if (isset(self::$_template) && !is_null(self::$_template->_logFxn))
+            {
+                $this->_logFxn = self::$_template->_logFxn;
+            }
+            else
+            {
+                $this->_logFxn = function($contents) use ($self)
+                {
+                    if (!openlog(Request::LOGIDENT, LOG_PID, Request::LOG_LEVEL))
+                        throw new \Exception("Could not open syslog");
 
-            // default log fxn is to log to syslog
-            syslog(LOG_DEBUG, $contents);
+                    // default log fxn is to log to syslog
+                    syslog(LOG_DEBUG, $contents);
 
-            closelog();
+                    closelog();
 
-            return $self;
-        };
+                    return $self;
+                };
+            }
+        }
+
+        if (is_null($this->_cleanupFxn))
+        {
+            if (isset(self::$_template) && !is_null(self::$_template->_cleanupFxn))
+            {
+                $this->_cleanupFxn = self::$_template->_cleanupFxn;
+            }
+            else
+            {
+                $this->_cleanupFxn = function() use ($self)
+                {
+                    return $self;
+                };
+            }
+        }
 
         if (!is_array($attrs)) return;
         foreach ($attrs as $attr => $value) {
@@ -238,6 +264,9 @@ class Request
 
         curl_close($this->_ch);
         $this->log('Raw Response', $body);
+
+        $cleanup = $this->_cleanupFxn;
+        $cleanup();
 
         return new Response($body, $headers, $this);
     }
@@ -1153,6 +1182,25 @@ class Request
         }
         else
             throw new \Exception("Received non-callable logging function");
+
+        return $this;
+    }
+
+    /**
+     * Method for setting internal cleanup function,
+     * that runs after request execution. (e.g. to reclaim syslog)
+     * @return Request this
+     * @param object $fxn anonymous cleanup function 
+     */
+    public function cleanupFxn($fxn)
+    {
+        if (is_callable($fxn))
+        {
+            $self = giveAccess($this);
+            $this->_cleanupFxn = function() use ($fxn, $self) { $fxn(); return $self; };
+        }
+        else
+            throw new \Exception("Received non-callable cleanup function");
 
         return $this;
     }
