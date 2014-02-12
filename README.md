@@ -33,7 +33,7 @@ foreach ($response->body->results as $tweet) {
 
 ## Phar
 
-A [PHP Archive](http://php.net/manual/en/book.phar.php) (or .phar) file is available for [downloading](http://phphttpclient.com/httpful.phar).  Simply [download](http://phphttpclient.com/httpful.phar) the .phar, drop it into your project, and include it like you would any other php file.  _This method is ideal smaller projects, one off scripts, and quick API hacking_.
+A [PHP Archive](http://php.net/manual/en/book.phar.php) (or .phar) file is available for [downloading](http://phphttpclient.com/httpful.phar).  Simply [download](http://phphttpclient.com/httpful.phar) the .phar, drop it into your project, and include it like you would any other php file.  _This method is ideal for smaller projects, one off scripts, and quick API hacking_.
 
 ```php
 include('httpful.phar');
@@ -43,7 +43,7 @@ $r = \Httpful\Request::get($uri)->sendIt();
 
 ## Composer
 
-Httpful is PSR-0 compliant and can be installed using [composer](http://getcomposer.org/).  Simply add `nategood/httpful` to your composer.json file.  _Composer is the sane alternative to PEAR.  It is excellent for managing dependancies in larger projects_.
+Httpful is PSR-0 compliant and can be installed using [composer](http://getcomposer.org/).  Simply add `nategood/httpful` to your composer.json file.  _Composer is the sane alternative to PEAR.  It is excellent for managing dependencies in larger projects_.
 
     {
         "require": {
