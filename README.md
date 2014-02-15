@@ -170,3 +170,7 @@ Httpful highly encourages sending in pull requests.  When submitting a pull requ
   - Created AbstractMimeHandler type that all Mime Handlers must extend
   - Pulled out the parsing/serializing logic from the Request/Response classes into their own MimeHandler classes
   - Added ability to register new mime handlers for mime types
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/nategood/httpful/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
