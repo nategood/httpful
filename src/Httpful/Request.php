@@ -202,7 +202,7 @@ class Request
 
         if ($result === false) {
             $this->_error(curl_error($this->_ch));
-            throw new ConnectionErrorException('Unable to connect.');
+            throw new ConnectionErrorException('Unable to connect.',curl_errno($this->_ch),null,$this->_ch);
         }
 
         $info = curl_getinfo($this->_ch);
