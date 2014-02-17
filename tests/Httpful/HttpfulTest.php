@@ -18,12 +18,14 @@ use Httpful\Mime;
 use Httpful\Http;
 use Httpful\Response;
 use Httpful\Handlers\JsonHandler;
+use Httpful\Exception\ConnectionErrorException;
 
 class HttpfulTest extends \PHPUnit_Framework_TestCase
 {
     const TEST_SERVER = '127.0.0.1:8008';
     const TEST_URL = 'http://127.0.0.1:8008';
     const TEST_URL_400 = 'http://127.0.0.1:8008/400';
+    const TIMEOUT_URI = 'http://www.google.com:81';
 
     const SAMPLE_JSON_HEADER =
 "HTTP/1.1 200 OK
@@ -501,6 +503,20 @@ Transfer-Encoding: chunked\r\n", $request);
         $r = Request::get('some_other_url');
         $r->useProxy('proxy.com');
         $this->assertTrue($r->hasProxy());
+    }
+
+    public function testTimeout() {
+        try {
+            Request::init()
+                ->uri(self::TIMEOUT_URI)
+                ->timeout(1)
+                ->send();
+        } catch(ConnectionErrorException $e) {
+            $this->assertTrue(is_resource($e->getCurlObject()));
+            $this->assertTrue($e->wasTimeout());
+            return;
+        }
+        $this->assertFalse(true);
     }
 
     public function testParseJSON() {
