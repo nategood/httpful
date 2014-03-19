@@ -383,12 +383,11 @@ class Request
     public function attach($files) {
         foreach ($files as $key => $file) {
             if (function_exists('curl_file_create')) {
-                $this->payload[$key] = curl_file_create($file);;
+                $this->payload[$key] = curl_file_create($file);
             } else {
                 $this->payload[$key] = "@{$file}";
             }
         }
-        
         $this->sendsType(Mime::UPLOAD);
         return $this;
     }
