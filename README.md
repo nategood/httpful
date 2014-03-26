@@ -71,6 +71,15 @@ Httpful highly encourages sending in pull requests.  When submitting a pull requ
  - Include commenting where appropriate and add a descriptive pull request message
 
 # Changelog
+
+## 0.2.12
+
+ - REFACTOR [I #123](https://github.com/nategood/httpful/pull/123) Support new curl file upload method
+ - FEATURE [I #118](https://github.com/nategood/httpful/pull/118) 5.4 HTTP Test Server
+ - FIX [I #109](https://github.com/nategood/httpful/pull/109) Typo
+ - FIX [I #103](https://github.com/nategood/httpful/pull/103)  Handle also CURLOPT_SSL_VERIFYHOST for strictSsl mode
+ - FIX [I #109](https://github.com/nategood/httpful/pull/109) 
+
 ## 0.2.11
 
  - FIX [I #99](https://github.com/nategood/httpful/pull/99) Prevent hanging on HEAD requests
@@ -170,7 +179,4 @@ Httpful highly encourages sending in pull requests.  When submitting a pull requ
   - Created AbstractMimeHandler type that all Mime Handlers must extend
   - Pulled out the parsing/serializing logic from the Request/Response classes into their own MimeHandler classes
   - Added ability to register new mime handlers for mime types
-
-
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/nategood/httpful/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
 
