@@ -78,7 +78,6 @@ Httpful highly encourages sending in pull requests.  When submitting a pull requ
  - FEATURE [I #118](https://github.com/nategood/httpful/pull/118) 5.4 HTTP Test Server
  - FIX [I #109](https://github.com/nategood/httpful/pull/109) Typo
  - FIX [I #103](https://github.com/nategood/httpful/pull/103)  Handle also CURLOPT_SSL_VERIFYHOST for strictSsl mode
- - FIX [I #109](https://github.com/nategood/httpful/pull/109) 
 
 ## 0.2.11
 
