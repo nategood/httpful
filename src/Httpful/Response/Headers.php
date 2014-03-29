@@ -18,7 +18,16 @@ final class Headers implements \ArrayAccess, \Countable {
         $headers = array();
         foreach ($lines as $line) {
             list($name, $value) = explode(':', $line, 2);
-            $headers[strtolower(trim($name))] = trim($value);
+            if (array_key_exists(strtolower(trim($name)), $headers)) {
+                    // See HTTP RFC Sec 4.2 Paragraph 5
+	                // http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
+	                // If a header appears more than once, it must also be able to
+	                // be represented as a single header with a comma-separated
+	                // list of values.  We transform accordingly. 
+				$headers[strtolower(trim($name))] .= '||' . trim($value);
+		            } else {
+		                 $headers[strtolower(trim($name))] = trim($value);
+		            }
         }
         return new self($headers);
     }
