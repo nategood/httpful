@@ -28,6 +28,9 @@ class Request
 
     const MAX_REDIRECTS_DEFAULT     = 25;
 
+    const LOGIDENT                  = 'httpful';
+    const LOG_LEVEL                 = LOG_LOCAL7;
+
     public $uri,
            $method                  = Http::GET,
            $headers                 = array(),
@@ -46,7 +49,8 @@ class Request
            $error_callback,
            $follow_redirects        = false,
            $max_redirects           = self::MAX_REDIRECTS_DEFAULT,
-           $payload_serializers     = array();
+           $payload_serializers     = array(),
+           $logging_enabled         = false;
 
     // Options
     // private $_options = array(
@@ -60,6 +64,8 @@ class Request
 
     // Template Request object
     private static $_template;
+    private $_logFxn = null;
+    private $_cleanupFxn = null;
 
     /**
      * We made the constructor private to force the factory style.  This was
@@ -70,6 +76,45 @@ class Request
      */
     private function __construct($attrs = null)
     {
+        $self = giveAccess($this);
+        if (is_null($this->_logFxn))
+        {
+            if (isset(self::$_template) && !is_null(self::$_template->_logFxn))
+            {
+                $this->_logFxn = self::$_template->_logFxn;
+            }
+            else
+            {
+                $this->_logFxn = function($contents) use ($self)
+                {
+                    if (!openlog(Request::LOGIDENT, LOG_PID, Request::LOG_LEVEL))
+                        throw new \Exception("Could not open syslog");
+
+                    // default log fxn is to log to syslog
+                    syslog(LOG_DEBUG, $contents);
+
+                    closelog();
+
+                    return $self;
+                };
+            }
+        }
+
+        if (is_null($this->_cleanupFxn))
+        {
+            if (isset(self::$_template) && !is_null(self::$_template->_cleanupFxn))
+            {
+                $this->_cleanupFxn = self::$_template->_cleanupFxn;
+            }
+            else
+            {
+                $this->_cleanupFxn = function() use ($self)
+                {
+                    return $self;
+                };
+            }
+        }
+
         if (!is_array($attrs)) return;
         foreach ($attrs as $attr => $value) {
             $this->$attr = $value;
@@ -212,11 +257,16 @@ class Request
             $result = str_ireplace("HTTP/1.0 200 Connection established\r\n\r\n", '', $result);
         }
         $response = explode("\r\n\r\n", $result, 2 + $info['redirect_count']);
+        $this->log('curlinfo', print_r($info, true));
 
         $body = array_pop($response);
         $headers = array_pop($response);
 
         curl_close($this->_ch);
+        $this->log('Raw Response', $body);
+
+        $cleanup = $this->_cleanupFxn;
+        $cleanup();
 
         return new Response($body, $headers, $this);
     }
@@ -433,6 +483,25 @@ class Request
     public function withStrictSSL()
     {
         return $this->strictSSL(true);
+    }
+
+    /**
+     * Is logging enabled?
+     * @return Request this
+     * @param bool $logging_enabled
+     */
+    public function logging($logging_enabled)
+    {
+        $this->logging_enabled = $logging_enabled;
+        return $this;
+    }
+    public function withoutLogging()
+    {
+        return $this->logging(false);
+    }
+    public function withLogging()
+    {
+        return $this->logging(true);
     }
 
     /**
@@ -773,6 +842,7 @@ class Request
         if (!isset($this->uri))
             throw new \Exception('Attempting to send a request before defining a URI endpoint.');
 
+        $this->log("Resource", $this->method . " " . $this->uri);
         $ch = curl_init($this->uri);
 
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $this->method);
@@ -821,6 +891,7 @@ class Request
         // set Content-Length to the size of the payload if present
         if (isset($this->payload)) {
             $this->serialized_payload = $this->_serializePayload($this->payload);
+            $this->log('Serialized Payload', print_r($this->serialized_payload, true));
             curl_setopt($ch, CURLOPT_POSTFIELDS, $this->serialized_payload);
             if(!$this->isUpload()) {
                 $this->headers['Content-Length'] =
@@ -1081,4 +1152,112 @@ class Request
     {
         return self::init(Http::OPTIONS)->uri($uri);
     }
+
+    /**
+     * Method for logging to debug logs
+     * @return Request this
+     * @param string $key keyname for logged information
+     * @param string $contents value to log for key
+     */
+    private function log($key, $contents)
+    {
+        if (!$this->logging_enabled)
+        {
+            return $this;
+        }
+
+        $logFxn = $this->_logFxn;
+        return $logFxn("$key:\n $contents\n\n");
+    }
+
+    /**
+     * Method for setting internal logging function,
+     * for supplying a different logging facility.
+     * @return Request this
+     * @param object $fxn anonymous function that performs logging operation
+     */
+    public function logFxn($fxn)
+    {
+        if (is_callable($fxn))
+        {
+            $self = giveAccess($this);
+            $this->_logFxn = function($contents) use ($fxn, $self) { $fxn($contents); return $self; };
+        }
+        else
+            throw new \Exception("Received non-callable logging function");
+
+        return $this;
+    }
+
+    /**
+     * Method for setting internal cleanup function,
+     * that runs after request execution. (e.g. to reclaim syslog)
+     * @return Request this
+     * @param object $fxn anonymous cleanup function 
+     */
+    public function cleanupFxn($fxn)
+    {
+        if (is_callable($fxn))
+        {
+            $self = giveAccess($this);
+            $this->_cleanupFxn = function() use ($fxn, $self) { $fxn(); return $self; };
+        }
+        else
+            throw new \Exception("Received non-callable cleanup function");
+
+        return $this;
+    }
+}
+
+// PHP 5.3 does not allow accessing "$this" in closure context
+// created within an object method like PHP 5.4 does. we can
+// instead use a ReflectionObject in PHP 5.3 to accomplish
+// something similar.
+class FullAccessWrapper
+{
+    protected $_self;
+    protected $_refl;
+
+    public function __construct($self)
+    {
+        $this->_self = $self;
+        $this->_refl = new \ReflectionObject($self);
+    }
+
+    public function __call($method, $args)
+    {
+        $mrefl = $this->_refl->getMethod($method);
+        $mrefl->setAccessible(true);
+        return $mrefl->invokeArgs($this->_self, $args);
+    }
+
+    public function __set($name, $value)
+    {
+        $prefl = $this->_refl->getProperty($name);
+        $prefl->setAccessible(true);
+        $prefl->setValue($this->_self, $value);
+    }
+
+    public function __get($name)
+    {
+        $prefl = $this->_refl->getProperty($name);
+        $prefl->setAccessible(true);
+        return $prefl->getValue($this->_self);
+    }
+
+    public function __isset($name)
+    {
+        $value = $this->__get($name);
+        return isset($value);
+    }
+}
+
+/** 
+ * Usage:
+ * $self = giveAccess($this);
+ * function() use ($self) { $self->privateMember... }
+ */
+function giveAccess($obj)
+{
+    return new FullAccessWrapper($obj);
 }
