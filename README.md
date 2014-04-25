@@ -1,6 +1,6 @@
 # Httpful
 
-[![Build Status](https://secure.travis-ci.org/nategood/httpful.png?branch=master)](http://travis-ci.org/nategood/httpful)
+[![Build Status](https://secure.travis-ci.org/nategood/httpful.png?branch=master)](http://travis-ci.org/nategood/httpful) [![Total Downloads](https://poser.pugx.org/nategood/httpful/downloads.png)](https://packagist.org/packages/nategood/httpful)
 
 [Httpful](http://phphttpclient.com) is a simple Http Client library for PHP 5.3+.  There is an emphasis of readability, simplicity, and flexibility – basically provide the features and flexibility to get the job done and make those features really easy to use.
 
@@ -71,6 +71,14 @@ Httpful highly encourages sending in pull requests.  When submitting a pull requ
  - Include commenting where appropriate and add a descriptive pull request message
 
 # Changelog
+
+## 0.2.12
+
+ - REFACTOR [I #123](https://github.com/nategood/httpful/pull/123) Support new curl file upload method
+ - FEATURE [I #118](https://github.com/nategood/httpful/pull/118) 5.4 HTTP Test Server
+ - FIX [I #109](https://github.com/nategood/httpful/pull/109) Typo
+ - FIX [I #103](https://github.com/nategood/httpful/pull/103)  Handle also CURLOPT_SSL_VERIFYHOST for strictSsl mode
+
 ## 0.2.11
 
  - FIX [I #99](https://github.com/nategood/httpful/pull/99) Prevent hanging on HEAD requests
@@ -170,3 +178,4 @@ Httpful highly encourages sending in pull requests.  When submitting a pull requ
   - Created AbstractMimeHandler type that all Mime Handlers must extend
   - Pulled out the parsing/serializing logic from the Request/Response classes into their own MimeHandler classes
   - Added ability to register new mime handlers for mime types
+

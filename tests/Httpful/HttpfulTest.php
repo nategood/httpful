@@ -19,7 +19,7 @@ use Httpful\Http;
 use Httpful\Response;
 use Httpful\Handlers\JsonHandler;
 
-define ('TEST_SERVER', WEB_SERVER_HOST . ':' . WEB_SERVER_PORT);
+define('TEST_SERVER', WEB_SERVER_HOST . ':' . WEB_SERVER_PORT);
 
 class HttpfulTest extends \PHPUnit_Framework_TestCase
 {
@@ -494,18 +494,21 @@ Transfer-Encoding: chunked\r\n", $request);
         $this->assertNotEquals($prev, $new);
     }
 
-    public function testHasProxyWithoutProxy() {
+    public function testHasProxyWithoutProxy()
+    {
         $r = Request::get('someUrl');
         $this->assertFalse($r->hasProxy());
     }
 
-    public function testHasProxyWithProxy() {
+    public function testHasProxyWithProxy()
+    {
         $r = Request::get('some_other_url');
         $r->useProxy('proxy.com');
         $this->assertTrue($r->hasProxy());
     }
 
-    public function testParseJSON() {
+    public function testParseJSON()
+    {
         $handler = new JsonHandler();
 
         $bodies = array(
@@ -560,10 +563,28 @@ Transfer-Encoding: chunked\r\n", $request);
             $this->assertFalse(file_exists("./test.log"));
         }
     }
+
+    // /**
+    //  * Skeleton for testing against the 5.4 baked in server
+    //  */
+    // public function testLocalServer()
+    // {
+    //     if (!defined('WITHOUT_SERVER') || (defined('WITHOUT_SERVER') && !WITHOUT_SERVER)) {
+    //         // PHP test server seems to always set content type to application/octet-stream
+    //         // so force parsing as JSON here
+    //         Httpful::register('application/octet-stream', new \Httpful\Handlers\JsonHandler());
+    //         $response = Request::get(TEST_SERVER . '/test.json')
+    //             ->sendsAndExpects(MIME::JSON);
+    //         $response->send();
+    //         $this->assertTrue(...);
+    //     }
+    // }
 }
 
-class DemoMimeHandler extends \Httpful\Handlers\MimeHandlerAdapter {
-    public function parse($body) {
+class DemoMimeHandler extends \Httpful\Handlers\MimeHandlerAdapter
+{
+    public function parse($body)
+    {
         return 'custom parse';
     }
 }
