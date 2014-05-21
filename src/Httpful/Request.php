@@ -322,7 +322,8 @@ class Request
      * Set the body of the request
      * @return Request this
      * @param mixed $payload
-     * @param string $mimeType
+     * @param string $mimeType currently, sets the sends AND expects mime type although this
+     *    behavior may change in the next minor release (as it is a potential breaking change).
      */
     public function body($payload, $mimeType = null)
     {
