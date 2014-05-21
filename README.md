@@ -72,6 +72,13 @@ Httpful highly encourages sending in pull requests.  When submitting a pull requ
 
 # Changelog
 
+## 0.2.13
+
+ - REFACTOR [I #121](https://github.com/nategood/httpful/pull/121) Throw more descriptive exception on curl errors
+ - REFACTOR [I #122](https://github.com/nategood/httpful/issues/122) Better proxy scrubbing in Request
+ - REFACTOR [I #119](https://github.com/nategood/httpful/issues/119) Better document the mimeType param on Request::body
+ - Misc code and test cleanup
+
 ## 0.2.12
 
  - REFACTOR [I #123](https://github.com/nategood/httpful/pull/123) Support new curl file upload method
