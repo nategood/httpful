@@ -322,12 +322,11 @@ class Request
      * Set the body of the request
      * @return Request this
      * @param mixed $payload
-     * @param string $mimeType currently, sets the sends AND expects mime type although this
-     *    behavior may change in the next minor release (as it is a potential breaking change).
+     * @param string $mimeType sets the content type for the request (no longer additionally sets "expects")
      */
     public function body($payload, $mimeType = null)
     {
-        $this->mime($mimeType);
+        $this->contentType($mimeType);
         $this->payload = $payload;
         // Iserntentially don't call _serializePayload yet.  Wait until
         // we actually send off the request to convert payload to string.
