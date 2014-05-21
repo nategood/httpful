@@ -8,7 +8,7 @@ use \Httpful\Request;
 $uri = "http://api.showclix.com/Event/8175";
 $response = Request::get($uri)
     ->expectsType('json')
-    ->sendIt();
+    ->send();
 
 // Print out the event details
 echo "The event {$response->body->event} will take place on {$response->body->event_start}\n";
@@ -18,7 +18,7 @@ echo "The event {$response->body->event} will take place on {$response->body->ev
 
 $response = Request::get($uri)
     ->expectsType('json')
-    ->sendIt();
+    ->send();
 
 // Print out the event details
 echo "The event {$response->body['event']} will take place on {$response->body['event_start']}\n";
