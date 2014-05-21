@@ -57,7 +57,7 @@ Because Httpful is PSR-0 compliant, you can also just clone the Httpful reposito
 
 # Show Me More!
 
-You can checkout the [Httpful Landing Page](http://phphttpclient.com) for more info including many examples and  [documentation](http:://phphttpclient.com/docs).
+You can checkout the [Httpful Landing Page](http://phphttpclient.com) for more info including many examples and  [documentation](http://phphttpclient.com/docs).
 
 # Contributing
 
