@@ -324,9 +324,15 @@ Content-Type: text/plain; charset=utf-8\r\n", $req);
         $req = Request::init();
 
         $req->attach(array('index' => '/dir/filename'));
-        // $response = new Response(SAMPLE_JSON_RESPONSE, "", $req);
-        // // Check default content type of iso-8859-1
-        $this->assertEquals($req->payload['index'], '@/dir/filename');
+        $payload = $req->payload['index'];
+        // PHP 5.5  + will take advantage of CURLFile while previous
+        // versions just use the string syntax
+        if (is_string($payload)) {
+            $this->assertEquals($payload, '@/dir/filename');
+        } else {
+            $this->assertInstanceOf('CURLFile', $payload);
+        }
+
         $this->assertEquals($req->content_type, Mime::UPLOAD);
         $this->assertEquals($req->serialize_payload_method, Request::SERIALIZE_PAYLOAD_NEVER);
     }
