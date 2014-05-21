@@ -203,9 +203,11 @@ class Request
         if ($result === false) {
             if ($curlErrorNumber = curl_errno($this->_ch)) {
                 $curlErrorString = curl_error($this->_ch);
-                throw new ConnectionErrorException('Unable to connect: '.$curlErrorNumber.' '.$curlErrorString);
+                $this->_error($curlErrorString);
+                throw new ConnectionErrorException('Unable to connect: ' . $curlErrorNumber . ' ' . $curlErrorString);
             }
 
+            $this->_error('Unable to connect.');
             throw new ConnectionErrorException('Unable to connect.');
         }
 
