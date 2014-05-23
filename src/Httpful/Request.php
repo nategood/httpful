@@ -823,6 +823,7 @@ class Request
         }
 
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $this->strict_ssl);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $this->strict_ssl);
         // zero is safe for all curl versions
         $verifyValue = $this->strict_ssl + 0;
         //Support for value 1 removed in cURL 7.28.1 value 2 valid in all versions
