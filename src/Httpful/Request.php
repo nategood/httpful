@@ -455,14 +455,35 @@ class Request
      * @param string $auth_username Authentication username. Default null
      * @param string $auth_password Authentication password. Default null
      */
-    public function useProxy($proxy_host, $proxy_port = 80, $auth_type = null, $auth_username = null, $auth_password = null)
+    public function useProxy($proxy_host, $proxy_port = 80, $auth_type = null, $auth_username = null, $auth_password = null, $proxy_type = Proxy::HTTP)
     {
         $this->addOnCurlOption(CURLOPT_PROXY, "{$proxy_host}:{$proxy_port}");
+        $this->addOnCurlOption(CURLOPT_PROXYTYPE, $proxy_type);
         if (in_array($auth_type, array(CURLAUTH_BASIC,CURLAUTH_NTLM))) {
             $this->addOnCurlOption(CURLOPT_PROXYAUTH, $auth_type)
                 ->addOnCurlOption(CURLOPT_PROXYUSERPWD, "{$auth_username}:{$auth_password}");
         }
         return $this;
+    }
+
+    /**
+     * Shortcut for useProxy to configure SOCKS 4 proxy
+     * @see Request::useProxy
+     * @return Request
+     */
+    public function useSocks4Proxy($proxy_host, $proxy_port = 80, $auth_type = null, $auth_username = null, $auth_password = null)
+    {
+        return $this->useProxy($proxy_host, $proxy_port, $auth_type, $auth_username, $auth_password, Proxy::SOCKS4);
+    }
+
+    /**
+     * Shortcut for useProxy to configure SOCKS 5 proxy
+     * @see Request::useProxy
+     * @return Request
+     */
+    public function useSocks5Proxy($proxy_host, $proxy_port = 80, $auth_type = null, $auth_username = null, $auth_password = null)
+    {
+        return $this->useProxy($proxy_host, $proxy_port, $auth_type, $auth_username, $auth_password, Proxy::SOCKS5);
     }
 
     /**
