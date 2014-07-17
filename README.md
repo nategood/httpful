@@ -72,6 +72,14 @@ Httpful highly encourages sending in pull requests.  When submitting a pull requ
 
 # Changelog
 
+## 0.2.15 
+
+ - FEATURE [I #131](https://github.com/nategood/httpful/pull/131) Support for SOCKS proxy
+
+## 0.2.14
+
+ - FEATURE [I #138](https://github.com/nategood/httpful/pull/138) Added alternative option for XML request construction. In the next major release this will likely supplant the older version.
+
 ## 0.2.13
 
  - REFACTOR [I #121](https://github.com/nategood/httpful/pull/121) Throw more descriptive exception on curl errors
