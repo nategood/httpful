@@ -57,6 +57,37 @@ class XmlHandler extends MimeHandlerAdapter
     }
 
     /**
+     * @param mixed $payload
+     * @return string
+     * @author Ted Zellers
+     */
+    public function serialize_clean($payload)
+    {
+        $xml = new \XMLWriter;
+        $xml->openMemory();
+        $xml->startDocument('1.0','ISO-8859-1');
+        $this->serialize_node($xml, $payload);
+        return $xml->outputMemory(true);
+    }
+
+    /**
+     * @param XMLWriter $xmlw
+     * @param mixed $node to serialize
+     * @author Ted Zellers
+     */
+    public function serialize_node(&$xmlw, $node){
+        if (!is_array($node)){
+            $xmlw->text($node);
+        } else {
+            foreach ($node as $k => $v){
+                $xmlw->startElement($k);
+                    $this->serialize_node($xmlw, $v);
+                $xmlw->endElement();
+            }
+        }
+    }
+
+    /**
      * @author Zack Douglas <zack@zackerydouglas.info>
      */
     private function _future_serializeAsXml($value, $node = null, $dom = null)
