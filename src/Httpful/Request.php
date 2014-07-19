@@ -570,7 +570,7 @@ class Request
      * here just as a convenience in very specific cases.
      * The preferred "readable" way would be to leverage
      * the support for custom header methods.
-     * @return Response $this
+     * @return Request $this
      * @param array $headers
      */
     public function addHeaders(array $headers)
