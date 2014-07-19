@@ -14,7 +14,8 @@ class requestTest extends \PHPUnit_Framework_TestCase
      */
     public function testGet_InvalidURL()
     {
-        \Httpful\Request::get('unavailable.url')->send();
+        // Silence the default logger via whenError override
+        \Httpful\Request::get('unavailable.url')->whenError(function($error) {})->send();
     }
 
 }

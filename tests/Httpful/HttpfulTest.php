@@ -395,6 +395,21 @@ Content-Type: text/plain; charset=utf-8\r\n", $req);
         $this->assertTrue($response->hasErrors());
     }
 
+    function testWhenError() {
+        $caught = false;
+
+        try {
+            Request::get('malformed:url')
+                ->whenError(function($error) use(&$caught) {
+                    $caught = true;
+                })
+                ->timeoutIn(0.1)
+                ->send();
+        } catch (\Httpful\Exception\ConnectionErrorException $e) {}
+
+        $this->assertTrue($caught);
+    }
+
     function test_parseCode()
     {
         $req = Request::init()->sendsAndExpects(Mime::JSON);

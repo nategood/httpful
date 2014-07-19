@@ -152,7 +152,7 @@ class Request
     /**
      * Specify a HTTP timeout
      * @return Request $this
-     * @param |int $timeout seconds to timeout the HTTP call
+     * @param float|int $timeout seconds to timeout the HTTP call
      */
     public function timeout($timeout)
     {
@@ -635,6 +635,18 @@ class Request
     }
 
     /**
+     * Callback called to handle HTTP errors. When nothing is set, defaults
+     * to logging via `error_log`
+     * @return Request
+     * @param \Closure $callback (string $error)
+     */
+    public function whenError(\Closure $callback)
+    {
+        $this->error_callback = $callback;
+        return $this;
+    }
+
+    /**
      * Register a callback that will be used to serialize the payload
      * for a particular mime type.  When using "*" for the mime
      * type, it will use that parser for all responses regardless of the mime
@@ -765,9 +777,13 @@ class Request
 
     private function _error($error)
     {
-        // Default actions write to error log
-        // TODO add in support for various Loggers
-        error_log($error);
+        // TODO add in support for various Loggers that follow
+        // PSR 3 https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-3-logger-interface.md
+        if (isset($this->error_callback)) {
+            $this->error_callback->__invoke($error);
+        } else {
+            error_log($error);
+        }
     }
 
     /**

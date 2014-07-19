@@ -72,7 +72,11 @@ Httpful highly encourages sending in pull requests.  When submitting a pull requ
 
 # Changelog
 
-## 0.2.15 
+## 0.2.16
+
+ - FEATURE Added support for whenError to define a custom callback to be fired upon error. Useful for logging or overriding the default error_log behavior.
+
+## 0.2.15
 
  - FEATURE [I #131](https://github.com/nategood/httpful/pull/131) Support for SOCKS proxy
 
