@@ -226,7 +226,7 @@ class Request
 
         curl_close($this->_ch);
 
-        return new Response($body, $headers, $this);
+        return new Response($body, $headers, $this, $info);
     }
     public function sendIt()
     {
