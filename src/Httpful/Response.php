@@ -19,6 +19,7 @@ class Response
            $content_type,
            $parent_type,
            $charset,
+           $meta_data,
            $is_mime_vendor_specific = false,
            $is_mime_personal = false;
 
@@ -27,12 +28,14 @@ class Response
      * @param string $body
      * @param string $headers
      * @param Request $request
+     * @param array $meta_data
      */
-    public function __construct($body, $headers, Request $request)
+    public function __construct($body, $headers, Request $request, array $meta_data = array())
     {
         $this->request      = $request;
         $this->raw_headers  = $headers;
         $this->raw_body     = $body;
+        $this->meta_data    = $meta_data;
 
         $this->code         = $this->_parseCode($headers);
         $this->headers      = Response\Headers::fromString($headers);
