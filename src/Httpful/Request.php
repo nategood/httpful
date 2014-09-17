@@ -1160,6 +1160,11 @@ class Request
 		 * get the headers of a page, as remote servers usually don't honour the
 		 * "range" header in HTTP requests.
 		 *
+		 * IMPORTANT: setting the limit too low will cause the request to fail, because
+		 * the response will not contain the headers and body expected by the parser.
+		 * The minimum value should be at least 1000, to ensure that all headers are
+		 * retrieved and the parsing can succeed.
+		 *
 		 * @param int size The amount of data to retrieve, in bytes.
 		 * @return Httpful\Request
 		 */
