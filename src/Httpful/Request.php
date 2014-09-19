@@ -211,11 +211,10 @@ class Request
 						// If error number is CURLE_WRITE_ERROR, it may just be that we hit
 						// the download limit. In such case, we can get the data retrieved so
 						// far and carry on. No need to throw an exception, as we are not
-						// dealing with an actual error
+						// dealing with an actual error.
 						if(($curlErrorNumber == CURLE_WRITE_ERROR) &&
 							 ($this->download_limit > 0)) {
-							//
-							$result = $this->retrieved_data;
+							$result = true;
 						}
 						else {
 							// Any other error number represents an actual error
@@ -229,6 +228,22 @@ class Request
 							throw new ConnectionErrorException('Unable to connect.');
 						}
         }
+
+				/* Result can be "true" in two cases:
+				 * - When download limit is greater than zero, and the limit set was
+				 *   larger than the page size (i.e. the whole page was fetched, despite
+				 *   the limit).
+				 * - When download limit is greater than zero and error CURLE_WRITE_ERROR
+				 *   was raised (i.e. the transfer was interrupted because the limit was
+				 *   reached).
+				 *
+				 * In both cases, the data is actually stored in $this->retrieved_data,
+				 * therefore it must be put back inside $result, where the library
+				 * expects to find it.
+				 */
+				if($result === true) {
+					$result = $this->retrieved_data;
+				}
 
         $info = curl_getinfo($this->_ch);
 
