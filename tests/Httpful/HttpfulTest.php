@@ -322,11 +322,7 @@ Content-Type: text/plain; charset=utf-8\r\n", $req);
 
     function testAttach() {
         $req = Request::init();
-
-        // Create a temporary image
-        $faker = \Faker\Factory::create();
-        $filename = $faker->image;
-
+        $filename = 'test_image.jpg';
         $req->attach(array('index' => $filename));
         $payload = $req->payload['index'];
         // PHP 5.5  + will take advantage of CURLFile while previous
@@ -336,8 +332,6 @@ Content-Type: text/plain; charset=utf-8\r\n", $req);
         } else {
             $this->assertInstanceOf('CURLFile', $payload);
         }
-
-        unlink($filename);
 
         $this->assertEquals($req->content_type, Mime::UPLOAD);
         $this->assertEquals($req->serialize_payload_method, Request::SERIALIZE_PAYLOAD_NEVER);
