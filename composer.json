@@ -22,7 +22,6 @@
         }
     },
     "require-dev": {
-        "phpunit/phpunit": "*",
-        "fzaninotto/faker": "*"
+        "phpunit/phpunit": "*"
     }
 }
