@@ -1,5 +1,8 @@
 language: php
-before_script: cd tests
+before_script:
+    - composer self-update
+    - composer install --dev
+    - cd tests
 php:
   - 5.3
   - 5.4
