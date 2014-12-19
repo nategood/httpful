@@ -322,13 +322,14 @@ Content-Type: text/plain; charset=utf-8\r\n", $req);
 
     function testAttach() {
         $req = Request::init();
-
-        $req->attach(array('index' => '/dir/filename'));
+        $testsPath = realpath(dirname(__FILE__) . DIRECTORY_SEPARATOR . '..');
+        $filename = $testsPath . DIRECTORY_SEPARATOR . 'test_image.jpg';
+        $req->attach(array('index' => $filename));
         $payload = $req->payload['index'];
         // PHP 5.5  + will take advantage of CURLFile while previous
         // versions just use the string syntax
         if (is_string($payload)) {
-            $this->assertEquals($payload, '@/dir/filename');
+            $this->assertEquals($payload, '@' . $filename . ';type=image/jpeg');
         } else {
             $this->assertInstanceOf('CURLFile', $payload);
         }

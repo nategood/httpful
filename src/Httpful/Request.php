@@ -392,11 +392,13 @@ class Request
 
     public function attach($files)
     {
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
         foreach ($files as $key => $file) {
+            $mimeType = finfo_file($finfo, $file);
             if (function_exists('curl_file_create')) {
-                $this->payload[$key] = curl_file_create($file);
+                $this->payload[$key] = curl_file_create($file, $mimeType);
             } else {
-                $this->payload[$key] = "@{$file}";
+                $this->payload[$key] = '@' . $file . ';type=' . $mimeType;
             }
         }
         $this->sendsType(Mime::UPLOAD);
