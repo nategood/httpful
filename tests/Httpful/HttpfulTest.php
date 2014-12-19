@@ -322,7 +322,8 @@ Content-Type: text/plain; charset=utf-8\r\n", $req);
 
     function testAttach() {
         $req = Request::init();
-        $filename = 'test_image.jpg';
+        $testsPath = realpath(dirname(__FILE__) . DIRECTORY_SEPARATOR . '..');
+        $filename = $testsPath . DIRECTORY_SEPARATOR . 'test_image.jpg';
         $req->attach(array('index' => $filename));
         $payload = $req->payload['index'];
         // PHP 5.5  + will take advantage of CURLFile while previous
