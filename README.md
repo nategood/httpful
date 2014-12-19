@@ -71,6 +71,11 @@ Httpful highly encourages sending in pull requests.  When submitting a pull requ
  - Include commenting where appropriate and add a descriptive pull request message
 
 # Changelog
+## 0.2.18
+
+ - FIX [PR #149](https://github.com/nategood/httpful/pull/149)
+ - FIX [PR #150](https://github.com/nategood/httpful/pull/150)
+ - FIX [PR #156](https://github.com/nategood/httpful/pull/156)
 
 ## 0.2.17
 
