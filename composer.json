@@ -10,6 +10,11 @@
             "name": "Nate Good",
             "email": "me@nategood.com",
             "homepage": "http://nategood.com"
+        },
+        {
+            "name": "Diego Zanella",
+            "email": "admin@aelia.co",
+            "homepage": "http://aelia.co"
         }
     ],
     "require": {

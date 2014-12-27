@@ -61,6 +61,11 @@ class Request
     // Template Request object
     private static $_template;
 
+    // @var int The maximum amount of data to retrieve.
+    protected $download_limit;
+    // @var string The data retrieved by the CURL request. Used only a download limit is set.
+    protected $retrieved_data;
+
     /**
      * We made the constructor private to force the factory style.  This was
      * done to keep the syntax cleaner and better the support the idea of
@@ -201,14 +206,43 @@ class Request
         $result = curl_exec($this->_ch);
 
         if ($result === false) {
-            if ($curlErrorNumber = curl_errno($this->_ch)) {
-                $curlErrorString = curl_error($this->_ch);
-                $this->_error($curlErrorString);
-                throw new ConnectionErrorException('Unable to connect: ' . $curlErrorNumber . ' ' . $curlErrorString);
-            }
+            $curlErrorNumber = curl_errno($this->_ch);
 
-            $this->_error('Unable to connect.');
-            throw new ConnectionErrorException('Unable to connect.');
+            // If error number is CURLE_WRITE_ERROR, it may just be that we hit
+            // the download limit. In such case, we can get the data retrieved so
+            // far and carry on. No need to throw an exception, as we are not
+            // dealing with an actual error.
+            if(($curlErrorNumber == CURLE_WRITE_ERROR) &&
+               ($this->download_limit > 0)) {
+              $result = true;
+            }
+            else {
+              // Any other error number represents an actual error
+              if ($curlErrorNumber) {
+                  $curlErrorString = curl_error($this->_ch);
+                  $this->_error($curlErrorString);
+                  throw new ConnectionErrorException('Unable to connect: ' . $curlErrorNumber . ' ' . $curlErrorString);
+              }
+
+              $this->_error('Unable to connect.');
+              throw new ConnectionErrorException('Unable to connect.');
+            }
+        }
+
+        /* Result can be "true" in two cases:
+         * - When download limit is greater than zero, and the limit set was
+         *   larger than the page size (i.e. the whole page was fetched, despite
+         *   the limit).
+         * - When download limit is greater than zero and error CURLE_WRITE_ERROR
+         *   was raised (i.e. the transfer was interrupted because the limit was
+         *   reached).
+         *
+         * In both cases, the data is actually stored in $this->retrieved_data,
+         * therefore it must be put back inside $result, where the library
+         * expects to find it.
+         */
+        if($result === true) {
+          $result = $this->retrieved_data;
         }
 
         $info = curl_getinfo($this->_ch);
@@ -1136,5 +1170,52 @@ class Request
     public static function options($uri)
     {
         return self::init(Http::OPTIONS)->uri($uri);
+    }
+
+    /**
+     * Allows to limit the size of retrieved data. Useful when you only need to
+     * get the headers of a page, as remote servers usually don't honour the
+     * "range" header in HTTP requests.
+     *
+     * IMPORTANT: setting the limit too low will cause the request to fail, because
+     * the response will not contain the headers and body expected by the parser.
+     * The minimum value should be at least 1000, to ensure that all headers are
+     * retrieved and the parsing can succeed.
+     *
+     * @param int size The amount of data to retrieve, in bytes.
+     * @return Httpful\Request
+     */
+    public function limit($size) {
+      if((int)$size > 0) {
+        $this->download_limit = $size;
+        $this->retrieved_data = '';
+        $this->addOnCurlOption(CURLOPT_BINARYTRANSFER, 1);
+        $this->addOnCurlOption(CURLOPT_WRITEFUNCTION, array($this, 'downloadLimiter'));
+      }
+
+      return $this;
+    }
+
+    /**
+     * Callback for the Request::limit() method. This method keeps track of the
+     * data retrieved, and interrupts the transfer once the limit has been
+     * reached.
+     *
+     * @param object ch The CURL handle.
+     * @param string chunk A chunk of the data retrieved by the CURL request.
+     * @return int The length of the retrieved chunk, or -1 if the limit has
+     * been reached.
+     */
+    public function downloadLimiter($ch, $chunk) {
+      $len = strlen($this->retrieved_data) + strlen($chunk);
+      if($len >= $this->download_limit) {
+        $this->retrieved_data .= substr($chunk, 0, $this->download_limit - strlen($this->retrieved_data));
+        //echo strlen($this->retrieved_data) , ' ', $this->retrieved_data;
+        return -1;
+      }
+
+      $this->retrieved_data .= $chunk;
+
+      return strlen($chunk);
     }
 }
