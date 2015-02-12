@@ -44,6 +44,7 @@ class Request
            $payload,
            $parse_callback,
            $error_callback,
+           $send_callback,
            $follow_redirects        = false,
            $max_redirects           = self::MAX_REDIRECTS_DEFAULT,
            $payload_serializers     = array();
@@ -649,6 +650,18 @@ class Request
     }
 
     /**
+     * Callback invoked after payload has been serialized but before
+     * the request has been built.
+     * @return Request this
+     * @param \Closure $callback (Request $request)
+     */
+    public function beforeSend(\Closure $callback)
+    {
+        $this->send_callback = $callback;
+        return $this;
+    }
+
+    /**
      * Register a callback that will be used to serialize the payload
      * for a particular mime type.  When using "*" for the mime
      * type, it will use that parser for all responses regardless of the mime
@@ -825,6 +838,14 @@ class Request
         if (!isset($this->uri))
             throw new \Exception('Attempting to send a request before defining a URI endpoint.');
 
+        if (isset($this->payload)) {
+            $this->serialized_payload = $this->_serializePayload($this->payload);
+        }
+
+        if (isset($this->send_callback)) {
+            call_user_func($this->send_callback, $this);
+        }
+
         $ch = curl_init($this->uri);
 
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $this->method);
@@ -876,7 +897,6 @@ class Request
         // https://github.com/nategood/httpful/issues/84
         // set Content-Length to the size of the payload if present
         if (isset($this->payload)) {
-            $this->serialized_payload = $this->_serializePayload($this->payload);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $this->serialized_payload);
             if (!$this->isUpload()) {
                 $this->headers['Content-Length'] =
