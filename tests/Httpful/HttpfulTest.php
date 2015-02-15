@@ -411,6 +411,31 @@ Content-Type: text/plain; charset=utf-8\r\n", $req);
         $this->assertTrue($caught);
     }
 
+    function testBeforeSend() {
+        $invoked = false;
+        $changed = false;
+        $self = $this;
+
+        try {
+            Request::get('malformed://url')
+                ->beforeSend(function($request) use(&$invoked,$self) {
+                    $self->assertEquals('malformed://url', $request->uri);
+                    $self->assertEquals('A payload', $request->serialized_payload);
+                    $request->uri('malformed2://url');
+                    $invoked = true;
+                })
+                ->whenError(function($error) { /* Be silent */ })
+                ->body('A payload')
+                ->send();
+        } catch (\Httpful\Exception\ConnectionErrorException $e) {
+            $this->assertTrue(strpos($e->getMessage(), 'malformed2') !== false);
+            $changed = true;
+        }
+
+        $this->assertTrue($invoked);
+        $this->assertTrue($changed);
+    }
+
     function test_parseCode()
     {
         $req = Request::init()->sendsAndExpects(Mime::JSON);
