@@ -204,11 +204,11 @@ class Request
             if ($curlErrorNumber = curl_errno($this->_ch)) {
                 $curlErrorString = curl_error($this->_ch);
                 $this->_error($curlErrorString);
-                throw new ConnectionErrorException('Unable to connect: ' . $curlErrorNumber . ' ' . $curlErrorString);
+                throw new ConnectionErrorException('Unable to connect to "'.$this->uri.'": ' . $curlErrorNumber . ' ' . $curlErrorString);
             }
 
-            $this->_error('Unable to connect.');
-            throw new ConnectionErrorException('Unable to connect.');
+            $this->_error('Unable to connect to "'.$this->uri.'".');
+            throw new ConnectionErrorException('Unable to connect to "'.$this->uri.'".');
         }
 
         $info = curl_getinfo($this->_ch);
