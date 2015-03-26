@@ -399,7 +399,10 @@ class Request
             if (function_exists('curl_file_create')) {
                 $this->payload[$key] = curl_file_create($file, $mimeType);
             } else {
-                $this->payload[$key] = '@' . $file . ';type=' . $mimeType;
+                $this->payload[$key] = '@' . $file;
+	            if ($mimeType) {
+		            $this->payload[$key] .= ';type=' . $mimeType;
+	            }
             }
         }
         $this->sendsType(Mime::UPLOAD);
