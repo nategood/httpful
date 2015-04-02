@@ -786,15 +786,15 @@ class Request
         if (!isset($this->uri))
             throw new \Exception('Attempting to send a request before defining a URI endpoint.');
 
-        $ch = curl_init($this->uri);
+        $curl_handle = curl_init($this->uri);
 
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $this->method);
+        curl_setopt($curl_handle, CURLOPT_CUSTOMREQUEST, $this->method);
         if ($this->method === Http::HEAD) {
-            curl_setopt($ch, CURLOPT_NOBODY, true);
+            curl_setopt($curl_handle, CURLOPT_NOBODY, true);
         }
 
         if ($this->hasBasicAuth()) {
-            curl_setopt($ch, CURLOPT_USERPWD, $this->username . ':' . $this->password);
+            curl_setopt($curl_handle, CURLOPT_USERPWD, $this->username . ':' . $this->password);
         }
 
         if ($this->hasClientSideCert()) {
@@ -805,37 +805,37 @@ class Request
             if (!file_exists($this->client_cert))
                 throw new \Exception('Could not read Client Certificate');
 
-            curl_setopt($ch, CURLOPT_SSLCERTTYPE,   $this->client_encoding);
-            curl_setopt($ch, CURLOPT_SSLKEYTYPE,    $this->client_encoding);
-            curl_setopt($ch, CURLOPT_SSLCERT,       $this->client_cert);
-            curl_setopt($ch, CURLOPT_SSLKEY,        $this->client_key);
-            curl_setopt($ch, CURLOPT_SSLKEYPASSWD,  $this->client_passphrase);
-            // curl_setopt($ch, CURLOPT_SSLCERTPASSWD,  $this->client_cert_passphrase);
+            curl_setopt($curl_handle, CURLOPT_SSLCERTTYPE,   $this->client_encoding);
+            curl_setopt($curl_handle, CURLOPT_SSLKEYTYPE,    $this->client_encoding);
+            curl_setopt($curl_handle, CURLOPT_SSLCERT,       $this->client_cert);
+            curl_setopt($curl_handle, CURLOPT_SSLKEY,        $this->client_key);
+            curl_setopt($curl_handle, CURLOPT_SSLKEYPASSWD,  $this->client_passphrase);
+            // curl_setopt($curl_handle, CURLOPT_SSLCERTPASSWD,  $this->client_cert_passphrase);
         }
 
         if ($this->hasTimeout()) {
-            curl_setopt($ch, CURLOPT_TIMEOUT, $this->timeout);
+            curl_setopt($curl_handle, CURLOPT_TIMEOUT, $this->timeout);
         }
 
         if ($this->follow_redirects) {
-            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-            curl_setopt($ch, CURLOPT_MAXREDIRS, $this->max_redirects);
+            curl_setopt($curl_handle, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($curl_handle, CURLOPT_MAXREDIRS, $this->max_redirects);
         }
 
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $this->strict_ssl);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $this->strict_ssl);
+        curl_setopt($curl_handle, CURLOPT_SSL_VERIFYPEER, $this->strict_ssl);
+        curl_setopt($curl_handle, CURLOPT_SSL_VERIFYHOST, $this->strict_ssl);
         // zero is safe for all curl versions
         $verifyValue = $this->strict_ssl + 0;
         //Support for value 1 removed in cURL 7.28.1 value 2 valid in all versions
         if ($verifyValue > 0) $verifyValue++;
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $verifyValue);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl_handle, CURLOPT_SSL_VERIFYHOST, $verifyValue);
+        curl_setopt($curl_handle, CURLOPT_RETURNTRANSFER, true);
 
         // https://github.com/nategood/httpful/issues/84
         // set Content-Length to the size of the payload if present
         if (isset($this->payload)) {
             $this->serialized_payload = $this->_serializePayload($this->payload);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $this->serialized_payload);
+            curl_setopt($curl_handle, CURLOPT_POSTFIELDS, $this->serialized_payload);
             if (!$this->isUpload()) {
                 $this->headers['Content-Length'] =
                     $this->_determineLength($this->serialized_payload);
@@ -882,21 +882,21 @@ class Request
         $this->raw_headers .= \implode("\r\n", $headers);
         $this->raw_headers .= "\r\n";
 
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($curl_handle, CURLOPT_HTTPHEADER, $headers);
 
         if ($this->_debug) {
-            curl_setopt($ch, CURLOPT_VERBOSE, true);
+            curl_setopt($curl_handle, CURLOPT_VERBOSE, true);
         }
 
-        curl_setopt($ch, CURLOPT_HEADER, 1);
+        curl_setopt($curl_handle, CURLOPT_HEADER, 1);
 
         // If there are some additional curl opts that the user wants
         // to set, we can tack them in here
         foreach ($this->additional_curl_opts as $curlopt => $curlval) {
-            curl_setopt($ch, $curlopt, $curlval);
+            curl_setopt($curl_handle, $curlopt, $curlval);
         }
 
-        $this->_ch = $ch;
+        $this->_ch = $curl_handle;
 
         return $this;
     }
