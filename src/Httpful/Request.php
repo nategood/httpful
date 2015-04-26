@@ -215,7 +215,7 @@ class Request
         $info = curl_getinfo($this->_ch);
 
         // Remove the "HTTP/1.x 200 Connection established" string and any other headers added by proxy
-        $proxy_regex = "/HTTP\/1\.[01] 200 Connection established.*?\r\n\r\n/s";
+        $proxy_regex = "/HTTP\/1\.[01] 200 Connection established.*?\r\n\r\n/si";
         if ($this->hasProxy() && preg_match($proxy_regex, $result)) {
             $result = preg_replace($proxy_regex, '', $result);
         }
