@@ -18,6 +18,7 @@ class JsonHandler extends MimeHandlerAdapter
     /**
      * @param string $body
      * @return mixed
+     * @throws \Exception
      */
     public function parse($body)
     {
