@@ -270,6 +270,18 @@ class Request
         return $this->basicAuth($username, $password);
     }
 
+    // @alias of ntlmAuth
+    public function authenticateWithNTLM($username, $password)
+    {
+        return $this->ntlmAuth($username, $password);
+    }
+
+    public function ntlmAuth($username, $password)
+    {
+        $this->addOnCurlOption(CURLOPT_HTTPAUTH, CURLAUTH_NTLM);
+        return $this->basicAuth($username, $password);
+    }
+
     /**
      * User Digest Auth.
      * @return Request this
