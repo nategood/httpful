@@ -114,7 +114,7 @@ class Response
      */
     public function _parseHeaders($headers)
     {
-        return Httpful\Response\Headers::fromString($headers)->toArray();
+        return \Httpful\Response\Headers::fromString($headers)->toArray();
     }
 
     public function _parseCode($headers)
