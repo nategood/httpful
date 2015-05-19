@@ -25,8 +25,8 @@ class Http
     }
 
     /**
-     * @return bool
      * @param string HTTP method
+     * @return bool
      */
     public static function isSafeMethod($method)
     {
@@ -34,8 +34,8 @@ class Http
     }
 
     /**
-     * @return bool
      * @param string HTTP method
+     * @return bool
      */
     public static function isUnsafeMethod($method)
     {
@@ -54,8 +54,8 @@ class Http
     }
 
     /**
-     * @return bool
      * @param string HTTP method
+     * @return bool
      */
     public static function isIdempotent($method)
     {
@@ -63,8 +63,8 @@ class Http
     }
 
     /**
-     * @return bool
      * @param string HTTP method
+     * @return bool
      */
     public static function isNotIdempotent($method)
     {

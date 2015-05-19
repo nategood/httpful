@@ -32,7 +32,7 @@ class XmlHandler extends MimeHandlerAdapter
     /**
      * @param string $body
      * @return mixed
-     * @throws Exception if unable to parse
+     * @throws \Exception if unable to parse
      */
     public function parse($body)
     {
@@ -48,7 +48,7 @@ class XmlHandler extends MimeHandlerAdapter
     /**
      * @param mixed $payload
      * @return string
-     * @throws Exception if unable to serialize
+     * @throws \Exception if unable to serialize
      */
     public function serialize($payload)
     {
@@ -71,7 +71,7 @@ class XmlHandler extends MimeHandlerAdapter
     }
 
     /**
-     * @param XMLWriter $xmlw
+     * @param \XMLWriter $xmlw
      * @param mixed $node to serialize
      * @author Ted Zellers
      */
