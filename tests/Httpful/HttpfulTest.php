@@ -554,6 +554,14 @@ Transfer-Encoding: chunked\r\n", $request);
         $this->assertTrue($r->hasProxy());
     }
 
+    public function testHasProxyWithEnvironmentProxy()
+    {
+        putenv('http_proxy=http://127.0.0.1:300/');
+        $r = Request::get('some_other_url');
+        $this->assertTrue($r->hasProxy());
+    }
+
+
     public function testParseJSON()
     {
         $handler = new JsonHandler();
