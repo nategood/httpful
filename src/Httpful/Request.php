@@ -201,33 +201,11 @@ class Request
 
         $result = curl_exec($this->_ch);
 
-        if ($result === false) {
-            if ($curlErrorNumber = curl_errno($this->_ch)) {
-                $curlErrorString = curl_error($this->_ch);
-                $this->_error($curlErrorString);
-                throw new ConnectionErrorException('Unable to connect to "'.$this->uri.'": ' . $curlErrorNumber . ' ' . $curlErrorString);
-            }
-
-            $this->_error('Unable to connect to "'.$this->uri.'".');
-            throw new ConnectionErrorException('Unable to connect to "'.$this->uri.'".');
-        }
-
-        $info = curl_getinfo($this->_ch);
-
-        // Remove the "HTTP/1.x 200 Connection established" string and any other headers added by proxy
-        $proxy_regex = "/HTTP\/1\.[01] 200 Connection established.*?\r\n\r\n/si";
-        if ($this->hasProxy() && preg_match($proxy_regex, $result)) {
-            $result = preg_replace($proxy_regex, '', $result);
-        }
-
-        $response = explode("\r\n\r\n", $result, 2 + $info['redirect_count']);
-
-        $body = array_pop($response);
-        $headers = array_pop($response);
+        $response = $this->buildResponse($result);
 
         curl_close($this->_ch);
 
-        return new Response($body, $headers, $this, $info);
+        return $response;
     }
     public function sendIt()
     {
@@ -1036,6 +1014,38 @@ class Request
         $user_agent .= ')';
 
         return $user_agent;
+    }
+
+    /**
+     * Takes a curl result and generates a Response from it
+     * @return Response
+     */
+    public function buildResponse($result) {
+        if ($result === false) {
+            if ($curlErrorNumber = curl_errno($this->_ch)) {
+                $curlErrorString = curl_error($this->_ch);
+                $this->_error($curlErrorString);
+                throw new ConnectionErrorException('Unable to connect to "'.$this->uri.'": ' . $curlErrorNumber . ' ' . $curlErrorString);
+            }
+
+            $this->_error('Unable to connect to "'.$this->uri.'".');
+            throw new ConnectionErrorException('Unable to connect to "'.$this->uri.'".');
+        }
+
+        $info = curl_getinfo($this->_ch);
+
+        // Remove the "HTTP/1.x 200 Connection established" string and any other headers added by proxy
+        $proxy_regex = "/HTTP\/1\.[01] 200 Connection established.*?\r\n\r\n/si";
+        if ($this->hasProxy() && preg_match($proxy_regex, $result)) {
+            $result = preg_replace($proxy_regex, '', $result);
+        }
+
+        $response = explode("\r\n\r\n", $result, 2 + $info['redirect_count']);
+
+        $body = array_pop($response);
+        $headers = array_pop($response);
+
+        return new Response($body, $headers, $this, $info);
     }
 
     /**
