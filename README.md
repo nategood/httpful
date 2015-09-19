@@ -19,14 +19,17 @@ Features
 Here's something to whet your appetite.  Search the twitter API for tweets containing "#PHP".  Include a trivial header for the heck of it.  Notice that the library automatically interprets the response as JSON (can override this if desired) and parses it as an array of objects.
 
 ```php
-$url = "http://search.twitter.com/search.json?q=" . urlencode('#PHP');
-$response = Request::get($url)
+
+// Make a request to the GitHub API with a custom
+// header of "X-Trvial-Header: Just as a demo".
+$url = "https://api.github.com/users/nategood";
+$response = \Httpful\Request::get($url)
+    ->expectsJson()
     ->withXTrivialHeader('Just as a demo')
     ->send();
 
-foreach ($response->body->results as $tweet) {
-    echo "@{$tweet->from_user} tweets \"{$tweet->text}\"\n";
-}
+echo "{$response->body->name} joined GitHub on " .
+                        date('M jS', strtotime($response->body->created_at)) ."\n";
 ```
 
 # Installation
