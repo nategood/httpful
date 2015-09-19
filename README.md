@@ -58,6 +58,12 @@ Httpful is PSR-0 compliant and can be installed using [composer](http://getcompo
 
 Because Httpful is PSR-0 compliant, you can also just clone the Httpful repository and use a PSR-0 compatible autoloader to load the library, like [Symfony's](http://symfony.com/doc/current/components/class_loader.html). Alternatively you can use the PSR-0 compliant autoloader included with the Httpful (simply `require("bootstrap.php")`).
 
+## Build your Phar
+
+If you want the build your own [Phar Archive](http://php.net/manual/en/book.phar.php) you can use the `build` script included.
+Make sure that your `php.ini` has the *Off* or 0 value for the `phar.readonly` setting.
+Also you need to create ad empty `downloads` directory in the project root.
+
 # Show Me More!
 
 You can checkout the [Httpful Landing Page](http://phphttpclient.com) for more info including many examples and  [documentation](http://phphttpclient.com/docs).
