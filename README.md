@@ -81,6 +81,10 @@ Httpful highly encourages sending in pull requests.  When submitting a pull requ
 
 # Changelog
 
+## 0.2.20
+
+ - MINOR Move Response building logic into separate function [PR #193](https://github.com/nategood/httpful/pull/193)
+
 ## 0.2.19
 
  - FEATURE Before send hook [PR #164](https://github.com/nategood/httpful/pull/164)
