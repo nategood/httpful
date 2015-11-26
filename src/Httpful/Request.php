@@ -760,7 +760,7 @@ class Request
         // recusion.  Do not use this syntax elsewhere.
         // It goes against the whole readability
         // and transparency idea.
-        self::$_template = new Request(array('method' => Http::GET));
+        self::$_template = new static(array('method' => Http::GET));
 
         // This is more like it...
         self::$_template
@@ -811,7 +811,7 @@ class Request
         if (!isset(self::$_template))
             self::_initializeDefaults();
 
-        $request = new Request();
+        $request = new static();
         return $request
                ->_setDefaults()
                ->method($method)
