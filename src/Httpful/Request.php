@@ -13,7 +13,7 @@ use Httpful\Exception\ConnectionErrorException;
  * itself very nicely to "chaining".  You will see several "alias"
  * methods: more readable method definitions that wrap
  * their more concise counterparts.  You will also notice
- * no public constructor.  This two adds to the readability
+ * no public constructor.  This too adds to the readability
  * and "chainabilty" of the library.
  *
  * @author Nate Good <me@nategood.com>
