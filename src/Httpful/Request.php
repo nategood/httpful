@@ -1183,4 +1183,76 @@ class Request
     {
         return self::init(Http::OPTIONS)->uri($uri);
     }
+
+    /**
+     * @return Request
+     */
+    public function expectsJson()
+    {
+        return $this->expects(Mime::JSON);
+    }
+    /**
+     * @return Request
+     */
+    public function expectsXml()
+    {
+        return $this->expects(Mime::XML);
+    }
+    /**
+     * @return Request
+     */
+    public function expectsXhtml()
+    {
+        return $this->expects(Mime::XHTML);
+    }
+
+    /**
+     * @return Request
+     */
+    public function expectsForm()
+    {
+        return $this->expects(Mime::FORM);
+    }
+    /**
+     * @return Request
+     */
+    public function expectsUpload()
+    {
+        return $this->expects(Mime::UPLOAD);
+    }
+    /**
+     * @return Request
+     */
+    public function expectsPlain()
+    {
+        return $this->expects(Mime::PLAIN);
+    }
+    /**
+     * @return Request
+     */
+    public function expectsJs()
+    {
+        return $this->expects(Mime::JS);
+    }
+    /**
+     * @return Request
+     */
+    public function expectsHtml()
+    {
+        return $this->expects(Mime::HTML);
+    }
+    /**
+     * @return Request
+     */
+    public function expectsYaml()
+    {
+        return $this->expects(Mime::YAML);
+    }
+    /**
+     * @return Request
+     */
+    public function expectsCsv()
+    {
+        return $this->expects(Mime::CSV);
+    }
 }
