@@ -1017,6 +1017,17 @@ class Request
     }
 
     /**
+     * Sets user agent.
+     *
+     * @param string $userAgent
+     *
+     * @return Request
+     */
+    public function setUserAgent($userAgent){
+        return $this->addHeader('User-Agent', $userAgent);
+    }
+
+    /**
      * Takes a curl result and generates a Response from it
      * @return Response
      */
