@@ -464,7 +464,7 @@ Content-Type: text/plain; charset=utf-8\r\n", $req);
         $req = Request::init();
         $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_MULTI_HEADER, $req);
         $parse_headers = $response->_parseHeaders(self::SAMPLE_MULTI_HEADER);
-        $this->assertEquals('Value1,Value2', $parse_headers['x-my-header']);
+        $this->assertEquals('Value1,Value2', $parse_headers['X-My-Header']);
     }
 
     function testDetectContentType()
