@@ -8,10 +8,7 @@ final class Headers implements \ArrayAccess, \Countable {
 
     private function __construct($headers)
     {
-        $this->headers = array();
-        foreach($headers as $name => $value) {
-            $this->headers[strtolower($name)] = $value;
-        }
+        $this->headers = $headers;
     }
 
     public static function fromString($string)
