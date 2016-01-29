@@ -35,13 +35,13 @@ final class Headers implements \ArrayAccess, \Countable {
 
     public function offsetExists($offset)
     {
-        return isset($this->headers[strtolower($offset)]);
+        return isset($this->headers[$offset]);
     }
 
     public function offsetGet($offset)
     {
-        if (isset($this->headers[$name = strtolower($offset)])) {
-            return $this->headers[$name];
+        if (isset($this->headers[$offset])) {
+            return $this->headers[$offset];
         }
     }
 
