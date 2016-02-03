@@ -48,7 +48,8 @@ class Request
            $follow_redirects        = false,
            $max_redirects           = self::MAX_REDIRECTS_DEFAULT,
            $payload_serializers     = array(),
-           $timeout;
+           $timeout,
+           $connection_timeout;
 
     // Options
     // private $_options = array(
@@ -128,6 +129,14 @@ class Request
     }
 
     /**
+     * @return bool does the request have a connection timeout?
+     */
+    public function hasConnectionTimeout()
+    {
+        return isset($this->connection_timeout);
+    }
+
+    /**
      * @return bool has the internal curl request been initialized?
      */
     public function hasBeenInitialized()
@@ -166,6 +175,19 @@ class Request
     public function timeoutIn($seconds)
     {
         return $this->timeout($seconds);
+    }
+
+    /**
+     * Specify a HTTP connection timeout
+     * @param float|int $timeout seconds to timeout the HTTP connection
+     * @return Request
+     */
+    public function setConnectionTimeout($connection_timeout)
+    {
+        if (preg_match('^\d+(\.\d+)?', $connection_timeout)) {
+            $this->connection_timeout = $connection_timeout;
+        }
+        return $this;
     }
 
     /**
@@ -873,6 +895,14 @@ class Request
                 curl_setopt($ch, CURLOPT_TIMEOUT_MS, $this->timeout * 1000);
             } else {
                 curl_setopt($ch, CURLOPT_TIMEOUT, $this->timeout);
+            }
+        }
+
+        if ($this->hasConnectionTimeout()) {
+            if (defined('CURLOPT_CONNECTTIMEOUT_MS')) {
+                curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, $this->connection_timeout * 1000);
+            } else {
+                curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, $this->connection_timeout);
             }
         }
 
