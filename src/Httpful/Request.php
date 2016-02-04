@@ -47,9 +47,7 @@ class Request
            $send_callback,
            $follow_redirects        = false,
            $max_redirects           = self::MAX_REDIRECTS_DEFAULT,
-           $payload_serializers     = array(),
-           $timeout,
-           $connection_timeout;
+           $payload_serializers     = array();
 
     // Options
     // private $_options = array(
