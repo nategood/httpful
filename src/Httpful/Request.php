@@ -184,7 +184,7 @@ class Request
      */
     public function setConnectionTimeout($connection_timeout)
     {
-        if (preg_match('^\d+(\.\d+)?', $connection_timeout)) {
+        if (preg_match('/^\d+(\.\d+)?/', $connection_timeout)) {
             $this->connection_timeout = $connection_timeout;
         }
         return $this;
