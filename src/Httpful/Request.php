@@ -179,12 +179,16 @@ class Request
      * Specify a HTTP connection timeout
      * @param float|int $timeout seconds to timeout the HTTP connection
      * @return Request
+     * @throws Exception
      */
     public function setConnectionTimeout($connection_timeout)
     {
-        if (preg_match('/^\d+(\.\d+)?/', $connection_timeout)) {
-            $this->connection_timeout = $connection_timeout;
+        if (!preg_match('/^\d+(\.\d+)?/', $connection_timeout)) {
+            throw new \InvalidArgumentException(
+                "Invalid connection timeout provided: " . var_export($connection_timeout, true)
+            );
         }
+        $this->connection_timeout = $connection_timeout;
         return $this;
     }
 
