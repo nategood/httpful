@@ -27,7 +27,7 @@ Add to your composer json
         }
     ],
     "require": {
-        "nategood/httpful": "stable"
+        "nategood/httpful": "dev-stable"
     }
 }
 ```
