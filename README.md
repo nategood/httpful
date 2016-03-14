@@ -62,7 +62,7 @@ Because Httpful is PSR-0 compliant, you can also just clone the Httpful reposito
 
 If you want the build your own [Phar Archive](http://php.net/manual/en/book.phar.php) you can use the `build` script included.
 Make sure that your `php.ini` has the *Off* or 0 value for the `phar.readonly` setting.
-Also you need to create ad empty `downloads` directory in the project root.
+Also you need to create an empty `downloads` directory in the project root.
 
 # Show Me More!
 
