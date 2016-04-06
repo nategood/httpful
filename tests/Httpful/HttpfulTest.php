@@ -268,6 +268,32 @@ X-My-Header:Value2\r\n";
         $this->assertEquals(1, $response->body->array[0]);
     }
 
+    function testResponseParseWithInline()
+    {
+        $req = Request::init()->sendsAndExpects(Mime::JSON)
+            ->parseWith(function($body) {
+                return json_decode($body);
+            });
+        $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
+
+        $this->assertEquals("value", $response->body->key);
+        $this->assertEquals("value", $response->body->object->key);
+        $this->assertInternalType('array', $response->body->array);
+        $this->assertEquals(1, $response->body->array[0]);
+    }
+
+    function testResponseParseWithCallable()
+    {
+        $req = Request::init()->sendsAndExpects(Mime::JSON)
+            ->parseWith(json_decode);
+        $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
+
+        $this->assertEquals("value", $response->body->key);
+        $this->assertEquals("value", $response->body->object->key);
+        $this->assertInternalType('array', $response->body->array);
+        $this->assertEquals(1, $response->body->array[0]);
+    }
+
     function testXMLResponseParse()
     {
         $req = Request::init()->sendsAndExpects(Mime::XML);
