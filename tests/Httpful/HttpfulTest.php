@@ -285,7 +285,7 @@ X-My-Header:Value2\r\n";
     function testResponseParseWithCallable()
     {
         $req = Request::init()->sendsAndExpects(Mime::JSON)
-            ->parseWith(json_decode);
+            ->parseWith("json_decode");
         $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
 
         $this->assertEquals("value", $response->body->key);
