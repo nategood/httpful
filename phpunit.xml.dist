@@ -1,0 +1,13 @@
+<phpunit bootstrap="tests/bootstrap.php">
+    <testsuite name="httpful">
+        <directory>tests</directory>
+    </testsuite>
+    <php>
+        <const name="WEB_SERVER_HOST" value="localhost" />
+        <const name="WEB_SERVER_PORT" value="1349" />
+        <const name="WEB_SERVER_DOCROOT" value="./static" />
+    </php>
+    <logging>
+        <log type="coverage-clover" target="build/logs/clover.xml"/>
+    </logging>
+</phpunit>

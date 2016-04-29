@@ -1,7 +1,12 @@
-<?php 
+<?php
 
 namespace Httpful\Exception;
 
-class ConnectionErrorException extends \Exception 
+/**
+ * Class ConnectionErrorException
+ *
+ * @package Httpful\Exception
+ */
+class ConnectionErrorException extends \Exception
 {
 }

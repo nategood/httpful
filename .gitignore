@@ -1,5 +1,11 @@
 .DS_Store
-composer.lock
-vendor
 downloads
-.idea/*
+
+/build
+
+# IDE
+/.idea
+
+# Composer
+vendor
+composer.lock
