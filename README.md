@@ -13,6 +13,8 @@
 
 # Httpful
 
+WARNING: this is only a Fork of "https://github.com/nategood/httpful"
+
 [Httpful](http://phphttpclient.com) is a simple Http Client library for PHP 5.3+.  There is an emphasis of readability, simplicity, and flexibility – basically provide the features and flexibility to get the job done and make those features really easy to use.
 
 Features
