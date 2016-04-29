@@ -2,6 +2,7 @@
 
 /examples export-ignore
 /tests export-ignore
+/build.sh export-ignore
 /.editorconfig export-ignore
 /.scrutinizer.yml export-ignore
 /.styleci.yml export-ignore

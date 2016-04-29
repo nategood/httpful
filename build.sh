@@ -9,16 +9,22 @@
  * Httpful should make this easy.
  */
 
-function exit_unless($condition, $msg = null) {
-    if ($condition)
-        return;
-    echo "[FAIL]\n$msg\n";
-    exit(1);
+/**
+ * @param      $condition
+ * @param null $msg
+ */
+function exit_unless($condition, $msg = null)
+{
+  if ($condition) {
+    return;
+  }
+  echo "[FAIL]\n$msg\n";
+  exit(1);
 }
 
 // Create the Httpful Phar
 echo "Building Phar... ";
-$base_dir = dirname(__FILE__);
+$base_dir = __DIR__;
 $source_dir = $base_dir . '/src/Httpful/';
 $phar_path = $base_dir . '/downloads/httpful.phar';
 $phar = new Phar($phar_path, 0, 'httpful.phar');
@@ -31,16 +37,16 @@ $stub = <<<HEREDOC
 
     __HALT_COMPILER();
 HEREDOC;
+
 try {
-    $phar->setStub($stub);
-} catch(Exception $e) {
-    $phar = false;
+  $phar->setStub($stub);
+} catch (Exception $e) {
+  $phar = false;
 }
+
 exit_unless($phar, "Unable to create a phar.  Make certain you have phar.readonly=0 set in your ini file.");
 $phar->buildFromDirectory(dirname($source_dir));
 echo "[ OK ]\n";
-
-
 
 // Add it to git!
 //echo "Adding httpful.phar to the repo... ";
