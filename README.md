@@ -1,6 +1,17 @@
-# Httpful
+[![Stories in Ready](https://badge.waffle.io/voku/httpful.png?label=ready&title=Ready)](https://waffle.io/voku/httpful)
+[![Build Status](https://travis-ci.org/voku/httpful.svg?branch=master)](https://travis-ci.org/voku/httpful)
+[![Coverage Status](https://coveralls.io/repos/github/voku/httpful/badge.svg?branch=master)](https://coveralls.io/github/voku/httpful?branch=master)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/voku/httpful/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/voku/httpful/?branch=master)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/5882e37a6cd24f6c9d1cf70a08064146)](https://www.codacy.com/app/voku/httpful)
+[![SensioLabsInsight](https://insight.sensiolabs.com/projects/532fa372-d55f-4f0b-a5ac-0ec978545454/mini.png)](https://insight.sensiolabs.com/projects/532fa372-d55f-4f0b-a5ac-0ec978545454)
+[![Dependency Status](https://www.versioneye.com/user/projects/571dd3b8fcd19a00454422c0/badge.svg?style=flat)](https://www.versioneye.com/user/projects/571dd3b8fcd19a00454422c0)
+[![Latest Stable Version](https://poser.pugx.org/voku/httpful/v/stable)](https://packagist.org/packages/voku/httpful) 
+[![Total Downloads](https://poser.pugx.org/voku/httpful/downloads)](https://packagist.org/packages/voku/httpful) 
+[![Latest Unstable Version](https://poser.pugx.org/voku/httpful/v/unstable)](https://packagist.org/packages/voku/httpful)
+[![PHP 7 ready](http://php7ready.timesplinter.ch/voku/httpful/badge.svg)](https://travis-ci.org/voku/httpful)
+[![License](https://poser.pugx.org/voku/httpful/license)](https://packagist.org/packages/voku/httpful)
 
-[![Build Status](https://secure.travis-ci.org/nategood/httpful.png?branch=master)](http://travis-ci.org/nategood/httpful) [![Total Downloads](https://poser.pugx.org/nategood/httpful/downloads.png)](https://packagist.org/packages/nategood/httpful)
+# Httpful
 
 [Httpful](http://phphttpclient.com) is a simple Http Client library for PHP 5.3+.  There is an emphasis of readability, simplicity, and flexibility – basically provide the features and flexibility to get the job done and make those features really easy to use.
 
