@@ -2,6 +2,8 @@
 
 namespace Httpful;
 
+use Httpful\Response\Headers;
+
 /**
  * Models an HTTP response
  *
@@ -143,26 +145,7 @@ class Response
    */
   public function _parseHeaders($headers)
   {
-    $headersArray = preg_split("/(\r|\n)+/", $headers, -1, \PREG_SPLIT_NO_EMPTY);
-    $parse_headers = array();
-    $countHeader = count($headersArray);
-    for ($i = 1; $i < $countHeader; $i++) {
-      list($key, $raw_value) = explode(':', $headersArray[$i], 2);
-      $key = trim($key);
-      $value = trim($raw_value);
-      if (array_key_exists($key, $parse_headers)) {
-        // See HTTP RFC Sec 4.2 Paragraph 5
-        // http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
-        // If a header appears more than once, it must also be able to
-        // be represented as a single header with a comma-separated
-        // list of values.  We transform accordingly.
-        $parse_headers[$key] .= ',' . $value;
-      } else {
-        $parse_headers[$key] = $value;
-      }
-    }
-
-    return $parse_headers;
+    return Headers::fromString($headers)->toArray();
   }
 
   /**
