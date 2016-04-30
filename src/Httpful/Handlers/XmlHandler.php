@@ -48,7 +48,7 @@ class XmlHandler extends MimeHandlerAdapter
     }
     $parsed = simplexml_load_string($body, null, $this->libxml_opts, $this->namespace);
     if ($parsed === false) {
-      throw new \Exception("Unable to parse response as XML");
+      throw new \Exception('Unable to parse response as XML');
     }
 
     return $parsed;
@@ -130,11 +130,11 @@ class XmlHandler extends MimeHandlerAdapter
       $objNode = $dom->createElement(get_class($value));
       $node->appendChild($objNode);
       $this->_future_serializeObjectAsXml($value, $objNode, $dom);
-    } else if (is_array($value)) {
+    } elseif (is_array($value)) {
       $arrNode = $dom->createElement('array');
       $node->appendChild($arrNode);
       $this->_future_serializeArrayAsXml($value, $arrNode, $dom);
-    } else if (is_bool($value)) {
+    } elseif (is_bool($value)) {
       $node->appendChild($dom->createTextNode($value ? 'TRUE' : 'FALSE'));
     } else {
       $node->appendChild($dom->createTextNode($value));

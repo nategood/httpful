@@ -1,16 +1,16 @@
 <?php
 
+use \Httpful\Request;
 use Httpful\Handlers\JsonHandler;
 use Httpful\Httpful;
 use Httpful\Mime;
-use \Httpful\Request;
 
-require(__DIR__ . '/../bootstrap.php');
+require __DIR__ . '/../bootstrap.php';
 
 //
 // Get event details for a public event
 //
-$uri = "http://api.showclix.com/Event/8175";
+$uri = 'http://api.showclix.com/Event/8175';
 $response = Request::get($uri)
                    ->expectsType('json')
                    ->send();

@@ -3,7 +3,7 @@
 use \Httpful\Request;
 
 // XML Example from GitHub
-require(__DIR__ . '/../bootstrap.php');
+require __DIR__ . '/../bootstrap.php';
 
 
 $uri = 'https://github.com/api/v2/xml/user/show/nategood';

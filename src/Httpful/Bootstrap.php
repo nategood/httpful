@@ -67,7 +67,7 @@ class Bootstrap
     $path = $base . self::DIR_GLUE . implode(self::DIR_GLUE, $parts) . '.php';
 
     if (file_exists($path)) {
-      require_once($path);
+      require_once $path;
     }
   }
 

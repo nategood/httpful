@@ -168,7 +168,7 @@ class Response
         ||
         count($parts) < 2
     ) {
-      throw new \Exception("Unable to parse response code from HTTP response due to malformed response");
+      throw new \Exception('Unable to parse response code from HTTP response due to malformed response');
     }
 
     return (int)$parts[1];
