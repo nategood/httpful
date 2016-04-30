@@ -359,7 +359,14 @@ class Request
    */
   public function followRedirects($follow = true)
   {
-    $this->max_redirects = $follow === true ? self::MAX_REDIRECTS_DEFAULT : max(0, $follow);
+    if ($follow === true) {
+      $this->max_redirects = self::MAX_REDIRECTS_DEFAULT;
+    } else if ($follow === false) {
+      $this->max_redirects = 0;
+    } else {
+      $this->max_redirects = max(0, $follow);
+    }
+
     $this->follow_redirects = (bool)$follow;
 
     return $this;
@@ -1351,7 +1358,7 @@ class Request
       throw new \Exception('Attempting to send a request before defining a URI endpoint.');
     }
 
-    if ($this->params) {
+    if (!empty($this->params)) {
       $this->_uriPrep();
     }
 
