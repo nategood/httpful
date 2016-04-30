@@ -10,6 +10,11 @@ namespace Httpful\Exception;
 class ConnectionErrorException extends \Exception
 {
   /**
+   * @var null|resource
+   */
+  public $curl_object = null;
+
+  /**
    * @var int
    */
   private $curlErrorNumber;
@@ -18,6 +23,29 @@ class ConnectionErrorException extends \Exception
    * @var string
    */
   private $curlErrorString;
+
+  /**
+   * ConnectionErrorException constructor.
+   *
+   * @param string         $message
+   * @param int            $code
+   * @param \Exception|null $previous
+   * @param null           $curl_object
+   */
+  public function __construct($message, $code = 0, \Exception $previous = null, $curl_object = null)
+  {
+    $this->curl_object = $curl_object;
+
+    parent::__construct($message, $code, $previous);
+  }
+
+  /**
+   * @return null|resource
+   */
+  public function getCurlObject()
+  {
+    return $this->curl_object;
+  }
 
   /**
    * @return string
@@ -57,5 +85,13 @@ class ConnectionErrorException extends \Exception
     $this->curlErrorString = $curlErrorString;
 
     return $this;
+  }
+
+  /**
+   * @return bool
+   */
+  public function wasTimeout()
+  {
+    return $this->code === CURLE_OPERATION_TIMEOUTED;
   }
 }

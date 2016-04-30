@@ -174,9 +174,19 @@ class Request
   /**
    * Template Request object
    *
-   * @var
+   * @var Request
    */
   private static $_template;
+
+  /**
+   * @var int The maximum amount of data to retrieve.
+   */
+  protected $download_limit;
+
+  /**
+   * @var string The data retrieved by the CURL request. Used only a download limit is set.
+   */
+  protected $retrieved_data;
 
   /**
    * We made the constructor protected to force the factory style.  This was
@@ -1527,7 +1537,10 @@ class Request
         $this->_error($curlErrorString);
 
         $exception = new ConnectionErrorException(
-            'Unable to connect to "' . $this->uri . '": ' . $curlErrorNumber . ' ' . $curlErrorString
+            'Unable to connect to "' . $this->uri . '": ' . $curlErrorNumber . ' ' . $curlErrorString,
+            $curlErrorNumber,
+            null,
+            $this->_ch
         );
 
         $exception->setCurlErrorNumber($curlErrorNumber)->setCurlErrorString($curlErrorString);

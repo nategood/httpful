@@ -40,6 +40,7 @@ class HttpfulTest extends \PHPUnit_Framework_TestCase
   const TEST_SERVER  = TEST_SERVER;
   const TEST_URL     = 'http://127.0.0.1:8008';
   const TEST_URL_400 = 'http://127.0.0.1:8008/400';
+  const TIMEOUT_URI  = 'http://www.google.com:81';
 
   const SAMPLE_JSON_HEADER   =
       "HTTP/1.1 200 OK
@@ -597,6 +598,23 @@ Transfer-Encoding: chunked\r\n", $request
     putenv('http_proxy=http://127.0.0.1:300/');
     $r = Request::get('some_other_url');
     self::assertTrue($r->hasProxy());
+  }
+
+  public function testTimeout()
+  {
+    try {
+      Request::init()
+             ->uri(self::TIMEOUT_URI)
+             ->timeout(1)
+             ->send();
+    } catch (ConnectionErrorException $e) {
+      self::assertTrue(is_resource($e->getCurlObject()));
+      self::assertTrue($e->wasTimeout());
+
+      return;
+    }
+    
+    self::assertFalse(true);
   }
 
   public function testParseJSON()
