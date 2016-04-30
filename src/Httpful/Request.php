@@ -55,9 +55,14 @@ class Request
   public $client_passphrase;
 
   /**
-   * @var int
+   * @var bool
    */
   public $timeout;
+
+  /**
+   * @var int|float
+   */
+  public $connection_timeout;
 
   /**
    * @var string
@@ -224,6 +229,14 @@ class Request
   }
 
   /**
+   * @return bool does the request have a connection timeout?
+   */
+  public function hasConnectionTimeout()
+  {
+    return isset($this->connection_timeout);
+  }
+
+  /**
    * @return bool has the internal curl request been initialized?
    */
   public function hasBeenInitialized()
@@ -232,7 +245,9 @@ class Request
   }
 
   /**
-   * @return bool Is this request setup for basic auth?
+   * Is this request setup for basic auth?
+   *
+   * @return bool
    */
   public function hasBasicAuth()
   {
@@ -240,7 +255,9 @@ class Request
   }
 
   /**
-   * @return bool Is this request setup for digest auth?
+   * Is this request setup for digest auth?
+   *
+   * @return bool
    */
   public function hasDigestAuth()
   {
@@ -271,6 +288,29 @@ class Request
   public function timeoutIn($seconds)
   {
     return $this->timeout($seconds);
+  }
+
+
+  /**
+   * Specify a HTTP connection timeout
+   *
+   * @param float|int $connection_timeout seconds to timeout the HTTP connection
+   *
+   * @return Request
+   *
+   * @throws \InvalidArgumentException
+   */
+  public function setConnectionTimeout($connection_timeout)
+  {
+    if (!preg_match('/^\d+(\.\d+)?/', $connection_timeout)) {
+      throw new \InvalidArgumentException(
+          "Invalid connection timeout provided: " . var_export($connection_timeout, true)
+      );
+    }
+
+    $this->connection_timeout = $connection_timeout;
+
+    return $this;
   }
 
   /**
@@ -1074,8 +1114,7 @@ class Request
     self::$_template = new Request(array('method' => Http::GET));
 
     // This is more like it...
-    self::$_template
-        ->withoutStrictSSL();
+    self::$_template->withoutStrictSSL();
   }
 
   /**
@@ -1175,7 +1214,7 @@ class Request
       curl_setopt($ch, CURLOPT_USERPWD, $this->username . ':' . $this->password);
     }
 
-    if ($this->hasClientSideCert()) {
+    if ($this->hasClientSideCert() === true) {
 
       if (!file_exists($this->client_key)) {
         throw new \Exception('Could not read Client Key');
@@ -1193,7 +1232,7 @@ class Request
       // curl_setopt($ch, CURLOPT_SSLCERTPASSWD,  $this->client_cert_passphrase);
     }
 
-    if ($this->hasTimeout()) {
+    if ($this->hasTimeout() === true) {
       if (defined('CURLOPT_TIMEOUT_MS')) {
         curl_setopt($ch, CURLOPT_TIMEOUT_MS, $this->timeout * 1000);
       } else {
@@ -1201,7 +1240,15 @@ class Request
       }
     }
 
-    if ($this->follow_redirects) {
+    if ($this->hasConnectionTimeout() === true) {
+      if (defined('CURLOPT_CONNECTTIMEOUT_MS')) {
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, $this->connection_timeout * 1000);
+      } else {
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, $this->connection_timeout);
+      }
+    }
+
+    if ($this->follow_redirects === true) {
       curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
       curl_setopt($ch, CURLOPT_MAXREDIRS, $this->max_redirects);
     }
