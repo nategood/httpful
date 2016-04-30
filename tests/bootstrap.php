@@ -8,16 +8,7 @@ if (!function_exists('pcntl_signal')) {
     define('SIGKILL', 9);
 }
 
-// Define "posix_kill" for Windows ...
-if (!function_exists('posix_kill')) {
-    /**
-     * @param $pid
-     * @param $sigkill
-     */
-    function posix_kill($pid, $sigkill) { }
-}
-
-if ($php_major < 5.4) {
+if ($php_major < 5.4 || 0 === stripos(PHP_OS, 'WIN')) {
     define('WITHOUT_SERVER', true);
 } else {
     // Command that starts the built-in web server
