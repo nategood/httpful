@@ -119,14 +119,29 @@ class Request
    */
   public $password;
 
+  /**
+   * @var string
+   */
   public $serialized_payload;
 
+  /**
+   * @var string
+   */
   public $payload;
 
+  /**
+   * @var \Closure
+   */
   public $parse_callback;
 
+  /**
+   * @var \Closure
+   */
   public $error_callback;
 
+  /**
+   * @var \Closure
+   */
   public $send_callback;
 
   /**
@@ -144,28 +159,34 @@ class Request
    */
   public $payload_serializers = array();
 
-  // Options
-  // private $_options = array(
-  //     'serialize_payload_method' => self::SERIALIZE_PAYLOAD_SMART
-  //     'auto_parse' => true
-  // );
+  /**
+   * Curl Handle
+   *
+   * @var resource
+   */
+  public $_ch;
 
-  // Curl Handle
-  public $_ch,
-      $_debug;
+  /**
+   * @var bool
+   */
+  public $_debug = false;
 
-  // Template Request object
+  /**
+   * Template Request object
+   *
+   * @var
+   */
   private static $_template;
 
   /**
-   * We made the constructor private to force the factory style.  This was
+   * We made the constructor protected to force the factory style.  This was
    * done to keep the syntax cleaner and better the support the idea of
    * "default templates".  Very basic and flexible as it is only intended
    * for internal use.
    *
    * @param array $attrs hash of initial attribute values
    */
-  private function __construct($attrs = null)
+  protected function __construct($attrs = null)
   {
     if (!is_array($attrs)) {
       return;
@@ -525,7 +546,7 @@ class Request
   /**
    * Set the body of the request
    *
-   * @param mixed  $payload
+   * @param string $payload
    * @param string $mimeType currently, sets the sends AND expects mime type although this
    *                         behavior may change in the next minor release (as it is a potential breaking change).
    *
@@ -1215,6 +1236,7 @@ class Request
   private function _error($error)
   {
     // TODO add in support for various Loggers that follow
+
     // PSR 3 https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-3-logger-interface.md
     if (isset($this->error_callback)) {
       $this->error_callback->__invoke($error);
