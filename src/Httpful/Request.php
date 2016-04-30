@@ -891,10 +891,24 @@ class Request
    */
   public function hasProxy()
   {
-    return
-        isset($this->additional_curl_opts[CURLOPT_PROXY])
-        &&
-        is_string($this->additional_curl_opts[CURLOPT_PROXY]);
+    /**
+     *  We must be aware that proxy variables could come from environment also.
+     *  In curl extension, http proxy can be specified not only via CURLOPT_PROXY option,
+     *  but also by environment variable called http_proxy.
+     */
+    if (
+        (
+            isset($this->additional_curl_opts[CURLOPT_PROXY])
+            &&
+            is_string($this->additional_curl_opts[CURLOPT_PROXY])
+        )
+        ||
+        getenv('http_proxy')
+    ) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
   /**
@@ -1529,7 +1543,11 @@ class Request
 
     // Remove the "HTTP/1.x 200 Connection established" string and any other headers added by proxy
     $proxy_regex = "/HTTP\/1\.[01] 200 Connection established.*?\r\n\r\n/si";
-    if ($this->hasProxy() && preg_match($proxy_regex, $result)) {
+    if (
+        $this->hasProxy() === true
+        &&
+        preg_match($proxy_regex, $result)
+    ) {
       $result = preg_replace($proxy_regex, '', $result);
     }
 

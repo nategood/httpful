@@ -12,14 +12,14 @@ namespace Httpful\Test;
 
 use Httpful\Bootstrap;
 use Httpful\Exception\ConnectionErrorException;
+use Httpful\Handlers\JsonHandler;
 use Httpful\Handlers\MimeHandlerAdapter;
 use Httpful\Handlers\XmlHandler;
-use Httpful\Httpful;
-use Httpful\Request;
-use Httpful\Mime;
 use Httpful\Http;
+use Httpful\Httpful;
+use Httpful\Mime;
+use Httpful\Request;
 use Httpful\Response;
-use Httpful\Handlers\JsonHandler;
 
 require(dirname(dirname(__DIR__)) . '/bootstrap.php');
 
@@ -29,6 +29,7 @@ Bootstrap::init();
 define('TEST_SERVER', WEB_SERVER_HOST . ':' . WEB_SERVER_PORT);
 
 /** @noinspection PhpMultipleClassesDeclarationsInOneFile */
+
 /**
  * Class HttpfulTest
  *
@@ -426,7 +427,7 @@ Content-Type: text/plain; charset=utf-8\r\n", $req
       Request::get('malformed:url')
              ->whenError(
                  function ($error) use (&$caught) {
-                    $caught = true;
+                   $caught = true;
                  }
              )
              ->timeoutIn(0.1)
@@ -591,6 +592,13 @@ Transfer-Encoding: chunked\r\n", $request
     self::assertTrue($r->hasProxy());
   }
 
+  public function testHasProxyWithEnvironmentProxy()
+  {
+    putenv('http_proxy=http://127.0.0.1:300/');
+    $r = Request::get('some_other_url');
+    self::assertTrue($r->hasProxy());
+  }
+
   public function testParseJSON()
   {
     $handler = new JsonHandler();
@@ -636,6 +644,7 @@ Transfer-Encoding: chunked\r\n", $request
 }
 
 /** @noinspection PhpMultipleClassesDeclarationsInOneFile */
+
 /**
  * Class DemoMimeHandler
  *
