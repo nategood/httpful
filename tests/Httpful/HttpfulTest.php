@@ -21,7 +21,7 @@ use Httpful\Mime;
 use Httpful\Request;
 use Httpful\Response;
 
-require(dirname(dirname(__DIR__)) . '/bootstrap.php');
+require dirname(dirname(__DIR__)) . '/bootstrap.php';
 
 Bootstrap::init();
 
@@ -54,9 +54,9 @@ Content-Type: text/csv
 Connection: keep-alive
 Transfer-Encoding: chunked\r\n";
   const SAMPLE_CSV_RESPONSE  =
-      "Key1,Key2
+      'Key1,Key2
 Value1,Value2
-\"40.0\",\"Forty\"";
+"40.0","Forty"';
   const SAMPLE_XML_RESPONSE  = '<stdClass><arrayProp><array><k1><myClass><intProp>2</intProp></myClass></k1></array></arrayProp><stringProp>a string</stringProp><boolProp>TRUE</boolProp></stdClass>';
   const SAMPLE_XML_HEADER    =
       "HTTP/1.1 200 OK
@@ -68,7 +68,7 @@ Transfer-Encoding: chunked\r\n";
 Content-Type: application/vnd.nategood.message+xml
 Connection: keep-alive
 Transfer-Encoding: chunked\r\n";
-  const SAMPLE_VENDOR_TYPE   = "application/vnd.nategood.message+xml";
+  const SAMPLE_VENDOR_TYPE   = 'application/vnd.nategood.message+xml';
   const SAMPLE_MULTI_HEADER  =
       "HTTP/1.1 200 OK
 Content-Type: application/json
@@ -280,8 +280,8 @@ X-My-Header:Value2\r\n";
     $req = Request::init()->sendsAndExpects(Mime::JSON);
     $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
 
-    self::assertEquals("value", $response->body->key);
-    self::assertEquals("value", $response->body->object->key);
+    self::assertEquals('value', $response->body->key);
+    self::assertEquals('value', $response->body->object->key);
     self::assertInternalType('array', $response->body->array);
     self::assertEquals(1, $response->body->array[0]);
   }
@@ -291,17 +291,17 @@ X-My-Header:Value2\r\n";
     $req = Request::init()->sendsAndExpects(Mime::XML);
     $response = new Response(self::SAMPLE_XML_RESPONSE, self::SAMPLE_XML_HEADER, $req);
     $sxe = $response->body;
-    self::assertEquals("object", gettype($sxe));
-    self::assertEquals("SimpleXMLElement", get_class($sxe));
+    self::assertEquals('object', gettype($sxe));
+    self::assertEquals('SimpleXMLElement', get_class($sxe));
     $bools = $sxe->xpath('/stdClass/boolProp');
     list(, $bool) = each($bools);
-    self::assertEquals("TRUE", (string)$bool);
+    self::assertEquals('TRUE', (string)$bool);
     $ints = $sxe->xpath('/stdClass/arrayProp/array/k1/myClass/intProp');
     list(, $int) = each($ints);
-    self::assertEquals("2", (string)$int);
+    self::assertEquals('2', (string)$int);
     $strings = $sxe->xpath('/stdClass/stringProp');
     list(, $string) = each($strings);
-    self::assertEquals("a string", (string)$string);
+    self::assertEquals('a string', (string)$string);
   }
 
   public function testCsvResponseParse()
@@ -309,10 +309,10 @@ X-My-Header:Value2\r\n";
     $req = Request::init()->sendsAndExpects(Mime::CSV);
     $response = new Response(self::SAMPLE_CSV_RESPONSE, self::SAMPLE_CSV_HEADER, $req);
 
-    self::assertEquals("Key1", $response->body[0][0]);
-    self::assertEquals("Value1", $response->body[1][0]);
+    self::assertEquals('Key1', $response->body[0][0]);
+    self::assertEquals('Value1', $response->body[1][0]);
     self::assertInternalType('string', $response->body[2][0]);
-    self::assertEquals("40.0", $response->body[2][0]);
+    self::assertEquals('40.0', $response->body[2][0]);
   }
 
   public function testParsingContentTypeCharset()
@@ -372,11 +372,11 @@ Content-Type: text/plain; charset=utf-8\r\n", $req
   public function testEmptyResponseParse()
   {
     $req = Request::init()->sendsAndExpects(Mime::JSON);
-    $response = new Response("", self::SAMPLE_JSON_HEADER, $req);
+    $response = new Response('', self::SAMPLE_JSON_HEADER, $req);
     self::assertEquals(null, $response->body);
 
     $reqXml = Request::init()->sendsAndExpects(Mime::XML);
-    $responseXml = new Response("", self::SAMPLE_XML_HEADER, $reqXml);
+    $responseXml = new Response('', self::SAMPLE_XML_HEADER, $reqXml);
     self::assertEquals(null, $responseXml->body);
   }
 
@@ -514,7 +514,7 @@ Content-Type: text/plain; charset=utf-8\r\n", $req
   public function testMissingBodyContentType()
   {
     $body = 'A string';
-    $request = Request::post(HttpfulTest::TEST_URL, $body)->_curlPrep();
+    $request = Request::post(self::TEST_URL, $body)->_curlPrep();
     self::assertEquals($body, $request->serialized_payload);
   }
 
@@ -524,12 +524,12 @@ Content-Type: text/plain; charset=utf-8\r\n", $req
     $request = Request::init()->sendsAndExpects(Mime::XML);
     $response = new Response('<xml><name>Nathan</name></xml>', self::SAMPLE_VENDOR_HEADER, $request);
 
-    self::assertEquals("application/xml", $response->parent_type);
+    self::assertEquals('application/xml', $response->parent_type);
     self::assertEquals(self::SAMPLE_VENDOR_TYPE, $response->content_type);
     self::assertTrue($response->is_mime_vendor_specific);
 
     // Make sure we still parsed as if it were plain old XML
-    self::assertEquals("Nathan", (string)$response->body->name);
+    self::assertEquals('Nathan', (string)$response->body->name);
   }
 
   public function testMissingContentType()
@@ -543,7 +543,7 @@ Connection: keep-alive
 Transfer-Encoding: chunked\r\n", $request
     );
 
-    self::assertEquals("", $response->content_type);
+    self::assertEquals('', $response->content_type);
   }
 
   public function testCustomMimeRegistering()
@@ -646,39 +646,39 @@ Transfer-Encoding: chunked\r\n", $request
 
   public function testParams()
   {
-    $r = Request::get("http://google.com");
+    $r = Request::get('http://google.com');
     $r->_curlPrep();
     $r->_uriPrep();
-    self::assertEquals("http://google.com", $r->uri);
+    self::assertEquals('http://google.com', $r->uri);
 
-    $r = Request::get("http://google.com?q=query");
+    $r = Request::get('http://google.com?q=query');
     $r->_curlPrep();
     $r->_uriPrep();
-    self::assertEquals("http://google.com?q=query", $r->uri);
+    self::assertEquals('http://google.com?q=query', $r->uri);
 
-    $r = Request::get("http://google.com");
-    $r->param("a", "b");
+    $r = Request::get('http://google.com');
+    $r->param('a', 'b');
     $r->_curlPrep();
     $r->_uriPrep();
-    self::assertEquals("http://google.com?a=b", $r->uri);
+    self::assertEquals('http://google.com?a=b', $r->uri);
 
-    $r = Request::get("http://google.com?a=b");
-    $r->param("c", "d");
+    $r = Request::get('http://google.com?a=b');
+    $r->param('c', 'd');
     $r->_curlPrep();
     $r->_uriPrep();
-    self::assertEquals("http://google.com?a=b&c=d", $r->uri);
+    self::assertEquals('http://google.com?a=b&c=d', $r->uri);
 
-    $r = Request::get("http://google.com?a=b");
-    $r->param("", "e");
+    $r = Request::get('http://google.com?a=b');
+    $r->param('', 'e');
     $r->_curlPrep();
     $r->_uriPrep();
-    self::assertEquals("http://google.com?a=b", $r->uri);
+    self::assertEquals('http://google.com?a=b', $r->uri);
 
-    $r = Request::get("http://google.com?a=b");
-    $r->param("e", "");
+    $r = Request::get('http://google.com?a=b');
+    $r->param('e', '');
     $r->_curlPrep();
     $r->_uriPrep();
-    self::assertEquals("http://google.com?a=b", $r->uri);
+    self::assertEquals('http://google.com?a=b', $r->uri);
   }
 
   // /**
@@ -718,4 +718,3 @@ class DemoMimeHandler extends MimeHandlerAdapter
     return 'custom parse';
   }
 }
-

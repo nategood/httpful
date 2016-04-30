@@ -5,7 +5,7 @@ use Httpful\Handlers\XmlHandler;
 use Httpful\Httpful;
 use Httpful\Mime;
 
-require(__DIR__ . '/../bootstrap.php');
+require __DIR__ . '/../bootstrap.php';
 
 // We can override the default parser configuration options be registering
 // a parser with different configuration options for a particular mime type

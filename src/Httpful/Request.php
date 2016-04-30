@@ -340,7 +340,7 @@ class Request
   {
     if (!preg_match('/^\d+(\.\d+)?/', $connection_timeout)) {
       throw new \InvalidArgumentException(
-          "Invalid connection timeout provided: " . var_export($connection_timeout, true)
+          'Invalid connection timeout provided: ' . var_export($connection_timeout, true)
       );
     }
 
@@ -1266,7 +1266,7 @@ class Request
     // recusion.  Do not use this syntax elsewhere.
     // It goes against the whole readability
     // and transparency idea.
-    self::$_template = new Request(array('method' => Http::GET));
+    self::$_template = new self(array('method' => Http::GET));
 
     // This is more like it...
     self::$_template->withoutStrictSSL();
@@ -1327,7 +1327,7 @@ class Request
       self::_initializeDefaults();
     }
 
-    $request = new Request();
+    $request = new self();
 
     return $request
         ->_setDefaults()
@@ -1524,27 +1524,27 @@ class Request
     $originalParams = array();
 
     if (
-        isset($url["query"])
+        isset($url['query'])
         &&
-        count($url["query"])
+        count($url['query'])
     ) {
-      parse_str($url["query"], $originalParams);
+      parse_str($url['query'], $originalParams);
     }
 
     $params = array_merge($originalParams, (array)$this->params);
 
     $queryString = http_build_query($params);
 
-    if (strpos($this->uri, "?") !== false) {
+    if (strpos($this->uri, '?') !== false) {
       $this->uri = substr(
           $this->uri,
           0,
-          strpos($this->uri, "?")
+          strpos($this->uri, '?')
       );
     }
 
     if (count($params)) {
-      $this->uri .= "?" . $queryString;
+      $this->uri .= '?' . $queryString;
     }
   }
 

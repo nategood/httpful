@@ -33,7 +33,7 @@ class CsvHandler extends MimeHandlerAdapter
     }
 
     if (empty($parsed)) {
-      throw new \Exception("Unable to parse response as CSV");
+      throw new \Exception('Unable to parse response as CSV');
     }
 
     return $parsed;

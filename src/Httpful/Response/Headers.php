@@ -81,7 +81,7 @@ final class Headers implements \ArrayAccess, \Countable
    */
   public function offsetSet($offset, $value)
   {
-    throw new \Exception("Headers are read-only.");
+    throw new \Exception('Headers are read-only.');
   }
 
   /**
@@ -91,7 +91,7 @@ final class Headers implements \ArrayAccess, \Countable
    */
   public function offsetUnset($offset)
   {
-    throw new \Exception("Headers are read-only.");
+    throw new \Exception('Headers are read-only.');
   }
 
   /**

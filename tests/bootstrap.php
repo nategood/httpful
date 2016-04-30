@@ -27,9 +27,9 @@ if ($php_major < 5.4 || 0 === stripos(PHP_OS, 'WIN')) {
 
     // check server.log to see if it failed to start
     $serverLogData = file_get_contents($serverLogFile);
-    if (strpos($serverLogData, "Fail") !== false) {
+    if (strpos($serverLogData, 'Fail') !== false) {
         // server failed to start for some reason
-        print "Failed to start server! Logs:" . PHP_EOL . PHP_EOL;
+        print 'Failed to start server! Logs:' . PHP_EOL . PHP_EOL;
         /** @noinspection ForgottenDebugOutputInspection */
         print_r($serverLogData);
         exit(1);
@@ -38,10 +38,10 @@ if ($php_major < 5.4 || 0 === stripos(PHP_OS, 'WIN')) {
     /** @noinspection PhpUndefinedConstantInspection */
     echo sprintf('%s - Web server started on %s:%d with PID %d', date('r'), WEB_SERVER_HOST, WEB_SERVER_PORT, $pid) . PHP_EOL;
 
-    register_shutdown_function(function() {
+    register_shutdown_function(function () {
         // cleanup after ourselves -- remove log file, shut down server
         global $pid;
-        unlink("./server.log");
+        unlink('./server.log');
         posix_kill($pid, SIGKILL);
     });
 }
