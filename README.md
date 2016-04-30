@@ -94,6 +94,19 @@ Httpful highly encourages sending in pull requests.  When submitting a pull requ
 
 # Changelog
 
+## 0.2.21
+
+ - [+]: "Add convenience methods for appending parameters to query string." [PR #65](https://github.com/nategood/httpful/pull/65)
+ - [+]: "Give more information to the Exception object to enable better error handling" [PR #117](https://github.com/nategood/httpful/pull/117)
+ - [+]: "Solves issue #170: HTTP Header parsing is inconsistent" [PR #182](https://github.com/nategood/httpful/pull/182)
+ - [+]: "added support for http_proxy environment variable" [PR #183](https://github.com/nategood/httpful/pull/183)
+ - [+]: "Fix for frameworks that use object proxies" + fixes phpdoc [PR #205](https://github.com/nategood/httpful/pull/205)
+ - [+]: "ConnectionErrorException cURLError" [PR #207](https://github.com/nategood/httpful/pull/208)
+ - [+]: "Added explicit support for expectsXXX" [PR #210](https://github.com/nategood/httpful/pull/210)
+ - [+]: "Add connection timeout" [PR #215](https://github.com/nategood/httpful/pull/215)
+ - [~]: use "portable-utf8" [voku](https://github.com/voku/httpful/commit/3b4b36bd65bdecd0dafaa7ace336ac9f629a0e5a)
+ - [+]: fixed code-style / added php-docs / added "alias"-methods ... [voku](https://github.com/voku/httpful/commit/3b82723609d5decc6521b94d336f090bc9d764e3)
+ 
 ## 0.2.20
 
  - MINOR Move Response building logic into separate function [PR #193](https://github.com/nategood/httpful/pull/193)
