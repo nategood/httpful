@@ -426,7 +426,7 @@ Content-Type: text/plain; charset=utf-8\r\n", $req
       Request::get('malformed:url')
              ->whenError(
                  function ($error) use (&$caught) {
-                   $caught = true;
+                    $caught = true;
                  }
              )
              ->timeoutIn(0.1)
