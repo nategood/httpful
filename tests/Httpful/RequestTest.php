@@ -2,14 +2,17 @@
 /**
  * @author nick fox <quixand gmail com>
  */
+
 namespace Httpful\Test;
 
+use Httpful\Request;
+
 /**
- * Class requestTest
+ * Class RequestTest
  *
  * @package Httpful\Test
  */
-class requestTest extends \PHPUnit_Framework_TestCase
+class RequestTest extends \PHPUnit_Framework_TestCase
 {
 
   /**
@@ -20,7 +23,7 @@ class requestTest extends \PHPUnit_Framework_TestCase
   public function testGet_InvalidURL()
   {
     // Silence the default logger via whenError override
-    \Httpful\Request::get('unavailable.url')->whenError(
+    Request::get('unavailable.url')->whenError(
         function ($error) {
         }
     )->send();

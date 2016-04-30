@@ -3,6 +3,7 @@
 namespace Httpful;
 
 use Httpful\Exception\ConnectionErrorException;
+use voku\helper\UTF8;
 
 /**
  * Clean, simple class for sending HTTP requests
@@ -1220,8 +1221,7 @@ class Request
     if (isset($this->payload)) {
       curl_setopt($ch, CURLOPT_POSTFIELDS, $this->serialized_payload);
       if (!$this->isUpload()) {
-        $this->headers['Content-Length'] =
-            $this->_determineLength($this->serialized_payload);
+        $this->headers['Content-Length'] = $this->_determineLength($this->serialized_payload);
       }
     }
 
@@ -1291,11 +1291,7 @@ class Request
    */
   public function _determineLength($str)
   {
-    if (function_exists('mb_strlen')) {
-      return mb_strlen($str, '8bit');
-    } else {
-      return strlen($str);
-    }
+    return UTF8::strlen($str, '8bit');
   }
 
   /**

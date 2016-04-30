@@ -1,7 +1,11 @@
 .DS_Store
 downloads
 
-/build
+# Tests
+server.log
+
+# Build
+/build/
 
 # IDE
 /.idea

@@ -21,6 +21,7 @@
   ],
   "require": {
     "php": ">=5.3",
+    "voku/portable-utf8": "~2.1",
     "ext-curl": "*"
   },
   "autoload": {

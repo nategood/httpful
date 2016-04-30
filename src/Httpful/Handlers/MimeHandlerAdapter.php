@@ -8,6 +8,8 @@
 
 namespace Httpful\Handlers;
 
+use voku\helper\UTF8;
+
 /**
  * Class MimeHandlerAdapter
  *
@@ -49,7 +51,7 @@ class MimeHandlerAdapter
    *
    * @return string
    */
-  function serialize($payload)
+  public function serialize($payload)
   {
     return (string)$payload;
   }
@@ -61,17 +63,6 @@ class MimeHandlerAdapter
    */
   protected function stripBom($body)
   {
-    if (substr($body, 0, 3) === "\xef\xbb\xbf")  // UTF-8
-    {
-      $body = substr($body, 3);
-    } else if (substr($body, 0, 4) === "\xff\xfe\x00\x00" || substr($body, 0, 4) === "\x00\x00\xfe\xff")  // UTF-32
-    {
-      $body = substr($body, 4);
-    } else if (substr($body, 0, 2) === "\xff\xfe" || substr($body, 0, 2) === "\xfe\xff")  // UTF-16
-    {
-      $body = substr($body, 2);
-    }
-
-    return $body;
+    return UTF8::removeBOM($body);
   }
 }
