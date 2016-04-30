@@ -898,6 +898,7 @@ class Request
   {
     $this->addOnCurlOption(CURLOPT_PROXY, "{$proxy_host}:{$proxy_port}");
     $this->addOnCurlOption(CURLOPT_PROXYTYPE, $proxy_type);
+    
     if (in_array($auth_type, array(CURLAUTH_BASIC, CURLAUTH_NTLM), true)) {
       $this->addOnCurlOption(CURLOPT_PROXYAUTH, $auth_type)
            ->addOnCurlOption(CURLOPT_PROXYUSERPWD, "{$auth_username}:{$auth_password}");
@@ -1372,6 +1373,8 @@ class Request
     }
 
     $ch = curl_init($this->uri);
+
+    curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
 
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $this->method);
     if ($this->method === Http::HEAD) {

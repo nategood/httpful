@@ -40,7 +40,7 @@ class HttpfulTest extends \PHPUnit_Framework_TestCase
   const TEST_SERVER  = TEST_SERVER;
   const TEST_URL     = 'http://127.0.0.1:8008';
   const TEST_URL_400 = 'http://127.0.0.1:8008/400';
-  const TIMEOUT_URI  = TEST_SERVER;
+  const TIMEOUT_URI  = '127.0.0.1:81';
 
   const SAMPLE_JSON_HEADER   =
       "HTTP/1.1 200 OK
