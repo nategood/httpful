@@ -605,7 +605,7 @@ Transfer-Encoding: chunked\r\n", $request
     try {
       Request::init()
              ->uri(self::TIMEOUT_URI)
-             ->timeout(1)
+             ->timeout(0.1)
              ->send();
     } catch (ConnectionErrorException $e) {
       self::assertTrue(is_resource($e->getCurlObject()));

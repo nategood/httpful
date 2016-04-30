@@ -1514,7 +1514,7 @@ class Request
    *
    * Any existing query string parameters, either passed as part of the URI
    * via uri() method, or passed via get() and friends will be preserved,
-   * with additional paramaters (added via params() or param()) appended.
+   * with additional parameters (added via params() or param()) appended.
    *
    * @return void
    */
