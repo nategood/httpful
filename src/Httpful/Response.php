@@ -104,6 +104,7 @@ class Response
    * Mime type.
    *
    * @param string Http response body
+   * @param string $body
    *
    * @return array|string|object the response parse accordingly
    */
@@ -149,7 +150,7 @@ class Response
   }
 
   /**
-   * @param $headers
+   * @param string $headers
    *
    * @return int
    * @throws \Exception

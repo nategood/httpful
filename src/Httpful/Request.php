@@ -353,7 +353,7 @@ class Request
    * If the response is a 301 or 302 redirect, automatically
    * send off another request to that location
    *
-   * @param bool|int $follow follow or not to follow or maximal number of redirects
+   * @param boolean $follow follow or not to follow or maximal number of redirects
    *
    * @return Request
    */
@@ -696,7 +696,7 @@ class Request
   /**
    * @alias of expects
    *
-   * @param $mime
+   * @param string|null $mime
    *
    * @return Request
    */
@@ -830,7 +830,7 @@ class Request
   /**
    * @alias of contentType
    *
-   * @param $mime
+   * @param string $mime
    *
    * @return Request
    */
@@ -899,7 +899,7 @@ class Request
     $this->addOnCurlOption(CURLOPT_PROXYTYPE, $proxy_type);
     if (in_array($auth_type, array(CURLAUTH_BASIC, CURLAUTH_NTLM), true)) {
       $this->addOnCurlOption(CURLOPT_PROXYAUTH, $auth_type)
-           ->addOnCurlOption(CURLOPT_PROXYUSERPWD, "{$auth_username}:{$auth_password}");
+            ->addOnCurlOption(CURLOPT_PROXYUSERPWD, "{$auth_username}:{$auth_password}");
     }
 
     return $this;
@@ -1300,7 +1300,7 @@ class Request
   }
 
   /**
-   * @param $error
+   * @param string $error
    */
   private function _error($error)
   {
@@ -1689,7 +1689,7 @@ class Request
    *
    * @see Request::registerPayloadSerializer()
    *
-   * @param mixed $payload
+   * @param string $payload
    *
    * @return string
    */

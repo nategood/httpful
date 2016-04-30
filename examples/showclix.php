@@ -12,8 +12,8 @@ require __DIR__ . '/../bootstrap.php';
 //
 $uri = 'http://api.showclix.com/Event/8175';
 $response = Request::get($uri)
-                   ->expectsType('json')
-                   ->send();
+                    ->expectsType('json')
+                    ->send();
 
 //
 // Print out the event details
@@ -26,8 +26,8 @@ echo "The event {$response->body->event} will take place on {$response->body->ev
 Httpful::register(Mime::JSON, new JsonHandler(array('decode_as_array' => true)));
 
 $response = Request::get($uri)
-                   ->expectsType('json')
-                   ->send();
+                    ->expectsType('json')
+                    ->send();
 
 // Print out the event details
 echo "The event {$response->body['event']} will take place on {$response->body['event_start']}\n";
