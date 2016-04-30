@@ -48,7 +48,7 @@ class CsvHandler extends MimeHandlerAdapter
   {
     $fp = fopen('php://temp/maxmemory:' . (6 * 1024 * 1024), 'r+');
     $i = 0;
-    
+
     foreach ($payload as $fields) {
       if ($i++ == 0) {
         fputcsv($fp, array_keys($fields));

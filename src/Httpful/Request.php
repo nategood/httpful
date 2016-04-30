@@ -890,6 +890,7 @@ class Request
    *                              Default null, no authentication
    * @param string $auth_username Authentication username. Default null
    * @param string $auth_password Authentication password. Default null
+   * @param int    $proxy_type    Proxy-Tye for Curl. Default is "Proxy::HTTP"
    *
    * @return Request
    */
@@ -899,7 +900,7 @@ class Request
     $this->addOnCurlOption(CURLOPT_PROXYTYPE, $proxy_type);
     if (in_array($auth_type, array(CURLAUTH_BASIC, CURLAUTH_NTLM), true)) {
       $this->addOnCurlOption(CURLOPT_PROXYAUTH, $auth_type)
-            ->addOnCurlOption(CURLOPT_PROXYUSERPWD, "{$auth_username}:{$auth_password}");
+           ->addOnCurlOption(CURLOPT_PROXYUSERPWD, "{$auth_username}:{$auth_password}");
     }
 
     return $this;
@@ -1200,7 +1201,7 @@ class Request
    * @param array  $args   in this case, there should only ever be 1 argument provided
    *                       and that argument should be a string value of the header we're setting
    *
-   * @return Request
+   * @return Request|null
    */
   public function __call($method, $args)
   {
@@ -1226,7 +1227,7 @@ class Request
     // This method also adds the custom header support as described in the
     // method comments
     if (count($args) === 0) {
-      return;
+      return null;
     }
 
     // Strip the sugar.  If it leads with "with", strip.

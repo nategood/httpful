@@ -2,6 +2,8 @@
 
 namespace Httpful;
 
+use Httpful\Handlers\MimeHandlerAdapter;
+
 /**
  * Class Httpful
  *
@@ -19,13 +21,13 @@ class Httpful
   /**
    * @var mixed
    */
-  private static $default       = null;
+  private static $default = null;
 
   /**
    * @param string                               $mimeType
    * @param \Httpful\Handlers\MimeHandlerAdapter $handler
    */
-  public static function register($mimeType, \Httpful\Handlers\MimeHandlerAdapter $handler)
+  public static function register($mimeType, MimeHandlerAdapter $handler)
   {
     self::$mimeRegistrar[$mimeType] = $handler;
   }
@@ -33,7 +35,7 @@ class Httpful
   /**
    * @param string $mimeType defaults to MimeHandlerAdapter
    *
-   * @return \Httpful\Handlers\MimeHandlerAdapter
+   * @return MimeHandlerAdapter
    */
   public static function get($mimeType = null)
   {
@@ -42,7 +44,7 @@ class Httpful
     }
 
     if (empty(self::$default)) {
-      self::$default = new \Httpful\Handlers\MimeHandlerAdapter();
+      self::$default = new MimeHandlerAdapter();
     }
 
     return self::$default;

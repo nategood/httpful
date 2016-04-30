@@ -103,10 +103,9 @@ class Response
    * (most often an associative array) based on the expected
    * Mime type.
    *
-   * @param string Http response body
-   * @param string $body
+   * @param string $body Http response body
    *
-   * @return array|string|object the response parse accordingly
+   * @return mixed the response parse accordingly
    */
   public function _parse($body)
   {

@@ -48,6 +48,7 @@ final class Headers implements \ArrayAccess, \Countable
         $parse_headers[$key] = $value;
       }
     }
+
     return new self($parse_headers);
   }
 
@@ -70,6 +71,8 @@ final class Headers implements \ArrayAccess, \Countable
   {
     if (isset($this->headers[$offset])) {
       return $this->headers[$offset];
+    } else {
+      return null;
     }
   }
 

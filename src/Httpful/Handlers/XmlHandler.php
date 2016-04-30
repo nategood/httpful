@@ -34,6 +34,7 @@ class XmlHandler extends MimeHandlerAdapter
     $this->libxml_opts = isset($conf['libxml_opts']) ? $conf['libxml_opts'] : 0;
   }
 
+  /** @noinspection PhpMissingParentCallCommonInspection */
   /**
    * @param string $body
    *
@@ -46,6 +47,7 @@ class XmlHandler extends MimeHandlerAdapter
     if (empty($body)) {
       return null;
     }
+    
     $parsed = simplexml_load_string($body, null, $this->libxml_opts, $this->namespace);
     if ($parsed === false) {
       throw new \Exception('Unable to parse response as XML');
@@ -54,14 +56,17 @@ class XmlHandler extends MimeHandlerAdapter
     return $parsed;
   }
 
+  /** @noinspection PhpMissingParentCallCommonInspection */
   /**
    * @param mixed $payload
    *
    * @return string
+   *
    * @throws \Exception if unable to serialize
    */
   public function serialize($payload)
   {
+    /** @noinspection PhpUnusedLocalVariableInspection */
     list($_, $dom) = $this->_future_serializeAsXml($payload);
 
     /* @var \DOMDocument $dom */
@@ -108,24 +113,26 @@ class XmlHandler extends MimeHandlerAdapter
    * @author Zack Douglas <zack@zackerydouglas.info>
    *
    * @param  mixed            $value
-   * @param \DOMDocument|null $node
+   * @param \DOMElement|null  $node
    * @param \DOMDocument|null $dom
    *
    * @return array
    */
-  private function _future_serializeAsXml($value, \DOMDocument $node = null, \DOMDocument $dom = null)
+  private function _future_serializeAsXml(&$value, \DOMElement $node = null, \DOMDocument $dom = null)
   {
     if (!$dom) {
       $dom = new \DOMDocument;
     }
+
     if (!$node) {
       if (!is_object($value)) {
         $node = $dom->createElement('response');
         $dom->appendChild($node);
       } else {
-        $node = $dom;
+        $node = $dom; // is it correct, that we use the "dom" as "node"?
       }
     }
+
     if (is_object($value)) {
       $objNode = $dom->createElement(get_class($value));
       $node->appendChild($objNode);
@@ -134,7 +141,7 @@ class XmlHandler extends MimeHandlerAdapter
       $arrNode = $dom->createElement('array');
       $node->appendChild($arrNode);
       $this->_future_serializeArrayAsXml($value, $arrNode, $dom);
-    } elseif (is_bool($value)) {
+    } elseif ((bool)$value === $value) {
       $node->appendChild($dom->createTextNode($value ? 'TRUE' : 'FALSE'));
     } else {
       $node->appendChild($dom->createTextNode($value));
@@ -152,13 +159,14 @@ class XmlHandler extends MimeHandlerAdapter
    *
    * @return array
    */
-  private function _future_serializeArrayAsXml($value, \DOMElement &$parent, \DOMDocument &$dom)
+  private function _future_serializeArrayAsXml(&$value, \DOMElement $parent, \DOMDocument $dom)
   {
     foreach ($value as $k => &$v) {
       $n = $k;
       if (is_numeric($k)) {
         $n = "child-{$n}";
       }
+
       $el = $dom->createElement($n);
       $parent->appendChild($el);
       $this->_future_serializeAsXml($v, $el, $dom);
@@ -176,7 +184,7 @@ class XmlHandler extends MimeHandlerAdapter
    *
    * @return array
    */
-  private function _future_serializeObjectAsXml($value, \DOMElement &$parent, \DOMDocument &$dom)
+  private function _future_serializeObjectAsXml(&$value, \DOMElement $parent, \DOMDocument $dom)
   {
     $refl = new \ReflectionObject($value);
     foreach ($refl->getProperties() as $pr) {
