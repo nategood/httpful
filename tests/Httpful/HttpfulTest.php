@@ -40,7 +40,6 @@ class HttpfulTest extends \PHPUnit_Framework_TestCase
   const TEST_SERVER  = TEST_SERVER;
   const TEST_URL     = 'http://127.0.0.1:8008';
   const TEST_URL_400 = 'http://127.0.0.1:8008/400';
-  const TIMEOUT_URI  = '127.0.0.1:81';
 
   const SAMPLE_JSON_HEADER   =
       "HTTP/1.1 200 OK
@@ -604,7 +603,7 @@ Transfer-Encoding: chunked\r\n", $request
   {
     try {
       Request::init()
-             ->uri(self::TIMEOUT_URI)
+             ->uri(self::TEST_SERVER . '/timeout.php')
              ->timeout(0.1)
              ->send();
     } catch (ConnectionErrorException $e) {
