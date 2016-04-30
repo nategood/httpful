@@ -130,6 +130,11 @@ class Request
   public $payload;
 
   /**
+   * @var array
+   */
+  public $params = array();
+
+  /**
    * @var \Closure
    */
   public $parse_callback;
@@ -569,6 +574,39 @@ class Request
     // Iserntentially don't call _serializePayload yet.  Wait until
     // we actually send off the request to convert payload to string.
     // At that time, the `serialized_payload` is set accordingly.
+    return $this;
+  }
+
+  /**
+   * Add additional parameters to be appended to the query string.
+   *
+   * Takes an associative array of key/value pairs as an argument.
+   *
+   * @param array $params
+   *
+   * @return Request this
+   */
+  public function params(array $params)
+  {
+    $this->params = array_merge($this->params, $params);
+
+    return $this;
+  }
+
+  /**
+   * Add additional parameter to be appended to the query string.
+   *
+   * @param string $key
+   * @param string $value
+   *
+   * @return Request this
+   */
+  public function param($key, $value)
+  {
+    if ($key && $value) {
+      $this->params[$key] = $value;
+    }
+
     return $this;
   }
 
@@ -1313,6 +1351,10 @@ class Request
       throw new \Exception('Attempting to send a request before defining a URI endpoint.');
     }
 
+    if ($this->params) {
+      $this->_uriPrep();
+    }
+
     if (isset($this->payload)) {
       $this->serialized_payload = $this->_serializePayload($this->payload);
     }
@@ -1465,6 +1507,45 @@ class Request
   public function isUpload()
   {
     return Mime::UPLOAD == $this->content_type;
+  }
+
+  /**
+   * Takes care of building the query string to be used in the request URI.
+   *
+   * Any existing query string parameters, either passed as part of the URI
+   * via uri() method, or passed via get() and friends will be preserved,
+   * with additional paramaters (added via params() or param()) appended.
+   *
+   * @return void
+   */
+  public function _uriPrep()
+  {
+    $url = parse_url($this->uri);
+    $originalParams = array();
+
+    if (
+        isset($url["query"])
+        &&
+        count($url["query"])
+    ) {
+      parse_str($url["query"], $originalParams);
+    }
+
+    $params = array_merge($originalParams, (array)$this->params);
+
+    $queryString = http_build_query($params);
+
+    if (strpos($this->uri, "?") !== false) {
+      $this->uri = substr(
+          $this->uri,
+          0,
+          strpos($this->uri, "?")
+      );
+    }
+
+    if (count($params)) {
+      $this->uri .= "?" . $queryString;
+    }
   }
 
   /**

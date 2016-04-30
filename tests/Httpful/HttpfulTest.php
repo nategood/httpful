@@ -613,7 +613,7 @@ Transfer-Encoding: chunked\r\n", $request
 
       return;
     }
-    
+
     self::assertFalse(true);
   }
 
@@ -642,6 +642,43 @@ Transfer-Encoding: chunked\r\n", $request
     }
 
     self::fail('Expected an exception to be thrown due to invalid json');
+  }
+
+  public function testParams()
+  {
+    $r = Request::get("http://google.com");
+    $r->_curlPrep();
+    $r->_uriPrep();
+    self::assertEquals("http://google.com", $r->uri);
+
+    $r = Request::get("http://google.com?q=query");
+    $r->_curlPrep();
+    $r->_uriPrep();
+    self::assertEquals("http://google.com?q=query", $r->uri);
+
+    $r = Request::get("http://google.com");
+    $r->param("a", "b");
+    $r->_curlPrep();
+    $r->_uriPrep();
+    self::assertEquals("http://google.com?a=b", $r->uri);
+
+    $r = Request::get("http://google.com?a=b");
+    $r->param("c", "d");
+    $r->_curlPrep();
+    $r->_uriPrep();
+    self::assertEquals("http://google.com?a=b&c=d", $r->uri);
+
+    $r = Request::get("http://google.com?a=b");
+    $r->param("", "e");
+    $r->_curlPrep();
+    $r->_uriPrep();
+    self::assertEquals("http://google.com?a=b", $r->uri);
+
+    $r = Request::get("http://google.com?a=b");
+    $r->param("e", "");
+    $r->_curlPrep();
+    $r->_uriPrep();
+    self::assertEquals("http://google.com?a=b", $r->uri);
   }
 
   // /**
