@@ -37,7 +37,7 @@ class XmlHandler extends MimeHandlerAdapter
   /**
    * @param string $body
    *
-   * @return mixed
+   * @return null|\SimpleXMLElement
    * @throws \Exception if unable to parse
    */
   public function parse($body)
