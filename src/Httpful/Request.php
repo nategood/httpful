@@ -852,6 +852,22 @@ class Request
   }
 
   /**
+   * @return Request
+   */
+  public function sendsJson()
+  {
+    return $this->contentType(Mime::JSON);
+  }
+
+  /**
+   * @return Request
+   */
+  public function sendsXml()
+  {
+    return $this->contentType(Mime::XML);
+  }
+
+  /**
    * Do we strictly enforce SSL verification?
    *
    * @param bool $strict
@@ -1209,7 +1225,7 @@ class Request
     // This method supports the sends* methods
     // like sendsJSON, sendsForm
     if (0 === strpos($method, 'sends')) {
-      $mime = strtolower(substr($method, 5));
+      $mime = substr($method, 5);
       if (Mime::supportsMimeType($mime)) {
         $this->sends(Mime::getFullMime($mime));
 
@@ -1217,7 +1233,7 @@ class Request
       }
     }
     if (0 === strpos($method, 'expects')) {
-      $mime = strtolower(substr($method, 7));
+      $mime = substr($method, 7);
       if (Mime::supportsMimeType($mime)) {
         $this->expects(Mime::getFullMime($mime));
 
