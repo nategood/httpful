@@ -11,12 +11,16 @@
     "api",
     "requests"
   ],
-  "version": "0.2.20",
   "authors": [
     {
       "name": "Nate Good",
       "email": "me@nategood.com",
       "homepage": "http://nategood.com"
+    },
+    {
+      "name": "Lars Moelleken",
+      "email": "lars@moelleken.org",
+      "homepage": "http://moelleken.org/"
     }
   ],
   "require": {
