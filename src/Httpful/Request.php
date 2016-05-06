@@ -361,7 +361,7 @@ class Request
   {
     if ($follow === true) {
       $this->max_redirects = self::MAX_REDIRECTS_DEFAULT;
-    } else if ($follow === false) {
+    } elseif ($follow === false) {
       $this->max_redirects = 0;
     } else {
       $this->max_redirects = max(0, $follow);
