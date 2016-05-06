@@ -11,15 +11,29 @@ use Httpful\Response\Headers;
  */
 class Response
 {
-
+  /**
+   * @var mixed
+   */
   public $body;
 
+  /**
+   * @var string
+   */
   public $raw_body;
 
+  /**
+   * @var Headers
+   */
   public $headers;
 
+  /**
+   * @var string
+   */
   public $raw_headers;
 
+  /**
+   * @var Request
+   */
   public $request;
 
   /**
@@ -27,8 +41,19 @@ class Response
    */
   public $code = 0;
 
+  /**
+   * @var string
+   */
+  public $reason;
+
+  /**
+   * @var string
+   */
   public $content_type;
 
+  /**
+   * @var string
+   */
   public $parent_type;
 
   /**
@@ -65,6 +90,7 @@ class Response
     $this->meta_data = $meta_data;
 
     $this->code = $this->_parseCode($headers);
+    $this->reason = Http::reason($this->code);
     $this->headers = Response\Headers::fromString($headers);
 
     $this->_interpretHeaders();
