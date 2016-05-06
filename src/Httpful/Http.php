@@ -100,7 +100,7 @@ class Http
     $codes = self::responseCodes();
 
     if (!array_key_exists($code, $codes)) {
-      throw new \Exception("Unable to parse response code from HTTP response due to malformed response. Code: " . $code);
+      throw new \Exception('Unable to parse response code from HTTP response due to malformed response. Code: ' . $code);
     }
 
     return $codes[$code];
