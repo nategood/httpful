@@ -398,6 +398,7 @@ class Request
     $response = $this->buildResponse($result);
 
     curl_close($this->_ch);
+    unset($this->_ch);
 
     return $response;
   }
@@ -1322,7 +1323,7 @@ class Request
    */
   private function _error($error)
   {
-    // TODO add in support for various Loggers that follow
+    // TODO: add in support for various Loggers that follow
 
     // PSR 3 https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-3-logger-interface.md
     if (isset($this->error_callback)) {
