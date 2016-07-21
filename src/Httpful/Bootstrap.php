@@ -55,8 +55,8 @@ class Bootstrap
     }
 
     /**
-     * @param string base
-     * @param string classname
+     * @param string $base
+     * @param string $classname
      */
     private static function _autoload($base, $classname)
     {

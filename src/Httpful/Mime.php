@@ -41,8 +41,8 @@ class Mime
     /**
      * Get the full Mime Type name from a "short name".
      * Returns the short if no mapping was found.
+     * @param string $short_name common name for mime type (e.g. json)
      * @return string full mime type (e.g. application/json)
-     * @param string common name for mime type (e.g. json)
      */
     public static function getFullMime($short_name)
     {
@@ -50,8 +50,8 @@ class Mime
     }
 
     /**
-     * @return bool
      * @param string $short_name
+     * @return bool
      */
     public static function supportsMimeType($short_name)
     {

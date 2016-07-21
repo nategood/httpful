@@ -24,6 +24,7 @@ class Response
            $is_mime_personal = false;
 
     private $parsers;
+
     /**
      * @param string $body
      * @param string $headers
@@ -64,7 +65,7 @@ class Response
     }
 
     /**
-     * @return return bool
+     * @return bool
      */
     public function hasBody()
     {
@@ -75,8 +76,8 @@ class Response
      * Parse the response into a clean data structure
      * (most often an associative array) based on the expected
      * Mime type.
-     * @return array|string|object the response parse accordingly
      * @param string Http response body
+     * @return array|string|object the response parse accordingly
      */
     public function _parse($body)
     {
@@ -109,8 +110,8 @@ class Response
     /**
      * Parse text headers from response into
      * array of key value pairs
-     * @return array parse headers
      * @param string $headers raw headers
+     * @return array parse headers
      */
     public function _parseHeaders($headers)
     {

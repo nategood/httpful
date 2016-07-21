@@ -19,14 +19,17 @@ Features
 Here's something to whet your appetite.  Search the twitter API for tweets containing "#PHP".  Include a trivial header for the heck of it.  Notice that the library automatically interprets the response as JSON (can override this if desired) and parses it as an array of objects.
 
 ```php
-$url = "http://search.twitter.com/search.json?q=" . urlencode('#PHP');
-$response = Request::get($url)
+
+// Make a request to the GitHub API with a custom
+// header of "X-Trvial-Header: Just as a demo".
+$url = "https://api.github.com/users/nategood";
+$response = \Httpful\Request::get($url)
+    ->expectsJson()
     ->withXTrivialHeader('Just as a demo')
     ->send();
 
-foreach ($response->body->results as $tweet) {
-    echo "@{$tweet->from_user} tweets \"{$tweet->text}\"\n";
-}
+echo "{$response->body->name} joined GitHub on " .
+                        date('M jS', strtotime($response->body->created_at)) ."\n";
 ```
 
 # Installation
@@ -55,6 +58,12 @@ Httpful is PSR-0 compliant and can be installed using [composer](http://getcompo
 
 Because Httpful is PSR-0 compliant, you can also just clone the Httpful repository and use a PSR-0 compatible autoloader to load the library, like [Symfony's](http://symfony.com/doc/current/components/class_loader.html). Alternatively you can use the PSR-0 compliant autoloader included with the Httpful (simply `require("bootstrap.php")`).
 
+## Build your Phar
+
+If you want the build your own [Phar Archive](http://php.net/manual/en/book.phar.php) you can use the `build` script included.
+Make sure that your `php.ini` has the *Off* or 0 value for the `phar.readonly` setting.
+Also you need to create ad empty `downloads` directory in the project root.
+
 # Show Me More!
 
 You can checkout the [Httpful Landing Page](http://phphttpclient.com) for more info including many examples and  [documentation](http://phphttpclient.com/docs).
@@ -71,6 +80,10 @@ Httpful highly encourages sending in pull requests.  When submitting a pull requ
  - Include commenting where appropriate and add a descriptive pull request message
 
 # Changelog
+
+## 0.2.20
+
+ - MINOR Move Response building logic into separate function [PR #193](https://github.com/nategood/httpful/pull/193)
 
 ## 0.2.19
 

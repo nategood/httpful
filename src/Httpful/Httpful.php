@@ -3,14 +3,14 @@
 namespace Httpful;
 
 class Httpful {
-    const VERSION = '0.2.19';
+    const VERSION = '0.2.20';
 
     private static $mimeRegistrar = array();
     private static $default = null;
 
     /**
-     * @param string $mime_type
-     * @param MimeHandlerAdapter $handler
+     * @param string $mimeType
+     * @param \Httpful\Handlers\MimeHandlerAdapter $handler
      */
     public static function register($mimeType, \Httpful\Handlers\MimeHandlerAdapter $handler)
     {
@@ -18,8 +18,8 @@ class Httpful {
     }
 
     /**
-     * @param string $mime_type defaults to MimeHandlerAdapter
-     * @return MimeHandlerAdapter
+     * @param string $mimeType defaults to MimeHandlerAdapter
+     * @return \Httpful\Handlers\MimeHandlerAdapter
      */
     public static function get($mimeType = null)
     {
@@ -37,6 +37,7 @@ class Httpful {
     /**
      * Does this particular Mime Type have a parser registered
      * for it?
+     * @param string $mimeType
      * @return bool
      */
     public static function hasParserRegistered($mimeType)
