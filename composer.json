@@ -1,5 +1,5 @@
 {
-    "name": "bluehaoran/httpful",
+    "name": "nategood/httpful",
     "description": "A Readable, Chainable, REST friendly, PHP HTTP Client",
     "homepage": "http://github.com/nategood/httpful",
     "license": "MIT",
