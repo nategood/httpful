@@ -13,7 +13,7 @@ use Httpful\Exception\ConnectionErrorException;
  * itself very nicely to "chaining".  You will see several "alias"
  * methods: more readable method definitions that wrap
  * their more concise counterparts.  You will also notice
- * no public constructor.  This two adds to the readability
+ * no public constructor.  This too adds to the readability
  * and "chainabilty" of the library.
  *
  * @author Nate Good <me@nategood.com>
@@ -760,7 +760,7 @@ class Request
         // recusion.  Do not use this syntax elsewhere.
         // It goes against the whole readability
         // and transparency idea.
-        self::$_template = new Request(array('method' => Http::GET));
+        self::$_template = new static(array('method' => Http::GET));
 
         // This is more like it...
         self::$_template
@@ -811,7 +811,7 @@ class Request
         if (!isset(self::$_template))
             self::_initializeDefaults();
 
-        $request = new Request();
+        $request = new static();
         return $request
                ->_setDefaults()
                ->method($method)
