@@ -23,6 +23,7 @@ class JsonHandler extends MimeHandlerAdapter
     public function parse($body)
     {
         $body = $this->stripBom($body);
+        $body = trim($body);
         if (empty($body))
             return null;
         $parsed = json_decode($body, $this->decode_as_array);
