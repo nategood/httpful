@@ -805,6 +805,8 @@ class Request
         }
       }
     }
+    finfo_close($finfo);
+    
     $this->sendsType(Mime::UPLOAD);
 
     return $this;
