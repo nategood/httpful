@@ -71,9 +71,9 @@ final class Headers implements \ArrayAccess, \Countable
   {
     if (isset($this->headers[$offset])) {
       return $this->headers[$offset];
-    } else {
-      return null;
     }
+
+    return null;
   }
 
   /**

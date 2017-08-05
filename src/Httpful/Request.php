@@ -982,9 +982,9 @@ class Request
         getenv('http_proxy')
     ) {
       return true;
-    } else {
-      return false;
     }
+
+    return false;
   }
 
   /**

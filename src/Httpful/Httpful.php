@@ -11,7 +11,7 @@ use Httpful\Handlers\MimeHandlerAdapter;
  */
 class Httpful
 {
-  const VERSION = '0.2.20';
+  const VERSION = '0.2.27';
 
   /**
    * @var array
