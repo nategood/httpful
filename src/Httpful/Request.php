@@ -488,7 +488,12 @@ class Request
      */
     public function hasProxy()
     {
-        return isset($this->additional_curl_opts[CURLOPT_PROXY]) && is_string($this->additional_curl_opts[CURLOPT_PROXY]);
+        /* We must be aware that proxy variables could come from environment also.
+           In curl extension, http proxy can be specified not only via CURLOPT_PROXY option, 
+           but also by environment variable called http_proxy.
+        */
+        return isset($this->additional_curl_opts[CURLOPT_PROXY]) && is_string($this->additional_curl_opts[CURLOPT_PROXY]) ||
+            getenv("http_proxy");
     }
 
     /**
