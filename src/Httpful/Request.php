@@ -63,13 +63,13 @@ class Request
     private static $_template;
 
     /**
-     * We made the constructor private to force the factory style.  This was
+     * We made the constructor protected to force the factory style.  This was
      * done to keep the syntax cleaner and better the support the idea of
      * "default templates".  Very basic and flexible as it is only intended
      * for internal use.
      * @param array $attrs hash of initial attribute values
      */
-    private function __construct($attrs = null)
+    protected function __construct($attrs = null)
     {
         if (!is_array($attrs)) return;
         foreach ($attrs as $attr => $value) {
