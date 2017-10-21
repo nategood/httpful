@@ -1,3 +1,36 @@
+# About this fork
+I made this fork mainly because I (and Ide) don't like to use magic methods for setting of variables. 
+Plus some additional shortcuts have been added, i.e. 
+
+```php
+
+// Shortcut for setting of user agent
+$client->setUserAgent("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.1");
+
+//explicit definition for expects
+$client->expectsJson()
+$client->expectsXml()
+$client->expectsXhtml()
+etc...
+
+```
+
+## Usage:
+
+Add to your composer json 
+```
+{
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/alekc/httpful"
+        }
+    ],
+    "require": {
+        "nategood/httpful": "dev-stable"
+    }
+}
+```
 # Httpful
 
 [![Build Status](https://secure.travis-ci.org/nategood/httpful.png?branch=master)](http://travis-ci.org/nategood/httpful) [![Total Downloads](https://poser.pugx.org/nategood/httpful/downloads.png)](https://packagist.org/packages/nategood/httpful)
