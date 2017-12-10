@@ -1545,26 +1545,26 @@ class Request
    */
   public function _uriPrep()
   {
-    $url = parse_url($this->uri);
+    $url = \parse_url($this->uri);
     $originalParams = array();
 
     if (
       isset($url['query'])
       &&
-      \count($url['query'])
+      $url['query']
     ) {
-      parse_str($url['query'], $originalParams);
+      \parse_str($url['query'], $originalParams);
     }
 
-    $params = array_merge($originalParams, (array)$this->params);
+    $params = \array_merge($originalParams, (array)$this->params);
 
-    $queryString = http_build_query($params);
+    $queryString = \http_build_query($params);
 
-    if (strpos($this->uri, '?') !== false) {
-      $this->uri = substr(
+    if (\strpos($this->uri, '?') !== false) {
+      $this->uri = \substr(
         $this->uri,
         0,
-        strpos($this->uri, '?')
+        \strpos($this->uri, '?')
       );
     }
 

@@ -299,14 +299,17 @@ X-My-Header:Value2\r\n";
     self::assertSame('object', gettype($sxe));
     self::assertSame('SimpleXMLElement', get_class($sxe));
     $bools = $sxe->xpath('/stdClass/boolProp');
-    list(, $bool) = each($bools);
-    self::assertSame('TRUE', (string)$bool);
+    foreach ($bools as $bool) {
+      self::assertSame('TRUE', (string)$bool);
+    }
     $ints = $sxe->xpath('/stdClass/arrayProp/array/k1/myClass/intProp');
-    list(, $int) = each($ints);
-    self::assertSame('2', (string)$int);
+    foreach ($ints as $int) {
+      self::assertSame('2', (string)$int);
+    }
     $strings = $sxe->xpath('/stdClass/stringProp');
-    list(, $string) = each($strings);
-    self::assertSame('a string', (string)$string);
+    foreach ($strings as $string) {
+      self::assertSame('a string', (string)$string);
+    }
   }
 
   public function testCsvResponseParse()
