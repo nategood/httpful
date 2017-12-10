@@ -28,7 +28,7 @@ final class Headers implements \ArrayAccess, \Countable
    *
    * @return Headers
    */
-  public static function fromString($string): Headers
+  public static function fromString($string): self
   {
     $headers = preg_split("/(\r|\n)+/", $string, -1, \PREG_SPLIT_NO_EMPTY);
     $parse_headers = array();

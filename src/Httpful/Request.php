@@ -227,7 +227,7 @@ class Request
    *
    * @param Request $template
    */
-  public static function ini(Request $template)
+  public static function ini(self $template)
   {
     self::$_template = clone $template;
   }
@@ -307,7 +307,7 @@ class Request
    *
    * @return Request
    */
-  public function timeout($timeout): Request
+  public function timeout($timeout): self
   {
     $this->timeout = $timeout;
 
@@ -321,7 +321,7 @@ class Request
    *
    * @return Request
    */
-  public function timeoutIn($seconds): Request
+  public function timeoutIn($seconds): self
   {
     return $this->timeout($seconds);
   }
@@ -336,7 +336,7 @@ class Request
    *
    * @throws \InvalidArgumentException
    */
-  public function setConnectionTimeout($connection_timeout): Request
+  public function setConnectionTimeout($connection_timeout): self
   {
     if (!preg_match('/^\d+(\.\d+)?/', $connection_timeout)) {
       throw new \InvalidArgumentException(
@@ -357,7 +357,7 @@ class Request
    *
    * @return Request
    */
-  public function followRedirects($follow = true): Request
+  public function followRedirects($follow = true): self
   {
     if ($follow === true) {
       $this->max_redirects = self::MAX_REDIRECTS_DEFAULT;
@@ -376,7 +376,7 @@ class Request
    * @see Request::followRedirects()
    * @return Request
    */
-  public function doNotFollowRedirects(): Request
+  public function doNotFollowRedirects(): self
   {
     return $this->followRedirects(false);
   }
@@ -434,7 +434,7 @@ class Request
    *
    * @return Request
    */
-  public function basicAuth($username, $password): Request
+  public function basicAuth($username, $password): self
   {
     $this->username = $username;
     $this->password = $password;
@@ -450,7 +450,7 @@ class Request
    *
    * @return Request
    */
-  public function authenticateWith($username, $password): Request
+  public function authenticateWith($username, $password): self
   {
     return $this->basicAuth($username, $password);
   }
@@ -463,7 +463,7 @@ class Request
    *
    * @return Request
    */
-  public function authenticateWithBasic($username, $password): Request
+  public function authenticateWithBasic($username, $password): self
   {
     return $this->basicAuth($username, $password);
   }
@@ -476,7 +476,7 @@ class Request
    *
    * @return Request
    */
-  public function authenticateWithNTLM($username, $password): Request
+  public function authenticateWithNTLM($username, $password): self
   {
     return $this->ntlmAuth($username, $password);
   }
@@ -487,7 +487,7 @@ class Request
    *
    * @return Request
    */
-  public function ntlmAuth($username, $password): Request
+  public function ntlmAuth($username, $password): self
   {
     $this->addOnCurlOption(CURLOPT_HTTPAUTH, CURLAUTH_NTLM);
 
@@ -502,7 +502,7 @@ class Request
    *
    * @return Request
    */
-  public function digestAuth($username, $password): Request
+  public function digestAuth($username, $password): self
   {
     $this->addOnCurlOption(CURLOPT_HTTPAUTH, CURLAUTH_DIGEST);
 
@@ -517,7 +517,7 @@ class Request
    *
    * @return Request
    */
-  public function authenticateWithDigest($username, $password): Request
+  public function authenticateWithDigest($username, $password): self
   {
     return $this->digestAuth($username, $password);
   }
@@ -540,7 +540,7 @@ class Request
    *
    * @return Request
    */
-  public function clientSideCert($cert, $key, $passphrase = null, $encoding = 'PEM'): Request
+  public function clientSideCert($cert, $key, $passphrase = null, $encoding = 'PEM'): self
   {
     $this->client_cert = $cert;
     $this->client_key = $key;
@@ -562,7 +562,7 @@ class Request
    *
    * @return Request
    */
-  public function authenticateWithCert($cert, $key, $passphrase = null, $encoding = 'PEM'): Request
+  public function authenticateWithCert($cert, $key, $passphrase = null, $encoding = 'PEM'): self
   {
     return $this->clientSideCert($cert, $key, $passphrase, $encoding);
   }
@@ -576,7 +576,7 @@ class Request
    *
    * @return Request
    */
-  public function body($payload, $mimeType = null): Request
+  public function body($payload, $mimeType = null): self
   {
     $this->mime($mimeType);
     $this->payload = $payload;
@@ -595,7 +595,7 @@ class Request
    *
    * @return Request this
    */
-  public function params(array $params): Request
+  public function params(array $params): self
   {
     $this->params = array_merge($this->params, $params);
 
@@ -610,7 +610,7 @@ class Request
    *
    * @return Request this
    */
-  public function param($key, $value): Request
+  public function param($key, $value): self
   {
     if ($key && $value) {
       $this->params[$key] = $value;
@@ -627,7 +627,7 @@ class Request
    *
    * @return Request
    */
-  public function mime($mime): Request
+  public function mime($mime): self
   {
     if (empty($mime)) {
       return $this;
@@ -646,7 +646,7 @@ class Request
    *
    * @return Request
    */
-  public function sendsAndExpectsType($mime): Request
+  public function sendsAndExpectsType($mime): self
   {
     return $this->mime($mime);
   }
@@ -656,7 +656,7 @@ class Request
    *
    * @return Request
    */
-  public function sendsAndExpects($mime): Request
+  public function sendsAndExpects($mime): self
   {
     return $this->mime($mime);
   }
@@ -669,7 +669,7 @@ class Request
    *
    * @return Request
    */
-  public function method($method): Request
+  public function method($method): self
   {
     if (empty($method)) {
       return $this;
@@ -684,7 +684,7 @@ class Request
    *
    * @return Request
    */
-  public function expects($mime): Request
+  public function expects($mime): self
   {
     if (empty($mime)) {
       return $this;
@@ -702,7 +702,7 @@ class Request
    *
    * @return Request
    */
-  public function expectsType($mime): Request
+  public function expectsType($mime): self
   {
     return $this->expects($mime);
   }
@@ -710,7 +710,7 @@ class Request
   /**
    * @return Request
    */
-  public function expectsJson(): Request
+  public function expectsJson(): self
   {
     return $this->expects(Mime::JSON);
   }
@@ -718,7 +718,7 @@ class Request
   /**
    * @return Request
    */
-  public function expectsXml(): Request
+  public function expectsXml(): self
   {
     return $this->expects(Mime::XML);
   }
@@ -726,7 +726,7 @@ class Request
   /**
    * @return Request
    */
-  public function expectsXhtml(): Request
+  public function expectsXhtml(): self
   {
     return $this->expects(Mime::XHTML);
   }
@@ -734,7 +734,7 @@ class Request
   /**
    * @return Request
    */
-  public function expectsForm(): Request
+  public function expectsForm(): self
   {
     return $this->expects(Mime::FORM);
   }
@@ -742,7 +742,7 @@ class Request
   /**
    * @return Request
    */
-  public function expectsUpload(): Request
+  public function expectsUpload(): self
   {
     return $this->expects(Mime::UPLOAD);
   }
@@ -750,7 +750,7 @@ class Request
   /**
    * @return Request
    */
-  public function expectsPlain(): Request
+  public function expectsPlain(): self
   {
     return $this->expects(Mime::PLAIN);
   }
@@ -758,7 +758,7 @@ class Request
   /**
    * @return Request
    */
-  public function expectsJs(): Request
+  public function expectsJs(): self
   {
     return $this->expects(Mime::JS);
   }
@@ -766,7 +766,7 @@ class Request
   /**
    * @return Request
    */
-  public function expectsHtml(): Request
+  public function expectsHtml(): self
   {
     return $this->expects(Mime::HTML);
   }
@@ -774,7 +774,7 @@ class Request
   /**
    * @return Request
    */
-  public function expectsYaml(): Request
+  public function expectsYaml(): self
   {
     return $this->expects(Mime::YAML);
   }
@@ -782,7 +782,7 @@ class Request
   /**
    * @return Request
    */
-  public function expectsCsv(): Request
+  public function expectsCsv(): self
   {
     return $this->expects(Mime::CSV);
   }
@@ -818,7 +818,7 @@ class Request
    *
    * @return Request
    */
-  public function contentType($mime): Request
+  public function contentType($mime): self
   {
     if (empty($mime)) {
       return $this;
@@ -838,7 +838,7 @@ class Request
    *
    * @return Request
    */
-  public function sends($mime): Request
+  public function sends($mime): self
   {
     return $this->contentType($mime);
   }
@@ -850,7 +850,7 @@ class Request
    *
    * @return Request
    */
-  public function sendsType($mime): Request
+  public function sendsType($mime): self
   {
     return $this->contentType($mime);
   }
@@ -858,7 +858,7 @@ class Request
   /**
    * @return Request
    */
-  public function sendsJson(): Request
+  public function sendsJson(): self
   {
     return $this->contentType(Mime::JSON);
   }
@@ -866,7 +866,7 @@ class Request
   /**
    * @return Request
    */
-  public function sendsXml(): Request
+  public function sendsXml(): self
   {
     return $this->contentType(Mime::XML);
   }
@@ -878,7 +878,7 @@ class Request
    *
    * @return Request
    */
-  public function strictSSL($strict): Request
+  public function strictSSL($strict): self
   {
     $this->strict_ssl = $strict;
 
@@ -888,7 +888,7 @@ class Request
   /**
    * @return Request
    */
-  public function withoutStrictSSL(): Request
+  public function withoutStrictSSL(): self
   {
     return $this->strictSSL(false);
   }
@@ -896,7 +896,7 @@ class Request
   /**
    * @return Request
    */
-  public function withStrictSSL(): Request
+  public function withStrictSSL(): self
   {
     return $this->strictSSL(true);
   }
@@ -914,7 +914,7 @@ class Request
    *
    * @return Request
    */
-  public function useProxy($proxy_host, $proxy_port = 80, $auth_type = null, $auth_username = null, $auth_password = null, $proxy_type = Proxy::HTTP): Request
+  public function useProxy($proxy_host, $proxy_port = 80, $auth_type = null, $auth_username = null, $auth_password = null, $proxy_type = Proxy::HTTP): self
   {
     $this->addOnCurlOption(CURLOPT_PROXY, "{$proxy_host}:{$proxy_port}");
     $this->addOnCurlOption(CURLOPT_PROXYTYPE, $proxy_type);
@@ -940,7 +940,7 @@ class Request
    *
    * @return Request
    */
-  public function useSocks4Proxy($proxy_host, $proxy_port = 80, $auth_type = null, $auth_username = null, $auth_password = null): Request
+  public function useSocks4Proxy($proxy_host, $proxy_port = 80, $auth_type = null, $auth_username = null, $auth_password = null): self
   {
     return $this->useProxy($proxy_host, $proxy_port, $auth_type, $auth_username, $auth_password, Proxy::SOCKS4);
   }
@@ -958,7 +958,7 @@ class Request
    *
    * @return Request
    */
-  public function useSocks5Proxy($proxy_host, $proxy_port = 80, $auth_type = null, $auth_username = null, $auth_password = null): Request
+  public function useSocks5Proxy($proxy_host, $proxy_port = 80, $auth_type = null, $auth_username = null, $auth_password = null): self
   {
     return $this->useProxy($proxy_host, $proxy_port, $auth_type, $auth_username, $auth_password, Proxy::SOCKS5);
   }
@@ -1005,7 +1005,7 @@ class Request
    *
    * @return Request
    */
-  public function serializePayload($mode): Request
+  public function serializePayload($mode): self
   {
     $this->serialize_payload_method = $mode;
 
@@ -1016,7 +1016,7 @@ class Request
    * @see Request::serializePayload()
    * @return Request
    */
-  public function neverSerializePayload(): Request
+  public function neverSerializePayload(): self
   {
     return $this->serializePayload(self::SERIALIZE_PAYLOAD_NEVER);
   }
@@ -1027,7 +1027,7 @@ class Request
    * @see Request::serializePayload()
    * @return Request
    */
-  public function smartSerializePayload(): Request
+  public function smartSerializePayload(): self
   {
     return $this->serializePayload(self::SERIALIZE_PAYLOAD_SMART);
   }
@@ -1036,7 +1036,7 @@ class Request
    * @see Request::serializePayload()
    * @return Request
    */
-  public function alwaysSerializePayload(): Request
+  public function alwaysSerializePayload(): self
   {
     return $this->serializePayload(self::SERIALIZE_PAYLOAD_ALWAYS);
   }
@@ -1053,7 +1053,7 @@ class Request
    *
    * @return Request
    */
-  public function addHeader($header_name, $value): Request
+  public function addHeader($header_name, $value): self
   {
     $this->headers[$header_name] = $value;
 
@@ -1070,7 +1070,7 @@ class Request
    *
    * @return Request
    */
-  public function addHeaders(array $headers): Request
+  public function addHeaders(array $headers): self
   {
     foreach ($headers as $header => $value) {
       $this->addHeader($header, $value);
@@ -1087,7 +1087,7 @@ class Request
    *
    * @return Request
    */
-  public function autoParse($auto_parse = true): Request
+  public function autoParse($auto_parse = true): self
   {
     $this->auto_parse = $auto_parse;
 
@@ -1098,7 +1098,7 @@ class Request
    * @see Request::autoParse()
    * @return Request
    */
-  public function withoutAutoParsing(): Request
+  public function withoutAutoParsing(): self
   {
     return $this->autoParse(false);
   }
@@ -1107,7 +1107,7 @@ class Request
    * @see Request::autoParse()
    * @return Request
    */
-  public function withAutoParsing(): Request
+  public function withAutoParsing(): self
   {
     return $this->autoParse(true);
   }
@@ -1120,7 +1120,7 @@ class Request
    *
    * @return Request
    */
-  public function parseWith(\Closure $callback): Request
+  public function parseWith(\Closure $callback): self
   {
     $this->parse_callback = $callback;
 
@@ -1134,7 +1134,7 @@ class Request
    *
    * @return Request
    */
-  public function parseResponsesWith(\Closure $callback): Request
+  public function parseResponsesWith(\Closure $callback): self
   {
     return $this->parseWith($callback);
   }
@@ -1147,7 +1147,7 @@ class Request
    *
    * @return Request
    */
-  public function whenError(\Closure $callback): Request
+  public function whenError(\Closure $callback): self
   {
     $this->error_callback = $callback;
 
@@ -1162,7 +1162,7 @@ class Request
    *
    * @return Request
    */
-  public function beforeSend(\Closure $callback): Request
+  public function beforeSend(\Closure $callback): self
   {
     $this->send_callback = $callback;
 
@@ -1182,7 +1182,7 @@ class Request
    *
    * @return Request
    */
-  public function registerPayloadSerializer($mime, \Closure $callback): Request
+  public function registerPayloadSerializer($mime, \Closure $callback): self
   {
     $this->payload_serializers[Mime::getFullMime($mime)] = $callback;
 
@@ -1196,7 +1196,7 @@ class Request
    *
    * @return Request
    */
-  public function serializePayloadWith(\Closure $callback): Request
+  public function serializePayloadWith(\Closure $callback): self
   {
     return $this->registerPayloadSerializer('*', $callback);
   }
@@ -1301,7 +1301,7 @@ class Request
    *
    * @return Request
    */
-  private function _setDefaults(): Request
+  private function _setDefaults(): self
   {
     if (!isset(self::$_template)) {
       self::_initializeDefaults();
@@ -1340,7 +1340,7 @@ class Request
    *
    * @return Request
    */
-  public static function init($method = null, $mime = null): Request
+  public static function init($method = null, $mime = null): self
   {
     // Setup our handlers, can call it here as it's idempotent
     Bootstrap::init();
@@ -1367,7 +1367,7 @@ class Request
    * @return Request
    * @throws \Exception
    */
-  public function _curlPrep(): Request
+  public function _curlPrep(): self
   {
     // Check for required stuff
     if (!isset($this->uri)) {
@@ -1620,7 +1620,7 @@ class Request
    *
    * @return Request
    */
-  public function setUserAgent($userAgent): Request
+  public function setUserAgent($userAgent): self
   {
     return $this->addHeader('User-Agent', $userAgent);
   }
@@ -1687,7 +1687,7 @@ class Request
    *
    * @return Request
    */
-  public function addOnCurlOption($curlopt, $curloptval): Request
+  public function addOnCurlOption($curlopt, $curloptval): self
   {
     $this->additional_curl_opts[$curlopt] = $curloptval;
 
@@ -1740,7 +1740,7 @@ class Request
    *
    * @return Request
    */
-  public static function get($uri, $mime = null): Request
+  public static function get($uri, $mime = null): self
   {
     return self::init(Http::GET)->uri($uri)->mime($mime);
   }
@@ -1769,7 +1769,7 @@ class Request
    *
    * @return Request
    */
-  public static function post($uri, $payload = null, $mime = null): Request
+  public static function post($uri, $payload = null, $mime = null): self
   {
     return self::init(Http::POST)->uri($uri)->body($payload, $mime);
   }
@@ -1783,7 +1783,7 @@ class Request
    *
    * @return Request
    */
-  public static function put($uri, $payload = null, $mime = null): Request
+  public static function put($uri, $payload = null, $mime = null): self
   {
     return self::init(Http::PUT)->uri($uri)->body($payload, $mime);
   }
@@ -1797,7 +1797,7 @@ class Request
    *
    * @return Request
    */
-  public static function patch($uri, $payload = null, $mime = null): Request
+  public static function patch($uri, $payload = null, $mime = null): self
   {
     return self::init(Http::PATCH)->uri($uri)->body($payload, $mime);
   }
@@ -1810,7 +1810,7 @@ class Request
    *
    * @return Request
    */
-  public static function delete($uri, $mime = null): Request
+  public static function delete($uri, $mime = null): self
   {
     return self::init(Http::DELETE)->uri($uri)->mime($mime);
   }
@@ -1822,7 +1822,7 @@ class Request
    *
    * @return Request
    */
-  public static function head($uri): Request
+  public static function head($uri): self
   {
     return self::init(Http::HEAD)->uri($uri);
   }
@@ -1834,7 +1834,7 @@ class Request
    *
    * @return Request
    */
-  public static function options($uri): Request
+  public static function options($uri): self
   {
     return self::init(Http::OPTIONS)->uri($uri);
   }
