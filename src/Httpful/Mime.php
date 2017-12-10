@@ -47,7 +47,7 @@ class Mime
    *
    * @return string full mime type (e.g. application/json)
    */
-  public static function getFullMime($short_name)
+  public static function getFullMime($short_name): string
   {
     return array_key_exists($short_name, self::$mimes) ? self::$mimes[$short_name] : $short_name;
   }
@@ -57,7 +57,7 @@ class Mime
    *
    * @return bool
    */
-  public static function supportsMimeType($short_name)
+  public static function supportsMimeType($short_name): bool
   {
     return array_key_exists($short_name, self::$mimes);
   }

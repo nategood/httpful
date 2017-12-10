@@ -50,7 +50,7 @@ class ConnectionErrorException extends \Exception
   /**
    * @return string
    */
-  public function getCurlErrorNumber()
+  public function getCurlErrorNumber(): string
   {
     return $this->curlErrorNumber;
   }
@@ -70,7 +70,7 @@ class ConnectionErrorException extends \Exception
   /**
    * @return string
    */
-  public function getCurlErrorString()
+  public function getCurlErrorString(): string
   {
     return $this->curlErrorString;
   }
@@ -90,7 +90,7 @@ class ConnectionErrorException extends \Exception
   /**
    * @return bool
    */
-  public function wasTimeout()
+  public function wasTimeout(): bool
   {
     return $this->code === CURLE_OPERATION_TIMEOUTED;
   }

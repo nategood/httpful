@@ -24,7 +24,7 @@ class Bootstrap
    */
   public static function init()
   {
-    spl_autoload_register(array('\Httpful\Bootstrap', 'autoload'));
+    \spl_autoload_register(array('\Httpful\Bootstrap', 'autoload'));
     self::registerHandlers();
   }
 
@@ -35,7 +35,7 @@ class Bootstrap
    */
   public static function autoload($classname)
   {
-    self::_autoload(dirname(__DIR__), $classname);
+    self::_autoload(\dirname(__DIR__), $classname);
   }
 
   /**

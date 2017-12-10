@@ -51,7 +51,7 @@ class MimeHandlerAdapter
    *
    * @return string
    */
-  public function serialize($payload)
+  public function serialize($payload): string
   {
     return (string)$payload;
   }
@@ -61,7 +61,7 @@ class MimeHandlerAdapter
    *
    * @return string
    */
-  protected function stripBom($body)
+  protected function stripBom($body): string
   {
     return UTF8::removeBOM($body);
   }

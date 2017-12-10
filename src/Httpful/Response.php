@@ -111,7 +111,7 @@ class Response
    *
    * @return bool Did we receive a 4xx or 5xx?
    */
-  public function hasErrors()
+  public function hasErrors(): bool
   {
     return $this->code >= 400;
   }
@@ -119,7 +119,7 @@ class Response
   /**
    * @return bool
    */
-  public function hasBody()
+  public function hasBody(): bool
   {
     return !empty($this->body);
   }
@@ -143,7 +143,7 @@ class Response
 
     // If provided, use custom parsing callback
     if (isset($this->request->parse_callback)) {
-      return call_user_func($this->request->parse_callback, $body);
+      return \call_user_func($this->request->parse_callback, $body);
     }
 
     // Decide how to parse the body of the response in the following order
@@ -169,7 +169,7 @@ class Response
    *
    * @return array parse headers
    */
-  public function _parseHeaders($headers)
+  public function _parseHeaders($headers): array
   {
     return Headers::fromString($headers)->toArray();
   }
@@ -180,11 +180,11 @@ class Response
    * @return int
    * @throws \Exception
    */
-  public function _parseCode($headers)
+  public function _parseCode($headers): int
   {
     $end = strpos($headers, "\r\n");
     if ($end === false) {
-      $end = strlen($headers);
+      $end = \strlen($headers);
     }
 
     $parts = explode(' ', substr($headers, 0, $end));
@@ -192,7 +192,7 @@ class Response
     if (
         !is_numeric($parts[1])
         ||
-        count($parts) < 2
+        \count($parts) < 2
     ) {
       throw new \Exception('Unable to parse response code from HTTP response due to malformed response');
     }
@@ -207,11 +207,11 @@ class Response
   public function _interpretHeaders()
   {
     // Parse the Content-Type and charset
-    $content_type = isset($this->headers['Content-Type']) ? $this->headers['Content-Type'] : '';
+    $content_type = $this->headers['Content-Type'] ?? '';
     $content_type = explode(';', $content_type);
 
     $this->content_type = $content_type[0];
-    if (count($content_type) == 2 && strpos($content_type[1], '=') !== false) {
+    if (\count($content_type) == 2 && strpos($content_type[1], '=') !== false) {
       /** @noinspection PhpUnusedLocalVariableInspection */
       list($nill, $this->charset) = explode('=', $content_type[1]);
     }

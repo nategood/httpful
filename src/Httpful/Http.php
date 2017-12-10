@@ -19,7 +19,7 @@ class Http
   /**
    * @return array of HTTP method strings
    */
-  public static function safeMethods()
+  public static function safeMethods(): array
   {
     return array(self::HEAD, self::GET, self::OPTIONS, self::TRACE);
   }
@@ -29,9 +29,9 @@ class Http
    *
    * @return bool
    */
-  public static function isSafeMethod($method)
+  public static function isSafeMethod($method): bool
   {
-    return in_array($method, self::safeMethods(), true);
+    return \in_array($method, self::safeMethods(), true);
   }
 
   /**
@@ -39,15 +39,15 @@ class Http
    *
    * @return bool
    */
-  public static function isUnsafeMethod($method)
+  public static function isUnsafeMethod($method): bool
   {
-    return !in_array($method, self::safeMethods(), true);
+    return !\in_array($method, self::safeMethods(), true);
   }
 
   /**
    * @return array list of (always) idempotent HTTP methods
    */
-  public static function idempotentMethods()
+  public static function idempotentMethods(): array
   {
     // Though it is possible to be idempotent, POST
     // is not guarunteed to be, and more often than
@@ -60,9 +60,9 @@ class Http
    *
    * @return bool
    */
-  public static function isIdempotent($method)
+  public static function isIdempotent($method): bool
   {
-    return in_array($method, self::idempotentMethods(), true);
+    return \in_array($method, self::idempotentMethods(), true);
   }
 
   /**
@@ -70,9 +70,9 @@ class Http
    *
    * @return bool
    */
-  public static function isNotIdempotent($method)
+  public static function isNotIdempotent($method): bool
   {
-    return !in_array($method, self::idempotentMethods(), true);
+    return !\in_array($method, self::idempotentMethods(), true);
   }
 
   /**
@@ -82,7 +82,7 @@ class Http
    *
    * @return array of HTTP method strings
    */
-  public static function canHaveBody()
+  public static function canHaveBody(): array
   {
     return array(self::POST, self::PUT, self::PATCH, self::OPTIONS);
   }
@@ -94,12 +94,12 @@ class Http
    *
    * @throws \Exception
    */
-  public static function reason($code)
+  public static function reason($code): string
   {
     $code = (int)$code;
     $codes = self::responseCodes();
 
-    if (!array_key_exists($code, $codes)) {
+    if (!\array_key_exists($code, $codes)) {
       throw new \Exception('Unable to parse response code from HTTP response due to malformed response. Code: ' . $code);
     }
 
@@ -111,7 +111,7 @@ class Http
    *
    * @return array
    */
-  protected static function responseCodes()
+  protected static function responseCodes(): array
   {
     return array(
         100 => 'Continue',

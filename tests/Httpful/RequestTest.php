@@ -6,13 +6,14 @@
 namespace Httpful\Test;
 
 use Httpful\Request;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Class RequestTest
  *
  * @package Httpful\Test
  */
-class RequestTest extends \PHPUnit_Framework_TestCase
+class RequestTest extends TestCase
 {
 
   /**

@@ -50,7 +50,7 @@ class JsonHandler extends MimeHandlerAdapter
    *
    * @return string
    */
-  public function serialize($payload)
+  public function serialize($payload): string
   {
     return json_encode($payload);
   }

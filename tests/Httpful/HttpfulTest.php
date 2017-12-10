@@ -20,6 +20,7 @@ use Httpful\Httpful;
 use Httpful\Mime;
 use Httpful\Request;
 use Httpful\Response;
+use PHPUnit\Framework\TestCase;
 
 require dirname(dirname(__DIR__)) . '/bootstrap.php';
 
@@ -35,7 +36,7 @@ define('TEST_SERVER', WEB_SERVER_HOST . ':' . WEB_SERVER_PORT);
  *
  * @package Httpful\Test
  */
-class HttpfulTest extends \PHPUnit_Framework_TestCase
+class HttpfulTest extends TestCase
 {
   const TEST_SERVER  = TEST_SERVER;
 

@@ -23,9 +23,9 @@ class Request
 {
 
   // Option constants
-  const SERIALIZE_PAYLOAD_NEVER  = 0;
+  const SERIALIZE_PAYLOAD_NEVER = 0;
   const SERIALIZE_PAYLOAD_ALWAYS = 1;
-  const SERIALIZE_PAYLOAD_SMART  = 2;
+  const SERIALIZE_PAYLOAD_SMART = 2;
 
   const MAX_REDIRECTS_DEFAULT = 25;
 
@@ -203,7 +203,7 @@ class Request
    */
   protected function __construct($attrs = null)
   {
-    if (!is_array($attrs)) {
+    if (!\is_array($attrs)) {
       return;
     }
 
@@ -259,7 +259,7 @@ class Request
   /**
    * @return bool does the request have a timeout?
    */
-  public function hasTimeout()
+  public function hasTimeout(): bool
   {
     return isset($this->timeout);
   }
@@ -267,7 +267,7 @@ class Request
   /**
    * @return bool does the request have a connection timeout?
    */
-  public function hasConnectionTimeout()
+  public function hasConnectionTimeout(): bool
   {
     return isset($this->connection_timeout);
   }
@@ -275,7 +275,7 @@ class Request
   /**
    * @return bool has the internal curl request been initialized?
    */
-  public function hasBeenInitialized()
+  public function hasBeenInitialized(): bool
   {
     return isset($this->_ch);
   }
@@ -285,7 +285,7 @@ class Request
    *
    * @return bool
    */
-  public function hasBasicAuth()
+  public function hasBasicAuth(): bool
   {
     return isset($this->password) && isset($this->username);
   }
@@ -295,7 +295,7 @@ class Request
    *
    * @return bool
    */
-  public function hasDigestAuth()
+  public function hasDigestAuth(): bool
   {
     return isset($this->password) && isset($this->username) && $this->additional_curl_opts[CURLOPT_HTTPAUTH] == CURLAUTH_DIGEST;
   }
@@ -307,7 +307,7 @@ class Request
    *
    * @return Request
    */
-  public function timeout($timeout)
+  public function timeout($timeout): Request
   {
     $this->timeout = $timeout;
 
@@ -321,7 +321,7 @@ class Request
    *
    * @return Request
    */
-  public function timeoutIn($seconds)
+  public function timeoutIn($seconds): Request
   {
     return $this->timeout($seconds);
   }
@@ -336,11 +336,11 @@ class Request
    *
    * @throws \InvalidArgumentException
    */
-  public function setConnectionTimeout($connection_timeout)
+  public function setConnectionTimeout($connection_timeout): Request
   {
     if (!preg_match('/^\d+(\.\d+)?/', $connection_timeout)) {
       throw new \InvalidArgumentException(
-          'Invalid connection timeout provided: ' . var_export($connection_timeout, true)
+        'Invalid connection timeout provided: ' . var_export($connection_timeout, true)
       );
     }
 
@@ -357,7 +357,7 @@ class Request
    *
    * @return Request
    */
-  public function followRedirects($follow = true)
+  public function followRedirects($follow = true): Request
   {
     if ($follow === true) {
       $this->max_redirects = self::MAX_REDIRECTS_DEFAULT;
@@ -376,7 +376,7 @@ class Request
    * @see Request::followRedirects()
    * @return Request
    */
-  public function doNotFollowRedirects()
+  public function doNotFollowRedirects(): Request
   {
     return $this->followRedirects(false);
   }
@@ -387,7 +387,7 @@ class Request
    * @return Response with parsed results
    * @throws ConnectionErrorException when unable to parse or communicate w server
    */
-  public function send()
+  public function send(): Response
   {
     if (!$this->hasBeenInitialized()) {
       $this->_curlPrep();
@@ -406,7 +406,7 @@ class Request
   /**
    * @return Response
    */
-  public function sendIt()
+  public function sendIt(): Response
   {
     return $this->send();
   }
@@ -434,7 +434,7 @@ class Request
    *
    * @return Request
    */
-  public function basicAuth($username, $password)
+  public function basicAuth($username, $password): Request
   {
     $this->username = $username;
     $this->password = $password;
@@ -450,7 +450,7 @@ class Request
    *
    * @return Request
    */
-  public function authenticateWith($username, $password)
+  public function authenticateWith($username, $password): Request
   {
     return $this->basicAuth($username, $password);
   }
@@ -463,7 +463,7 @@ class Request
    *
    * @return Request
    */
-  public function authenticateWithBasic($username, $password)
+  public function authenticateWithBasic($username, $password): Request
   {
     return $this->basicAuth($username, $password);
   }
@@ -476,7 +476,7 @@ class Request
    *
    * @return Request
    */
-  public function authenticateWithNTLM($username, $password)
+  public function authenticateWithNTLM($username, $password): Request
   {
     return $this->ntlmAuth($username, $password);
   }
@@ -487,7 +487,7 @@ class Request
    *
    * @return Request
    */
-  public function ntlmAuth($username, $password)
+  public function ntlmAuth($username, $password): Request
   {
     $this->addOnCurlOption(CURLOPT_HTTPAUTH, CURLAUTH_NTLM);
 
@@ -502,7 +502,7 @@ class Request
    *
    * @return Request
    */
-  public function digestAuth($username, $password)
+  public function digestAuth($username, $password): Request
   {
     $this->addOnCurlOption(CURLOPT_HTTPAUTH, CURLAUTH_DIGEST);
 
@@ -517,7 +517,7 @@ class Request
    *
    * @return Request
    */
-  public function authenticateWithDigest($username, $password)
+  public function authenticateWithDigest($username, $password): Request
   {
     return $this->digestAuth($username, $password);
   }
@@ -525,7 +525,7 @@ class Request
   /**
    * @return bool is this request setup for client side cert?
    */
-  public function hasClientSideCert()
+  public function hasClientSideCert(): bool
   {
     return isset($this->client_cert) && isset($this->client_key);
   }
@@ -533,14 +533,14 @@ class Request
   /**
    * Use Client Side Cert Authentication
    *
-   * @param string $key        file path to client key
-   * @param string $cert       file path to client cert
+   * @param string $key file path to client key
+   * @param string $cert file path to client cert
    * @param string $passphrase for client key
-   * @param string $encoding   default PEM
+   * @param string $encoding default PEM
    *
    * @return Request
    */
-  public function clientSideCert($cert, $key, $passphrase = null, $encoding = 'PEM')
+  public function clientSideCert($cert, $key, $passphrase = null, $encoding = 'PEM'): Request
   {
     $this->client_cert = $cert;
     $this->client_key = $key;
@@ -551,17 +551,18 @@ class Request
   }
 
   //
+
   /**
    * @alias of basicAuth
    *
    * @param        $cert
    * @param        $key
-   * @param null   $passphrase
+   * @param null $passphrase
    * @param string $encoding
    *
    * @return Request
    */
-  public function authenticateWithCert($cert, $key, $passphrase = null, $encoding = 'PEM')
+  public function authenticateWithCert($cert, $key, $passphrase = null, $encoding = 'PEM'): Request
   {
     return $this->clientSideCert($cert, $key, $passphrase, $encoding);
   }
@@ -575,7 +576,7 @@ class Request
    *
    * @return Request
    */
-  public function body($payload, $mimeType = null)
+  public function body($payload, $mimeType = null): Request
   {
     $this->mime($mimeType);
     $this->payload = $payload;
@@ -594,7 +595,7 @@ class Request
    *
    * @return Request this
    */
-  public function params(array $params)
+  public function params(array $params): Request
   {
     $this->params = array_merge($this->params, $params);
 
@@ -609,7 +610,7 @@ class Request
    *
    * @return Request this
    */
-  public function param($key, $value)
+  public function param($key, $value): Request
   {
     if ($key && $value) {
       $this->params[$key] = $value;
@@ -626,7 +627,7 @@ class Request
    *
    * @return Request
    */
-  public function mime($mime)
+  public function mime($mime): Request
   {
     if (empty($mime)) {
       return $this;
@@ -645,7 +646,7 @@ class Request
    *
    * @return Request
    */
-  public function sendsAndExpectsType($mime)
+  public function sendsAndExpectsType($mime): Request
   {
     return $this->mime($mime);
   }
@@ -655,7 +656,7 @@ class Request
    *
    * @return Request
    */
-  public function sendsAndExpects($mime)
+  public function sendsAndExpects($mime): Request
   {
     return $this->mime($mime);
   }
@@ -668,7 +669,7 @@ class Request
    *
    * @return Request
    */
-  public function method($method)
+  public function method($method): Request
   {
     if (empty($method)) {
       return $this;
@@ -683,7 +684,7 @@ class Request
    *
    * @return Request
    */
-  public function expects($mime)
+  public function expects($mime): Request
   {
     if (empty($mime)) {
       return $this;
@@ -701,7 +702,7 @@ class Request
    *
    * @return Request
    */
-  public function expectsType($mime)
+  public function expectsType($mime): Request
   {
     return $this->expects($mime);
   }
@@ -709,7 +710,7 @@ class Request
   /**
    * @return Request
    */
-  public function expectsJson()
+  public function expectsJson(): Request
   {
     return $this->expects(Mime::JSON);
   }
@@ -717,7 +718,7 @@ class Request
   /**
    * @return Request
    */
-  public function expectsXml()
+  public function expectsXml(): Request
   {
     return $this->expects(Mime::XML);
   }
@@ -725,7 +726,7 @@ class Request
   /**
    * @return Request
    */
-  public function expectsXhtml()
+  public function expectsXhtml(): Request
   {
     return $this->expects(Mime::XHTML);
   }
@@ -733,7 +734,7 @@ class Request
   /**
    * @return Request
    */
-  public function expectsForm()
+  public function expectsForm(): Request
   {
     return $this->expects(Mime::FORM);
   }
@@ -741,7 +742,7 @@ class Request
   /**
    * @return Request
    */
-  public function expectsUpload()
+  public function expectsUpload(): Request
   {
     return $this->expects(Mime::UPLOAD);
   }
@@ -749,7 +750,7 @@ class Request
   /**
    * @return Request
    */
-  public function expectsPlain()
+  public function expectsPlain(): Request
   {
     return $this->expects(Mime::PLAIN);
   }
@@ -757,7 +758,7 @@ class Request
   /**
    * @return Request
    */
-  public function expectsJs()
+  public function expectsJs(): Request
   {
     return $this->expects(Mime::JS);
   }
@@ -765,7 +766,7 @@ class Request
   /**
    * @return Request
    */
-  public function expectsHtml()
+  public function expectsHtml(): Request
   {
     return $this->expects(Mime::HTML);
   }
@@ -773,7 +774,7 @@ class Request
   /**
    * @return Request
    */
-  public function expectsYaml()
+  public function expectsYaml(): Request
   {
     return $this->expects(Mime::YAML);
   }
@@ -781,7 +782,7 @@ class Request
   /**
    * @return Request
    */
-  public function expectsCsv()
+  public function expectsCsv(): Request
   {
     return $this->expects(Mime::CSV);
   }
@@ -793,11 +794,11 @@ class Request
    */
   public function attach($files)
   {
-    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $finfo = \finfo_open(FILEINFO_MIME_TYPE);
     foreach ($files as $key => $file) {
       $mimeType = finfo_file($finfo, $file);
-      if (function_exists('curl_file_create')) {
-        $this->payload[$key] = curl_file_create($file, $mimeType);
+      if (\function_exists('curl_file_create')) {
+        $this->payload[$key] = \curl_file_create($file, $mimeType);
       } else {
         $this->payload[$key] = '@' . $file;
         if ($mimeType) {
@@ -805,8 +806,8 @@ class Request
         }
       }
     }
-    finfo_close($finfo);
-    
+    \finfo_close($finfo);
+
     $this->sendsType(Mime::UPLOAD);
 
     return $this;
@@ -817,7 +818,7 @@ class Request
    *
    * @return Request
    */
-  public function contentType($mime)
+  public function contentType($mime): Request
   {
     if (empty($mime)) {
       return $this;
@@ -837,7 +838,7 @@ class Request
    *
    * @return Request
    */
-  public function sends($mime)
+  public function sends($mime): Request
   {
     return $this->contentType($mime);
   }
@@ -849,7 +850,7 @@ class Request
    *
    * @return Request
    */
-  public function sendsType($mime)
+  public function sendsType($mime): Request
   {
     return $this->contentType($mime);
   }
@@ -857,7 +858,7 @@ class Request
   /**
    * @return Request
    */
-  public function sendsJson()
+  public function sendsJson(): Request
   {
     return $this->contentType(Mime::JSON);
   }
@@ -865,7 +866,7 @@ class Request
   /**
    * @return Request
    */
-  public function sendsXml()
+  public function sendsXml(): Request
   {
     return $this->contentType(Mime::XML);
   }
@@ -877,7 +878,7 @@ class Request
    *
    * @return Request
    */
-  public function strictSSL($strict)
+  public function strictSSL($strict): Request
   {
     $this->strict_ssl = $strict;
 
@@ -887,7 +888,7 @@ class Request
   /**
    * @return Request
    */
-  public function withoutStrictSSL()
+  public function withoutStrictSSL(): Request
   {
     return $this->strictSSL(false);
   }
@@ -895,7 +896,7 @@ class Request
   /**
    * @return Request
    */
-  public function withStrictSSL()
+  public function withStrictSSL(): Request
   {
     return $this->strictSSL(true);
   }
@@ -903,24 +904,24 @@ class Request
   /**
    * Use proxy configuration
    *
-   * @param string $proxy_host    Hostname or address of the proxy
-   * @param int    $proxy_port    Port of the proxy. Default 80
-   * @param string $auth_type     Authentication type or null. Accepted values are CURLAUTH_BASIC, CURLAUTH_NTLM.
+   * @param string $proxy_host Hostname or address of the proxy
+   * @param int $proxy_port Port of the proxy. Default 80
+   * @param string $auth_type Authentication type or null. Accepted values are CURLAUTH_BASIC, CURLAUTH_NTLM.
    *                              Default null, no authentication
    * @param string $auth_username Authentication username. Default null
    * @param string $auth_password Authentication password. Default null
-   * @param int    $proxy_type    Proxy-Tye for Curl. Default is "Proxy::HTTP"
+   * @param int $proxy_type Proxy-Tye for Curl. Default is "Proxy::HTTP"
    *
    * @return Request
    */
-  public function useProxy($proxy_host, $proxy_port = 80, $auth_type = null, $auth_username = null, $auth_password = null, $proxy_type = Proxy::HTTP)
+  public function useProxy($proxy_host, $proxy_port = 80, $auth_type = null, $auth_username = null, $auth_password = null, $proxy_type = Proxy::HTTP): Request
   {
     $this->addOnCurlOption(CURLOPT_PROXY, "{$proxy_host}:{$proxy_port}");
     $this->addOnCurlOption(CURLOPT_PROXYTYPE, $proxy_type);
-    
-    if (in_array($auth_type, array(CURLAUTH_BASIC, CURLAUTH_NTLM), true)) {
+
+    if (\in_array($auth_type, array(CURLAUTH_BASIC, CURLAUTH_NTLM), true)) {
       $this->addOnCurlOption(CURLOPT_PROXYAUTH, $auth_type)
-           ->addOnCurlOption(CURLOPT_PROXYUSERPWD, "{$auth_username}:{$auth_password}");
+        ->addOnCurlOption(CURLOPT_PROXYUSERPWD, "{$auth_username}:{$auth_password}");
     }
 
     return $this;
@@ -932,14 +933,14 @@ class Request
    * @see Request::useProxy
    *
    * @param      $proxy_host
-   * @param int  $proxy_port
+   * @param int $proxy_port
    * @param null $auth_type
    * @param null $auth_username
    * @param null $auth_password
    *
    * @return Request
    */
-  public function useSocks4Proxy($proxy_host, $proxy_port = 80, $auth_type = null, $auth_username = null, $auth_password = null)
+  public function useSocks4Proxy($proxy_host, $proxy_port = 80, $auth_type = null, $auth_username = null, $auth_password = null): Request
   {
     return $this->useProxy($proxy_host, $proxy_port, $auth_type, $auth_username, $auth_password, Proxy::SOCKS4);
   }
@@ -949,15 +950,15 @@ class Request
    *
    * @see Request::useProxy
    *
-   * @param string      $proxy_host
-   * @param int         $proxy_port
+   * @param string $proxy_host
+   * @param int $proxy_port
    * @param string|null $auth_type
    * @param string|null $auth_username
    * @param string|null $auth_password
    *
    * @return Request
    */
-  public function useSocks5Proxy($proxy_host, $proxy_port = 80, $auth_type = null, $auth_username = null, $auth_password = null)
+  public function useSocks5Proxy($proxy_host, $proxy_port = 80, $auth_type = null, $auth_username = null, $auth_password = null): Request
   {
     return $this->useProxy($proxy_host, $proxy_port, $auth_type, $auth_username, $auth_password, Proxy::SOCKS5);
   }
@@ -965,26 +966,20 @@ class Request
   /**
    * @return bool is this request setup for using proxy?
    */
-  public function hasProxy()
+  public function hasProxy(): bool
   {
     /**
      *  We must be aware that proxy variables could come from environment also.
      *  In curl extension, http proxy can be specified not only via CURLOPT_PROXY option,
      *  but also by environment variable called http_proxy.
      */
-    if (
-        (
-            isset($this->additional_curl_opts[CURLOPT_PROXY])
-            &&
-            is_string($this->additional_curl_opts[CURLOPT_PROXY])
-        )
-        ||
-        getenv('http_proxy')
-    ) {
-      return true;
-    }
-
-    return false;
+    return (
+        isset($this->additional_curl_opts[CURLOPT_PROXY])
+        &&
+        \is_string($this->additional_curl_opts[CURLOPT_PROXY])
+      )
+      ||
+      getenv('http_proxy');
   }
 
   /**
@@ -1010,7 +1005,7 @@ class Request
    *
    * @return Request
    */
-  public function serializePayload($mode)
+  public function serializePayload($mode): Request
   {
     $this->serialize_payload_method = $mode;
 
@@ -1021,7 +1016,7 @@ class Request
    * @see Request::serializePayload()
    * @return Request
    */
-  public function neverSerializePayload()
+  public function neverSerializePayload(): Request
   {
     return $this->serializePayload(self::SERIALIZE_PAYLOAD_NEVER);
   }
@@ -1032,7 +1027,7 @@ class Request
    * @see Request::serializePayload()
    * @return Request
    */
-  public function smartSerializePayload()
+  public function smartSerializePayload(): Request
   {
     return $this->serializePayload(self::SERIALIZE_PAYLOAD_SMART);
   }
@@ -1041,7 +1036,7 @@ class Request
    * @see Request::serializePayload()
    * @return Request
    */
-  public function alwaysSerializePayload()
+  public function alwaysSerializePayload(): Request
   {
     return $this->serializePayload(self::SERIALIZE_PAYLOAD_ALWAYS);
   }
@@ -1058,7 +1053,7 @@ class Request
    *
    * @return Request
    */
-  public function addHeader($header_name, $value)
+  public function addHeader($header_name, $value): Request
   {
     $this->headers[$header_name] = $value;
 
@@ -1075,7 +1070,7 @@ class Request
    *
    * @return Request
    */
-  public function addHeaders(array $headers)
+  public function addHeaders(array $headers): Request
   {
     foreach ($headers as $header => $value) {
       $this->addHeader($header, $value);
@@ -1092,7 +1087,7 @@ class Request
    *
    * @return Request
    */
-  public function autoParse($auto_parse = true)
+  public function autoParse($auto_parse = true): Request
   {
     $this->auto_parse = $auto_parse;
 
@@ -1103,7 +1098,7 @@ class Request
    * @see Request::autoParse()
    * @return Request
    */
-  public function withoutAutoParsing()
+  public function withoutAutoParsing(): Request
   {
     return $this->autoParse(false);
   }
@@ -1112,7 +1107,7 @@ class Request
    * @see Request::autoParse()
    * @return Request
    */
-  public function withAutoParsing()
+  public function withAutoParsing(): Request
   {
     return $this->autoParse(true);
   }
@@ -1125,7 +1120,7 @@ class Request
    *
    * @return Request
    */
-  public function parseWith(\Closure $callback)
+  public function parseWith(\Closure $callback): Request
   {
     $this->parse_callback = $callback;
 
@@ -1139,7 +1134,7 @@ class Request
    *
    * @return Request
    */
-  public function parseResponsesWith(\Closure $callback)
+  public function parseResponsesWith(\Closure $callback): Request
   {
     return $this->parseWith($callback);
   }
@@ -1152,7 +1147,7 @@ class Request
    *
    * @return Request
    */
-  public function whenError(\Closure $callback)
+  public function whenError(\Closure $callback): Request
   {
     $this->error_callback = $callback;
 
@@ -1167,7 +1162,7 @@ class Request
    *
    * @return Request
    */
-  public function beforeSend(\Closure $callback)
+  public function beforeSend(\Closure $callback): Request
   {
     $this->send_callback = $callback;
 
@@ -1181,13 +1176,13 @@ class Request
    * type.  If a custom '*' and 'application/json' exist, the custom
    * 'application/json' would take precedence over the '*' callback.
    *
-   * @param string   $mime     mime type we're registering
+   * @param string $mime mime type we're registering
    * @param \Closure $callback takes one argument, $payload,
    *                           which is the payload that we'll be
    *
    * @return Request
    */
-  public function registerPayloadSerializer($mime, \Closure $callback)
+  public function registerPayloadSerializer($mime, \Closure $callback): Request
   {
     $this->payload_serializers[Mime::getFullMime($mime)] = $callback;
 
@@ -1201,7 +1196,7 @@ class Request
    *
    * @return Request
    */
-  public function serializePayloadWith(\Closure $callback)
+  public function serializePayloadWith(\Closure $callback): Request
   {
     return $this->registerPayloadSerializer('*', $callback);
   }
@@ -1218,7 +1213,7 @@ class Request
    *                       to add a custom header like X-My-Header, you would use xMyHeader().
    *                       To promote readability, you can optionally prefix these methods with
    *                       "with"  (e.g. withXMyHeader("blah") instead of xMyHeader("blah")).
-   * @param array  $args   in this case, there should only ever be 1 argument provided
+   * @param array $args in this case, there should only ever be 1 argument provided
    *                       and that argument should be a string value of the header we're setting
    *
    * @return Request|null
@@ -1246,7 +1241,7 @@ class Request
 
     // This method also adds the custom header support as described in the
     // method comments
-    if (count($args) === 0) {
+    if (\count($args) === 0) {
       return null;
     }
 
@@ -1306,7 +1301,7 @@ class Request
    *
    * @return Request
    */
-  private function _setDefaults()
+  private function _setDefaults(): Request
   {
     if (!isset(self::$_template)) {
       self::_initializeDefaults();
@@ -1341,11 +1336,11 @@ class Request
    * Request::post syntax is preferred as it is more readable.
    *
    * @param string $method Http Method
-   * @param string $mime   Mime Type to Use
+   * @param string $mime Mime Type to Use
    *
    * @return Request
    */
-  public static function init($method = null, $mime = null)
+  public static function init($method = null, $mime = null): Request
   {
     // Setup our handlers, can call it here as it's idempotent
     Bootstrap::init();
@@ -1358,10 +1353,10 @@ class Request
     $request = new self();
 
     return $request
-        ->_setDefaults()
-        ->method($method)
-        ->sendsType($mime)
-        ->expectsType($mime);
+      ->_setDefaults()
+      ->method($method)
+      ->sendsType($mime)
+      ->expectsType($mime);
   }
 
   /**
@@ -1372,7 +1367,7 @@ class Request
    * @return Request
    * @throws \Exception
    */
-  public function _curlPrep()
+  public function _curlPrep(): Request
   {
     // Check for required stuff
     if (!isset($this->uri)) {
@@ -1388,7 +1383,7 @@ class Request
     }
 
     if (isset($this->send_callback)) {
-      call_user_func($this->send_callback, $this);
+      \call_user_func($this->send_callback, $this);
     }
 
     $ch = curl_init($this->uri);
@@ -1423,7 +1418,7 @@ class Request
     }
 
     if ($this->hasTimeout() === true) {
-      if (defined('CURLOPT_TIMEOUT_MS')) {
+      if (\defined('CURLOPT_TIMEOUT_MS')) {
         curl_setopt($ch, CURLOPT_TIMEOUT_MS, $this->timeout * 1000);
       } else {
         curl_setopt($ch, CURLOPT_TIMEOUT, $this->timeout);
@@ -1431,7 +1426,7 @@ class Request
     }
 
     if ($this->hasConnectionTimeout() === true) {
-      if (defined('CURLOPT_CONNECTTIMEOUT_MS')) {
+      if (\defined('CURLOPT_CONNECTTIMEOUT_MS')) {
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, $this->connection_timeout * 1000);
       } else {
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, $this->connection_timeout);
@@ -1495,9 +1490,9 @@ class Request
     }
 
     $url = \parse_url($this->uri);
-    $path = (isset($url['path']) ? $url['path'] : '/') . (isset($url['query']) ? '?' . $url['query'] : '');
+    $path = ($url['path'] ?? '/') . (isset($url['query']) ? '?' . $url['query'] : '');
     $this->raw_headers = "{$this->method} $path HTTP/1.1\r\n";
-    $host = (isset($url['host']) ? $url['host'] : 'localhost') . (isset($url['port']) ? ':' . $url['port'] : '');
+    $host = ($url['host'] ?? 'localhost') . (isset($url['port']) ? ':' . $url['port'] : '');
     $this->raw_headers .= "Host: $host\r\n";
     $this->raw_headers .= \implode("\r\n", $headers);
     $this->raw_headers .= "\r\n";
@@ -1526,7 +1521,7 @@ class Request
    *
    * @return int length of payload in bytes
    */
-  public function _determineLength($str)
+  public function _determineLength($str): int
   {
     return UTF8::strlen($str, '8bit');
   }
@@ -1534,7 +1529,7 @@ class Request
   /**
    * @return bool
    */
-  public function isUpload()
+  public function isUpload(): bool
   {
     return Mime::UPLOAD == $this->content_type;
   }
@@ -1554,9 +1549,9 @@ class Request
     $originalParams = array();
 
     if (
-        isset($url['query'])
-        &&
-        count($url['query'])
+      isset($url['query'])
+      &&
+      \count($url['query'])
     ) {
       parse_str($url['query'], $originalParams);
     }
@@ -1567,13 +1562,13 @@ class Request
 
     if (strpos($this->uri, '?') !== false) {
       $this->uri = substr(
-          $this->uri,
-          0,
-          strpos($this->uri, '?')
+        $this->uri,
+        0,
+        strpos($this->uri, '?')
       );
     }
 
-    if (count($params)) {
+    if (\count($params)) {
       $this->uri .= '?' . $queryString;
     }
   }
@@ -1581,7 +1576,7 @@ class Request
   /**
    * @return string
    */
-  public function buildUserAgent()
+  public function buildUserAgent(): string
   {
     $user_agent = 'User-Agent: Httpful/' . Httpful::VERSION . ' (cURL/';
     $curl = \curl_version();
@@ -1596,9 +1591,9 @@ class Request
 
     if (isset($_SERVER['SERVER_SOFTWARE'])) {
       $user_agent .= ' ' . \preg_replace(
-              '~PHP/[\d\.]+~U', '',
-              $_SERVER['SERVER_SOFTWARE']
-          );
+          '~PHP/[\d\.]+~U', '',
+          $_SERVER['SERVER_SOFTWARE']
+        );
     } else {
       if (isset($_SERVER['TERM_PROGRAM'])) {
         $user_agent .= " {$_SERVER['TERM_PROGRAM']}";
@@ -1625,7 +1620,7 @@ class Request
    *
    * @return Request
    */
-  public function setUserAgent($userAgent)
+  public function setUserAgent($userAgent): Request
   {
     return $this->addHeader('User-Agent', $userAgent);
   }
@@ -1638,7 +1633,7 @@ class Request
    * @return Response
    * @throws ConnectionErrorException
    */
-  public function buildResponse($result)
+  public function buildResponse($result): Response
   {
     if ($result === false) {
 
@@ -1648,10 +1643,10 @@ class Request
         $this->_error($curlErrorString);
 
         $exception = new ConnectionErrorException(
-            'Unable to connect to "' . $this->uri . '": ' . $curlErrorNumber . ' ' . $curlErrorString,
-            $curlErrorNumber,
-            null,
-            $this->_ch
+          'Unable to connect to "' . $this->uri . '": ' . $curlErrorNumber . ' ' . $curlErrorString,
+          $curlErrorNumber,
+          null,
+          $this->_ch
         );
 
         $exception->setCurlErrorNumber($curlErrorNumber)->setCurlErrorString($curlErrorString);
@@ -1668,9 +1663,9 @@ class Request
     // Remove the "HTTP/1.x 200 Connection established" string and any other headers added by proxy
     $proxy_regex = "/HTTP\/1\.[01] 200 Connection established.*?\r\n\r\n/si";
     if (
-        $this->hasProxy() === true
-        &&
-        preg_match($proxy_regex, $result)
+      $this->hasProxy() === true
+      &&
+      preg_match($proxy_regex, $result)
     ) {
       $result = preg_replace($proxy_regex, '', $result);
     }
@@ -1688,11 +1683,11 @@ class Request
    * that are not otherwise accessible from the rest of the API.
    *
    * @param string $curlopt
-   * @param mixed  $curloptval
+   * @param mixed $curloptval
    *
    * @return Request
    */
-  public function addOnCurlOption($curlopt, $curloptval)
+  public function addOnCurlOption($curlopt, $curloptval): Request
   {
     $this->additional_curl_opts[$curlopt] = $curloptval;
 
@@ -1716,7 +1711,7 @@ class Request
    *
    * @return string
    */
-  private function _serializePayload($payload)
+  private function _serializePayload($payload): string
   {
     if (empty($payload) || $this->serialize_payload_method === self::SERIALIZE_PAYLOAD_NEVER) {
       return $payload;
@@ -1731,7 +1726,7 @@ class Request
     if (isset($this->payload_serializers['*']) || isset($this->payload_serializers[$this->content_type])) {
       $key = isset($this->payload_serializers[$this->content_type]) ? $this->content_type : '*';
 
-      return call_user_func($this->payload_serializers[$key], $payload);
+      return \call_user_func($this->payload_serializers[$key], $payload);
     }
 
     return Httpful::get($this->content_type)->serialize($payload);
@@ -1740,12 +1735,12 @@ class Request
   /**
    * HTTP Method Get
    *
-   * @param string $uri  optional uri to use
+   * @param string $uri optional uri to use
    * @param string $mime expected
    *
    * @return Request
    */
-  public static function get($uri, $mime = null)
+  public static function get($uri, $mime = null): Request
   {
     return self::init(Http::GET)->uri($uri)->mime($mime);
   }
@@ -1755,12 +1750,12 @@ class Request
    * Like Request:::get, except that it sends off the request as well
    * returning a response
    *
-   * @param string $uri  optional uri to use
+   * @param string $uri optional uri to use
    * @param string $mime expected
    *
    * @return Response
    */
-  public static function getQuick($uri, $mime = null)
+  public static function getQuick($uri, $mime = null): Response
   {
     return self::get($uri, $mime)->send();
   }
@@ -1768,13 +1763,13 @@ class Request
   /**
    * HTTP Method Post
    *
-   * @param string $uri     optional uri to use
+   * @param string $uri optional uri to use
    * @param string $payload data to send in body of request
-   * @param string $mime    MIME to use for Content-Type
+   * @param string $mime MIME to use for Content-Type
    *
    * @return Request
    */
-  public static function post($uri, $payload = null, $mime = null)
+  public static function post($uri, $payload = null, $mime = null): Request
   {
     return self::init(Http::POST)->uri($uri)->body($payload, $mime);
   }
@@ -1782,13 +1777,13 @@ class Request
   /**
    * HTTP Method Put
    *
-   * @param string $uri     optional uri to use
+   * @param string $uri optional uri to use
    * @param string $payload data to send in body of request
-   * @param string $mime    MIME to use for Content-Type
+   * @param string $mime MIME to use for Content-Type
    *
    * @return Request
    */
-  public static function put($uri, $payload = null, $mime = null)
+  public static function put($uri, $payload = null, $mime = null): Request
   {
     return self::init(Http::PUT)->uri($uri)->body($payload, $mime);
   }
@@ -1796,13 +1791,13 @@ class Request
   /**
    * HTTP Method Patch
    *
-   * @param string $uri     optional uri to use
+   * @param string $uri optional uri to use
    * @param string $payload data to send in body of request
-   * @param string $mime    MIME to use for Content-Type
+   * @param string $mime MIME to use for Content-Type
    *
    * @return Request
    */
-  public static function patch($uri, $payload = null, $mime = null)
+  public static function patch($uri, $payload = null, $mime = null): Request
   {
     return self::init(Http::PATCH)->uri($uri)->body($payload, $mime);
   }
@@ -1811,11 +1806,11 @@ class Request
    * HTTP Method Delete
    *
    * @param string $uri optional uri to use
-   * @param null   $mime
+   * @param null $mime
    *
    * @return Request
    */
-  public static function delete($uri, $mime = null)
+  public static function delete($uri, $mime = null): Request
   {
     return self::init(Http::DELETE)->uri($uri)->mime($mime);
   }
@@ -1827,7 +1822,7 @@ class Request
    *
    * @return Request
    */
-  public static function head($uri)
+  public static function head($uri): Request
   {
     return self::init(Http::HEAD)->uri($uri);
   }
@@ -1839,7 +1834,7 @@ class Request
    *
    * @return Request
    */
-  public static function options($uri)
+  public static function options($uri): Request
   {
     return self::init(Http::OPTIONS)->uri($uri);
   }

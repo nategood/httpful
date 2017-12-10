@@ -28,11 +28,11 @@ final class Headers implements \ArrayAccess, \Countable
    *
    * @return Headers
    */
-  public static function fromString($string)
+  public static function fromString($string): Headers
   {
     $headers = preg_split("/(\r|\n)+/", $string, -1, \PREG_SPLIT_NO_EMPTY);
     $parse_headers = array();
-    $headersCount = count($headers);
+    $headersCount = \count($headers);
     for ($i = 1; $i < $headersCount; $i++) {
       list($key, $raw_value) = explode(':', $headers[$i], 2);
       $key = trim($key);
@@ -57,7 +57,7 @@ final class Headers implements \ArrayAccess, \Countable
    *
    * @return bool
    */
-  public function offsetExists($offset)
+  public function offsetExists($offset): bool
   {
     return isset($this->headers[$offset]);
   }
@@ -100,15 +100,15 @@ final class Headers implements \ArrayAccess, \Countable
   /**
    * @return int
    */
-  public function count()
+  public function count(): int
   {
-    return count($this->headers);
+    return \count($this->headers);
   }
 
   /**
    * @return array
    */
-  public function toArray()
+  public function toArray(): array
   {
     return $this->headers;
   }

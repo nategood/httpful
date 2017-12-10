@@ -37,7 +37,7 @@ class Httpful
    *
    * @return MimeHandlerAdapter
    */
-  public static function get($mimeType = null)
+  public static function get($mimeType = null): MimeHandlerAdapter
   {
     if (isset(self::$mimeRegistrar[$mimeType])) {
       return self::$mimeRegistrar[$mimeType];
@@ -58,7 +58,7 @@ class Httpful
    *
    * @return bool
    */
-  public static function hasParserRegistered($mimeType)
+  public static function hasParserRegistered($mimeType): bool
   {
     return isset(self::$mimeRegistrar[$mimeType]);
   }

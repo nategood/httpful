@@ -64,7 +64,7 @@ class XmlHandler extends MimeHandlerAdapter
    *
    * @throws \Exception if unable to serialize
    */
-  public function serialize($payload)
+  public function serialize($payload): string 
   {
     /** @noinspection PhpUnusedLocalVariableInspection */
     list($_, $dom) = $this->_future_serializeAsXml($payload);
@@ -80,7 +80,7 @@ class XmlHandler extends MimeHandlerAdapter
    * @return string
    * @author Ted Zellers
    */
-  public function serialize_clean($payload)
+  public function serialize_clean($payload): string
   {
     $xml = new \XMLWriter;
     $xml->openMemory();
@@ -98,7 +98,7 @@ class XmlHandler extends MimeHandlerAdapter
    */
   public function serialize_node(&$xmlw, $node)
   {
-    if (!is_array($node)) {
+    if (!\is_array($node)) {
       $xmlw->text($node);
     } else {
       foreach ($node as $k => $v) {
@@ -118,14 +118,14 @@ class XmlHandler extends MimeHandlerAdapter
    *
    * @return array
    */
-  private function _future_serializeAsXml(&$value, \DOMElement $node = null, \DOMDocument $dom = null)
+  private function _future_serializeAsXml(&$value, \DOMElement $node = null, \DOMDocument $dom = null): array
   {
     if (!$dom) {
       $dom = new \DOMDocument;
     }
 
     if (!$node) {
-      if (!is_object($value)) {
+      if (!\is_object($value)) {
         $node = $dom->createElement('response');
         $dom->appendChild($node);
       } else {
@@ -133,11 +133,11 @@ class XmlHandler extends MimeHandlerAdapter
       }
     }
 
-    if (is_object($value)) {
-      $objNode = $dom->createElement(get_class($value));
+    if (\is_object($value)) {
+      $objNode = $dom->createElement(\get_class($value));
       $node->appendChild($objNode);
       $this->_future_serializeObjectAsXml($value, $objNode, $dom);
-    } elseif (is_array($value)) {
+    } elseif (\is_array($value)) {
       $arrNode = $dom->createElement('array');
       $node->appendChild($arrNode);
       $this->_future_serializeArrayAsXml($value, $arrNode, $dom);
@@ -159,7 +159,7 @@ class XmlHandler extends MimeHandlerAdapter
    *
    * @return array
    */
-  private function _future_serializeArrayAsXml(&$value, \DOMElement $parent, \DOMDocument $dom)
+  private function _future_serializeArrayAsXml(&$value, \DOMElement $parent, \DOMDocument $dom): array
   {
     foreach ($value as $k => &$v) {
       $n = $k;
@@ -184,7 +184,7 @@ class XmlHandler extends MimeHandlerAdapter
    *
    * @return array
    */
-  private function _future_serializeObjectAsXml(&$value, \DOMElement $parent, \DOMDocument $dom)
+  private function _future_serializeObjectAsXml(&$value, \DOMElement $parent, \DOMDocument $dom): array
   {
     $refl = new \ReflectionObject($value);
     foreach ($refl->getProperties() as $pr) {

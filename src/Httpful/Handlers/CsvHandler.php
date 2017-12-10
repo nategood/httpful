@@ -44,7 +44,7 @@ class CsvHandler extends MimeHandlerAdapter
    *
    * @return string
    */
-  public function serialize($payload)
+  public function serialize($payload): string
   {
     $fp = fopen('php://temp/maxmemory:' . (6 * 1024 * 1024), 'r+');
     $i = 0;
