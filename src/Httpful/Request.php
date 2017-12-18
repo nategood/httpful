@@ -33,6 +33,8 @@ class Request
            $headers                 = array(),
            $raw_headers             = '',
            $strict_ssl              = false,
+           $use_ca_cert             = false,
+           $ca_cert_path,
            $content_type,
            $expected_type,
            $additional_curl_opts    = array(),
@@ -441,6 +443,33 @@ class Request
     public function withStrictSSL()
     {
         return $this->strictSSL(true);
+    }
+
+    /**
+     * Should the ca cert be used
+     * @param $caCert
+     * @return Request
+     */
+    public function caCert($caCert){
+        $this->use_ca_cert = $caCert;
+        return $this;
+    }
+    public function withoutCaCert(){
+        return $this->caCert(false);
+    }
+    public function withCaCert(){
+        return $this->caCert(true);
+    }
+
+    /**
+     * Adds the ca cert path
+     *
+     * @param string $caCertPath The CA certificate path
+     * @return Request
+     */
+    public function withCaCertPath($caCertPath){
+        $this->ca_cert_path = $caCertPath;
+        return $this;
     }
 
     /**
@@ -885,7 +914,13 @@ class Request
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
             curl_setopt($ch, CURLOPT_MAXREDIRS, $this->max_redirects);
         }
-
+        // use ca path for self signed certificates
+        if ($this->use_ca_cert){
+            if(!file_exists($this->ca_cert_path)){
+                throw new \Exception('Could not read CA Certificate');
+            }
+            curl_setopt(CURLOPT_CAPATH, $this->ca_cert_path);
+        }
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $this->strict_ssl);
         // zero is safe for all curl versions
         $verifyValue = $this->strict_ssl + 0;
