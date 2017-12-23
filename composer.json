@@ -25,7 +25,7 @@
   ],
   "require": {
     "php": ">=7.0",
-    "voku/portable-utf8": "~4.0",
+    "voku/portable-utf8": "~5.0",
     "ext-curl": "*"
   },
   "autoload": {
