@@ -64,7 +64,7 @@ class XmlHandler extends MimeHandlerAdapter
    *
    * @throws \Exception if unable to serialize
    */
-  public function serialize($payload): string 
+  public function serialize($payload): string
   {
     /** @noinspection PhpUnusedLocalVariableInspection */
     list($_, $dom) = $this->_future_serializeAsXml($payload);
