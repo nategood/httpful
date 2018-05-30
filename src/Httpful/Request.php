@@ -1054,7 +1054,9 @@ class Request
         }
 
         $response = explode("\r\n\r\n", $result, 2 + $info['redirect_count']);
-
+        if (count($response) < 2) {
+            $response = explode("\n\n", $result, 2 + $info['redirect_count']);
+        }
         $body = array_pop($response);
         $headers = array_pop($response);
 
