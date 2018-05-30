@@ -1053,10 +1053,12 @@ class Request
             $result = preg_replace($proxy_regex, '', $result);
         }
 
-        $response = explode("\r\n\r\n", $result, 2 + $info['redirect_count']);
-        if (count($response) < 2) {
-            $response = explode("\n\n", $result, 2 + $info['redirect_count']);
+        $line_feed = "\r\n\r\n";
+        if (strpos($result, $line_feed) === false) {
+            $line_feed = "\n\n";
         }
+        $response = explode($line_feed, $result, 2 + $info['redirect_count']);
+
         $body = array_pop($response);
         $headers = array_pop($response);
 
