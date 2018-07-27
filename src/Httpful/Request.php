@@ -17,6 +17,31 @@ use Httpful\Exception\ConnectionErrorException;
  * and "chainabilty" of the library.
  *
  * @author Nate Good <me@nategood.com>
+ * 
+ * @method self sendsJson()
+ * @method self sendsXml()
+ * @method self sendsForm()
+ * @method self sendsPlain()
+ * @method self sendsText()
+ * @method self sendsUpload()
+ * @method self sendsHtml()
+ * @method self sendsXhtml()
+ * @method self sendsJs()
+ * @method self sendsJavascript()
+ * @method self sendsYaml()
+ * @method self sendsCsv()
+ * @method self expectsJson()
+ * @method self expectsXml()
+ * @method self expectsForm()
+ * @method self expectsPlain()
+ * @method self expectsText()
+ * @method self expectsUpload()
+ * @method self expectsHtml()
+ * @method self expectsXhtml()
+ * @method self expectsJs()
+ * @method self expectsJavascript()
+ * @method self expectsYaml()
+ * @method self expectsCsv()
  */
 class Request
 {
