@@ -12,7 +12,7 @@ use Httpful\Exception\JsonParseException;
 /**
  * Class JsonHandler
  */
-class JsonHandler extends MimeHandlerAdapter
+class JsonHandler extends DefaultHandler
 {
     /**
      * @var bool

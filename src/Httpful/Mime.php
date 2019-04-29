@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Httpful;
 
-/**
- * Class to organize the Mime stuff a bit more
- */
 class Mime
 {
     const CSV = 'text/csv';
@@ -33,7 +30,7 @@ class Mime
      * Map short name for a mime type
      * to a full proper mime type
      */
-    public static $mimes = [
+    private static $mimes = [
         'json'       => self::JSON,
         'xml'        => self::XML,
         'form'       => self::FORM,

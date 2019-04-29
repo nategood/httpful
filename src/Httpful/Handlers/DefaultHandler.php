@@ -14,7 +14,7 @@ use voku\helper\UTF8;
 /**
  * Class MimeHandlerAdapter
  */
-class MimeHandlerAdapter implements MimeHandlerAdapterInterface
+class DefaultHandler implements MimeHandlerInterface
 {
     /**
      * MimeHandlerAdapter constructor.

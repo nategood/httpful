@@ -5,7 +5,7 @@ namespace Httpful\Handlers;
 /**
  * Class MimeHandlerAdapter
  */
-interface MimeHandlerAdapterInterface
+interface MimeHandlerInterface
 {
     /**
      * @param array $args

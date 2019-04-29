@@ -10,7 +10,7 @@ namespace Httpful\Handlers;
 /**
  * Class XmlHandler
  */
-class XmlHandler extends MimeHandlerAdapter
+class XmlHandler extends DefaultHandler
 {
     /**
      * @var string xml namespace to use with simple_load_string

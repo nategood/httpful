@@ -28,13 +28,13 @@ Features
 <?php
 
 // Make a request to the GitHub API with a custom
-// header of "X-Trvial-Header: Just as a demo".
+// header of "X-Foo-Header: Just as a demo".
 $uri = 'https://api.github.com/users/voku';
-$response = \Httpful\Client::get_request($uri)->addHeader('X-Trvial-Header', 'Just as a demo')
+$response = \Httpful\Client::get_request($uri)->addHeader('X-Foo-Header', 'Just as a demo')
                                               ->expectsJson()
                                               ->send();
 
-echo $response->getBody()->name . ' joined GitHub on ' . \date('M jS Y', \strtotime($response->getBody()->created_at)) . "\n";
+echo $response->getBody()->name . ' joined GitHub on ' . date('M jS Y', strtotime($response->getBody()->created_at)) . "\n";
 ```
 
 # Installation
@@ -50,7 +50,7 @@ Handlers are simple classes that are used to parse response bodies and serialize
 ```php
 <?php
 
-class SimpleCsvHandler extends \Httpful\Handlers\MimeHandlerAdapter
+class SimpleCsvHandler extends \Httpful\Handlers\DefaultHandler
 {
     /**
      * Takes a response body, and turns it into 

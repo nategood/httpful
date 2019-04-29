@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Httpful\Handlers\MimeHandlerAdapter;
+use Httpful\Handlers\DefaultHandler;
 use Httpful\Handlers\XmlHandler;
 use Httpful\Mime;
 use Httpful\Setup;
@@ -18,7 +18,7 @@ Setup::register(Mime::XML, new XmlHandler($conf));
 
 // We can also add the parsers with our own ...
 
-class SimpleCsvHandler extends MimeHandlerAdapter
+class SimpleCsvHandler extends DefaultHandler
 {
     /**
      * Takes a response body, and turns it into

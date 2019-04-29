@@ -10,7 +10,7 @@ namespace Httpful\Handlers;
 /**
  * Class FormHandler
  */
-class FormHandler extends MimeHandlerAdapter
+class FormHandler extends DefaultHandler
 {
     /**
      * @param string $body

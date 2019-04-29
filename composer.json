@@ -45,5 +45,11 @@
     "psr-0": {
       "Httpful": "src/"
     }
+  },
+
+  "autoload-dev": {
+    "psr-0": {
+      "Httpful\\Test\\": "tests/"
+    }
   }
 }

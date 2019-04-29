@@ -6,7 +6,7 @@ namespace Httpful;
 
 use Psr\Http\Message\StreamInterface;
 
-class Helper
+class Http
 {
     const DELETE = 'DELETE';
 
@@ -25,30 +25,10 @@ class Helper
     const TRACE = 'TRACE';
 
     /**
-     * @return array of HTTP method strings
-     *
-     * @deprecated Technically anything *can* have a body,
-     *             they just don't have semantic meaning.  So say's Roy
-     *             http://tech.groups.yahoo.com/group/rest-discuss/message/9962
-     */
-    public static function canHaveBody(): array
-    {
-        return [
-            self::POST,
-            self::PUT,
-            self::PATCH,
-            self::OPTIONS,
-        ];
-    }
-
-    /**
      * @return array list of (always) idempotent HTTP methods
      */
     public static function idempotentMethods(): array
     {
-        // Though it is possible to be idempotent, POST
-        // is not guarunteed to be, and more often than
-        // not, it is not.
         return [
             self::HEAD,
             self::GET,
@@ -123,7 +103,12 @@ class Helper
      */
     public static function safeMethods(): array
     {
-        return [self::HEAD, self::GET, self::OPTIONS, self::TRACE];
+        return [
+            self::HEAD,
+            self::GET,
+            self::OPTIONS,
+            self::TRACE,
+        ];
     }
 
     /**

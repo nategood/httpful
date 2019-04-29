@@ -4,25 +4,31 @@ declare(strict_types=1);
 
 namespace Httpful;
 
-use Httpful\Handlers\MimeHandlerAdapter;
-use Httpful\Handlers\MimeHandlerAdapterInterface;
+use Httpful\Handlers\DefaultHandler;
+use Httpful\Handlers\MimeHandlerInterface;
+use Psr\Log\LoggerInterface;
 
 class Setup
 {
     /**
-     * @var MimeHandlerAdapterInterface[]
+     * @var MimeHandlerInterface[]
      */
     private static $mimeRegistrar = [];
 
     /**
      * @var bool
      */
-    private static $registered = false;
+    private static $mimeRegistered = false;
 
     /**
-     * @var MimeHandlerAdapterInterface
+     * @var MimeHandlerInterface|null
      */
-    private static $default;
+    private static $mimeDefault;
+
+    /**
+     * @var callable|LoggerInterface|null
+     */
+    private static $errorGlobalCallback;
 
     /**
      * Does this particular Mime Type have a parser registered for it?
@@ -39,11 +45,13 @@ class Setup
     public static function reset()
     {
         self::$mimeRegistrar = [];
-        self::$registered = false;
+        self::$mimeRegistered = false;
+        self::$errorGlobalCallback = null;
+        self::$mimeDefault = null;
 
         self::initMimeHandlers();
 
-        self::setupMimeType();
+        self::setupGlobalMimeType();
     }
 
     /**
@@ -51,7 +59,7 @@ class Setup
      */
     public static function initMimeHandlers()
     {
-        if (self::$registered === true) {
+        if (self::$mimeRegistered === true) {
             return;
         }
 
@@ -72,24 +80,48 @@ class Setup
             self::register($mime, $handler);
         }
 
-        self::$registered = true;
+        self::$mimeRegistered = true;
     }
 
     /**
-     * @param string                      $mimeType
-     * @param MimeHandlerAdapterInterface $handler
+     * @param string               $mimeType
+     * @param MimeHandlerInterface $handler
      */
-    public static function register($mimeType, MimeHandlerAdapterInterface $handler)
+    public static function register($mimeType, MimeHandlerInterface $handler)
     {
         self::$mimeRegistrar[$mimeType] = $handler;
     }
 
     /**
+     * @param callable|LoggerInterface $error_callback
+     */
+    public static function setupGlobalErrorCallback($error_callback)
+    {
+        if (
+            !$error_callback instanceof LoggerInterface
+            &&
+            !\is_callable($error_callback)
+        ) {
+            throw new \InvalidArgumentException('Only callable or LoggerInterface are allowed as global error callback.');
+        }
+
+        self::$errorGlobalCallback = $error_callback;
+    }
+
+    /**
+     * @return callable|\Psr\Log\LoggerInterface|null
+     */
+    public static function getGlobalErrorCallback()
+    {
+        return self::$errorGlobalCallback;
+    }
+
+    /**
      * @param string $mimeType
      *
-     * @return MimeHandlerAdapterInterface
+     * @return MimeHandlerInterface
      */
-    public static function setupMimeType($mimeType = null): MimeHandlerAdapterInterface
+    public static function setupGlobalMimeType($mimeType = null): MimeHandlerInterface
     {
         self::initMimeHandlers();
 
@@ -97,10 +129,10 @@ class Setup
             return self::$mimeRegistrar[$mimeType];
         }
 
-        if (empty(self::$default)) {
-            self::$default = new MimeHandlerAdapter();
+        if (empty(self::$mimeDefault)) {
+            self::$mimeDefault = new DefaultHandler();
         }
 
-        return self::$default;
+        return self::$mimeDefault;
     }
 }

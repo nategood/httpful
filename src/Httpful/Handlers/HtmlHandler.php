@@ -13,7 +13,7 @@ use voku\helper\HtmlDomParser;
 /**
  * Class HtmlHandler
  */
-class HtmlHandler extends MimeHandlerAdapter
+class HtmlHandler extends DefaultHandler
 {
     /**
      * @param string $body

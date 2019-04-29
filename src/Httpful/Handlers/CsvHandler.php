@@ -10,7 +10,7 @@ namespace Httpful\Handlers;
 /**
  * Class CsvHandler
  */
-class CsvHandler extends MimeHandlerAdapter
+class CsvHandler extends DefaultHandler
 {
     /**
      * @param string $body

@@ -8,9 +8,6 @@ use Httpful\Response\Headers;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 
-/**
- * Models an HTTP response
- */
 final class Response implements ResponseInterface
 {
     /**
@@ -98,7 +95,7 @@ final class Response implements ResponseInterface
         $this->meta_data = $meta_data;
 
         $this->code = $this->_parseCode($headers);
-        $this->reason = Helper::reason((int) $this->code);
+        $this->reason = Http::reason((int) $this->code);
         $this->headers = Response\Headers::fromString($headers);
 
         $this->_interpretHeaders();
@@ -150,7 +147,7 @@ final class Response implements ResponseInterface
             }
         }
 
-        return Setup::setupMimeType($parse_with)->parse($body);
+        return Setup::setupGlobalMimeType($parse_with)->parse($body);
     }
 
     /**

@@ -24,7 +24,7 @@ final class Request implements \IteratorAggregate, RequestInterface
     const SERIALIZE_PAYLOAD_SMART = 2;
 
     /**
-     * Template Request object
+     * "Request"-template object
      *
      * @var Request|null
      */
@@ -68,7 +68,7 @@ final class Request implements \IteratorAggregate, RequestInterface
     /**
      * @var string
      */
-    private $method = Helper::GET;
+    private $method = Http::GET;
 
     /**
      * @var array
@@ -188,79 +188,26 @@ final class Request implements \IteratorAggregate, RequestInterface
     private $_protocol_version;
 
     /**
-     * We made the constructor protected to force the factory style.  This was
-     * done to keep the syntax cleaner and better the support the idea of
-     * "default templates".  Very basic and flexible as it is only intended
-     * for internal use.
+     * The Client::get, Client::post, ... syntax is preferred as it is more readable.
      *
-     * @param array $attrs hash of initial attribute values
+     * @param string    $method   Http Method
+     * @param string    $mime     Mime Type to Use
+     * @param self|null $template "Request"-template object
      */
-    public function __construct($attrs = null)
+    public function __construct($method = null, $mime = null, self $template = null)
     {
-        if (!\is_array($attrs)) {
-            return;
+        $this->_template = $template;
+
+        // fallback
+        if (!isset($this->_template)) {
+            $this->_template = new self(Http::GET, null, $this);
+            $this->_template->disableStrictSSL();
         }
 
-        foreach ($attrs as $attr => $value) {
-            $this->{$attr} = $value;
-        }
-    }
-
-    /**
-     * Magic method allows for neatly setting other headers in a
-     * similar syntax as the other setters.  This method also allows
-     * for the sends* syntax.
-     *
-     * @param string $method "missing" method name called
-     *                       the method name called should be the name of the header that you
-     *                       are trying to set in camel case without dashes e.g. to set a
-     *                       header for Content-Type you would use contentType() or more commonly
-     *                       to add a custom header like X-My-Header, you would use xMyHeader().
-     *                       To promote readability, you can optionally prefix these methods with
-     *                       "with"  (e.g. withXMyHeader("blah") instead of xMyHeader("blah")).
-     * @param array  $args   in this case, there should only ever be 1 argument provided
-     *                       and that argument should be a string value of the header we're setting
-     *
-     * @return self|null
-     */
-    public function __call($method, $args)
-    {
-        // This method supports the sends* methods like sendsJson, sendsForm ...
-        if (\strpos($method, 'sends') === 0) {
-            $mime = \substr($method, 5);
-            if (Mime::supportsMimeType($mime)) {
-                $this->contentType(Mime::getFullMime($mime));
-
-                return $this;
-            }
-        }
-        if (\strpos($method, 'expects') === 0) {
-            $mime = \substr($method, 7);
-            if (Mime::supportsMimeType($mime)) {
-                $this->expectsType(Mime::getFullMime($mime));
-
-                return $this;
-            }
-        }
-
-        // This method also adds the custom header support as described in the method comments.
-        if (\count($args) === 0) {
-            return null;
-        }
-
-        // Strip the sugar.  If it leads with "with", strip.
-        // This is okay because: No defined HTTP headers begin with with,
-        // and if you are defining a custom header, the standard is to prefix it
-        // with an "X-", so that should take care of any collisions.
-        if (\strpos($method, 'with') === 0) {
-            $method = \substr($method, 4);
-        }
-
-        // Precede upper case letters with dashes, uppercase the first letter of method.
-        $header = \ucwords(\implode('-', (array) \preg_split('/([A-Z][^A-Z]*)/', $method, -1, \PREG_SPLIT_DELIM_CAPTURE | \PREG_SPLIT_NO_EMPTY)));
-        $this->addHeader($header, $args[0]);
-
-        return $this;
+        $this->_setDefaultsFromTemplate()
+            ->method($method)
+            ->contentType($mime)
+            ->expectsType($mime);
     }
 
     /**
@@ -307,7 +254,7 @@ final class Request implements \IteratorAggregate, RequestInterface
         $curl->setOpt(\CURLOPT_IPRESOLVE, \CURL_IPRESOLVE_V4);
 
         $curl->setOpt(\CURLOPT_CUSTOMREQUEST, $this->method);
-        if ($this->method === Helper::HEAD) {
+        if ($this->method === Http::HEAD) {
             $curl->setOpt(\CURLOPT_NOBODY, true);
         }
 
@@ -524,20 +471,21 @@ final class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
-     * Add an additional header to the request.
+     * Add an additional header to the request
+     * and return an immutable version from this object.
      *
      * @param string $header_name
      * @param string $value
      *
      * @return self
-     *
-     * @see Request::__call()
      */
     public function addHeader($header_name, $value): self
     {
-        $this->headers[$header_name] = $value;
+        $return = clone $this;
 
-        return $this;
+        $return->headers[$header_name] = $value;
+
+        return $return;
     }
 
     /**
@@ -731,27 +679,6 @@ final class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
-     * Get default for a value based on the template objectl
-     *
-     * @param string|null $attr Name of attribute (e.g. mime, headers)
-     *                          if null just return the whole template object;
-     *
-     * @return mixed default value
-     */
-    public function getTemplateAttribute($attr)
-    {
-        if ($this->_template === null) {
-            $this->_initializeDefaultTemplate();
-        }
-
-        if (isset($attr)) {
-            return $this->_template->{$attr};
-        }
-
-        return $this->_template;
-    }
-
-    /**
      * HTTP Method Delete
      *
      * @param string      $uri  optional uri to use
@@ -761,7 +688,7 @@ final class Request implements \IteratorAggregate, RequestInterface
      */
     public static function delete(string $uri, string $mime = null): self
     {
-        return (new self())->init(Helper::DELETE)
+        return (new self(Http::DELETE))
             ->setUriFromString($uri)
             ->mime($mime);
     }
@@ -972,7 +899,7 @@ final class Request implements \IteratorAggregate, RequestInterface
      */
     public static function get(string $uri, string $mime = null): self
     {
-        return (new self())->init(Helper::GET)
+        return (new self(Http::GET))
             ->setUriFromString($uri)
             ->mime($mime);
     }
@@ -1190,59 +1117,9 @@ final class Request implements \IteratorAggregate, RequestInterface
      */
     public static function head($uri): self
     {
-        return (new self())->init(Helper::HEAD)
+        return (new self(Http::HEAD))
             ->setUriFromString($uri)
             ->mime(Mime::PLAIN);
-    }
-
-    /**
-     * Let's you configure default settings for this
-     * class from a template Request object.  Simply construct a
-     * Request object as much as you want to and then pass it to
-     * this method.  It will then lock in those settings from
-     * that template object.
-     * The most common of which may be default mime
-     * settings or strict ssl settings.
-     * Again some slight memory overhead incurred here but in the grand
-     * scheme of things as it typically only occurs once
-     *
-     * @param self $template
-     *
-     * @return self
-     */
-    public function useTemplate(self $template): self
-    {
-        $this->_template = clone $template;
-
-        $this->_setDefaultsFromTemplate();
-
-        return $this;
-    }
-
-    /**
-     * Factory style constructor works nicer for chaining.  This
-     * should also really only be used internally.  The Request::get,
-     * Request::post syntax is preferred as it is more readable.
-     *
-     * @param string $method Http Method
-     * @param string $mime   Mime Type to Use
-     *
-     * @return self
-     */
-    public function init($method = null, $mime = null): self
-    {
-        // Setup the default template if needed.
-        if (!isset($this->_template)) {
-            $this->_initializeDefaultTemplate();
-        }
-
-        $request = new self();
-
-        return $request
-            ->_setDefaultsFromTemplate()
-            ->method($method)
-            ->contentType($mime)
-            ->expectsType($mime);
     }
 
     /**
@@ -1289,8 +1166,7 @@ final class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
-     * Helper function to set the Content type and Expected as same in
-     * one swoop
+     * Helper function to set the Content type and Expected as same in one swoop.
      *
      * @param string|null $mime mime type to use for content type and expected return type
      *
@@ -1344,7 +1220,7 @@ final class Request implements \IteratorAggregate, RequestInterface
      */
     public static function options($uri): self
     {
-        return (new self())->init(Helper::OPTIONS)->setUriFromString($uri);
+        return (new self(Http::OPTIONS))->setUriFromString($uri);
     }
 
     /**
@@ -1403,7 +1279,7 @@ final class Request implements \IteratorAggregate, RequestInterface
      */
     public static function patch(string $uri, $payload = null, string $mime = null): self
     {
-        return (new self())->init(Helper::PATCH)
+        return (new self(Http::PATCH))
             ->setUriFromString($uri)
             ->_setBody($payload, $mime);
     }
@@ -1419,7 +1295,7 @@ final class Request implements \IteratorAggregate, RequestInterface
      */
     public static function post(string $uri, $payload = null, string $mime = null): self
     {
-        return (new self())->init(Helper::POST)
+        return (new self(Http::POST))
             ->setUriFromString($uri)
             ->_setBody($payload, $mime);
     }
@@ -1435,7 +1311,7 @@ final class Request implements \IteratorAggregate, RequestInterface
      */
     public static function put(string $uri, $payload = null, string $mime = null): self
     {
-        return (new self())->init(Helper::PUT)
+        return (new self(Http::PUT))
             ->setUriFromString($uri)
             ->_setBody($payload, $mime);
     }
@@ -1862,13 +1738,7 @@ final class Request implements \IteratorAggregate, RequestInterface
      */
     public function withUserAgent($userAgent): self
     {
-        $return = $this->__call('withUserAgent', [$userAgent]);
-
-        if ($return === null) {
-            return $this;
-        }
-
-        return $return;
+        return $this->addHeader('User-Agent', $userAgent);
     }
 
     /**
@@ -1878,7 +1748,7 @@ final class Request implements \IteratorAggregate, RequestInterface
      *
      * @return string HTTP protocol version
      */
-    public function getProtocolVersion()
+    public function getProtocolVersion(): string
     {
         return $this->_protocol_version ?? '';
     }
@@ -1915,7 +1785,7 @@ final class Request implements \IteratorAggregate, RequestInterface
      *              name using a case-insensitive string comparison. Returns false if
      *              no matching header name is found in the message.
      */
-    public function hasHeader($name)
+    public function hasHeader($name): bool
     {
         return $this->getHeaders() !== [];
     }
@@ -1935,7 +1805,7 @@ final class Request implements \IteratorAggregate, RequestInterface
      *                  header. If the header does not appear in the message, this method MUST
      *                  return an empty array.
      */
-    public function getHeader($name)
+    public function getHeader($name): array
     {
         $headers = $this->headers;
 
@@ -1970,7 +1840,7 @@ final class Request implements \IteratorAggregate, RequestInterface
      *                concatenated together using a comma. If the header does not appear in
      *                the message, this method MUST return an empty string.
      */
-    public function getHeaderLine($name)
+    public function getHeaderLine($name): string
     {
         return $this->headers[$name];
     }
@@ -2061,9 +1931,9 @@ final class Request implements \IteratorAggregate, RequestInterface
      *
      * @return StreamInterface returns the body as a stream
      */
-    public function getBody()
+    public function getBody(): StreamInterface
     {
-        return Helper::stream($this->payload);
+        return Http::stream($this->payload);
     }
 
     /**
@@ -2085,7 +1955,7 @@ final class Request implements \IteratorAggregate, RequestInterface
      */
     public function withBody(StreamInterface $body)
     {
-        $stream = Helper::stream($body);
+        $stream = Http::stream($body);
 
         return $this->_setBody($stream->getContents());
     }
@@ -2106,7 +1976,7 @@ final class Request implements \IteratorAggregate, RequestInterface
      *
      * @return string
      */
-    public function getRequestTarget()
+    public function getRequestTarget(): string
     {
         if ($this->uri === null) {
             return '/';
@@ -2164,7 +2034,7 @@ final class Request implements \IteratorAggregate, RequestInterface
      *
      * @return string returns the request method
      */
-    public function getMethod()
+    public function getMethod(): string
     {
         return $this->method;
     }
@@ -2241,6 +2111,21 @@ final class Request implements \IteratorAggregate, RequestInterface
      */
     private function _error($error)
     {
+        // global error handling
+
+        $globalErrorHandler = Setup::getGlobalErrorCallback();
+        if ($globalErrorHandler) {
+            if ($this->error_callback instanceof LoggerInterface) {
+                // PSR-3 https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-3-logger-interface.md
+                $this->error_callback->error($error);
+            } elseif (\is_callable($this->error_callback)) {
+                // error callback
+                \call_user_func($this->error_callback, $error);
+            }
+        }
+
+        // local error handling
+
         if (isset($this->error_callback)) {
             if ($this->error_callback instanceof LoggerInterface) {
                 // PSR-3 https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-3-logger-interface.md
@@ -2253,27 +2138,6 @@ final class Request implements \IteratorAggregate, RequestInterface
             /** @noinspection ForgottenDebugOutputInspection */
             \error_log($error);
         }
-    }
-
-    /**
-     * This is the default template to use if no
-     * template has been provided.  The template
-     * tells the class which default values to use.
-     * While there is a slight overhead for object
-     * creation once per execution (not once per
-     * Request instantiation), it promotes readability
-     * and flexibility within the class.
-     */
-    private function _initializeDefaultTemplate()
-    {
-        // This is the only place you will see this constructor syntax.
-        // It is only done here to prevent infinite recursion.
-        // Do not use this syntax elsewhere.
-        // It goes against the whole readability and transparency idea.
-        $this->_template = new self(['method' => Helper::GET]);
-
-        // This is more like it...
-        $this->_template->disableStrictSSL();
     }
 
     /**
@@ -2329,7 +2193,7 @@ final class Request implements \IteratorAggregate, RequestInterface
             return \call_user_func($this->payload_serializers[$key], $payload);
         }
 
-        return Setup::setupMimeType($this->content_type)->serialize($payload);
+        return Setup::setupGlobalMimeType($this->content_type)->serialize($payload);
     }
 
     /**
@@ -2340,10 +2204,6 @@ final class Request implements \IteratorAggregate, RequestInterface
      */
     private function _setDefaultsFromTemplate(): self
     {
-        if ($this->_template === null) {
-            $this->_initializeDefaultTemplate();
-        }
-
         if ($this->_template !== null) {
             foreach ($this->_template as $k => $v) {
                 if ($k[0] !== '_') {

@@ -28,7 +28,7 @@ if ($php_major < 5.4 || \stripos(\PHP_OS, 'WIN') === 0) {
     $pid = (int) $output[0];
 
     // check server.log to see if it failed to start
-    $serverLogData = \file_get_contents($serverLogFile);
+    $serverLogData = (string) \file_get_contents($serverLogFile);
     if (\strpos($serverLogData, 'Fail') !== false) {
         // server failed to start for some reason
         echo 'Failed to start server! Logs:' . \PHP_EOL . \PHP_EOL;
