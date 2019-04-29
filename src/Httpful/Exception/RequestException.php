@@ -17,12 +17,12 @@ final class RequestException extends \Exception implements \Psr\Http\Client\Requ
     /**
      * RequestException constructor.
      *
-     * @param string                                  $message
-     * @param int                                     $code
-     * @param \Throwable|null                         $previous
-     * @param \Psr\Http\Message\RequestInterface|null $request
+     * @param string                             $message
+     * @param int                                $code
+     * @param \Throwable|null                    $previous
+     * @param \Psr\Http\Message\RequestInterface $request
      */
-    public function __construct($message = "", $code = 0, Throwable $previous = null, RequestInterface $request = null)
+    public function __construct(RequestInterface $request, $message = '', $code = 0, Throwable $previous = null)
     {
         parent::__construct($message, $code, $previous);
 

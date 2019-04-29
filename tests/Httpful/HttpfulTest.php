@@ -141,8 +141,8 @@ Transfer-Encoding: chunked\r\n";
 
                            /* @var Request $request */
 
-                           $self::assertSame('malformed://url', $request->getUri());
-                           $request->setUri('malformed2://url');
+                           $self::assertSame('malformed://url', $request->getUriString());
+                           $request->setUriFromString('malformed2://url');
                            $invoked = true;
                        }
                    )
@@ -185,7 +185,7 @@ Transfer-Encoding: chunked\r\n";
     public function testCustomHeader()
     {
         $r = Request::get('http://example.com/')
-                    ->addHeader('XTrivial', 'FooBar');
+            ->addHeader('XTrivial', 'FooBar');
 
         $r->_curlPrep();
         static::assertContains('', $r->getRawHeaders());
@@ -328,7 +328,8 @@ Transfer-Encoding: chunked\r\n";
 
         $head = Client::head('http://www.google.com?a=b');
         static::assertSame('http://www.google.com/?a=b', $head->getMetaData()['url']);
-        static::assertIsString($head->getBody());
+        /** @noinspection PhpUnitTestsInspection */
+        static::assertInternalType('string', $head->getBody());
         static::assertSame('1.1', $head->getProtocolVersion());
 
         $post = Client::post('http://www.google.com?a=b');
@@ -458,36 +459,41 @@ Transfer-Encoding: chunked\r\n",
         $r = Request::get('http://google.com');
         $r->_curlPrep();
         $r->_uriPrep();
-        static::assertSame('http://google.com', $r->getUri());
+        static::assertSame('http://google.com', $r->getUriString());
 
         $r = Request::get('http://google.com?q=query');
         $r->_curlPrep();
         $r->_uriPrep();
-        static::assertSame('http://google.com?q=query', $r->getUri());
+        static::assertSame('http://google.com?q=query', $r->getUriString());
 
         $r = Request::get('http://google.com');
         $r->param('a', 'b');
         $r->_curlPrep();
         $r->_uriPrep();
-        static::assertSame('http://google.com?a=b', $r->getUri());
+        static::assertSame('http://google.com?a=b', $r->getUriString());
+
+        $r = Request::get('http://google.com');
+        $r->_curlPrep();
+        $r->_uriPrep();
+        static::assertSame('http://google.com', $r->getUriString());
 
         $r = Request::get('http://google.com?a=b');
         $r->param('c', 'd');
         $r->_curlPrep();
         $r->_uriPrep();
-        static::assertSame('http://google.com?a=b&c=d', $r->getUri());
+        static::assertSame('http://google.com?a=b&c=d', $r->getUriString());
 
         $r = Request::get('http://google.com?a=b');
         $r->param('', 'e');
         $r->_curlPrep();
         $r->_uriPrep();
-        static::assertSame('http://google.com?a=b', $r->getUri());
+        static::assertSame('http://google.com?a=b', $r->getUriString());
 
         $r = Request::get('http://google.com?a=b');
         $r->param('e', '');
         $r->_curlPrep();
         $r->_uriPrep();
-        static::assertSame('http://google.com?a=b', $r->getUri());
+        static::assertSame('http://google.com?a=b', $r->getUriString());
     }
 
     public function testParentType()
@@ -546,7 +552,7 @@ Transfer-Encoding: chunked\r\n",
             /** @noinspection PhpUnusedLocalVariableInspection */
             $result = $handler->parse('invalid{json');
         } catch (\Httpful\Exception\JsonParseException $e) {
-            static::assertSame('Unable to parse response as JSON: ' . json_last_error_msg() . ' | "invalid{json"', $e->getMessage());;
+            static::assertSame('Unable to parse response as JSON: ' . \json_last_error_msg() . ' | "invalid{json"', $e->getMessage());
 
             return;
         }
@@ -660,7 +666,7 @@ Content-Type: text/plain; charset=utf-8\r\n",
     {
         try {
             (new Request())->init()
-                ->setUri(self::TIMEOUT_URI)
+                ->setUriFromString(self::TIMEOUT_URI)
                 ->timeout(0.1)
                 ->send();
         } catch (ConnectionErrorException $e) {
@@ -680,7 +686,7 @@ Content-Type: text/plain; charset=utf-8\r\n",
         static::assertSame(self::SAMPLE_JSON_RESPONSE, (string) $response);
     }
 
-    public function testUserAgent()
+    public function testUserAgentGet()
     {
         $r = Request::get('http://example.com/')
             ->withUserAgent('ACME/1.2.3');

@@ -31,9 +31,9 @@ final class Request implements \IteratorAggregate, RequestInterface
     private $_template;
 
     /**
-     * @var string
+     * @var UriInterface|null
      */
-    private $uri = '';
+    private $uri;
 
     /**
      * @var string
@@ -71,7 +71,7 @@ final class Request implements \IteratorAggregate, RequestInterface
     private $method = Helper::GET;
 
     /**
-     * @var int[]|string[]
+     * @var array
      */
     private $headers = [];
 
@@ -277,13 +277,8 @@ final class Request implements \IteratorAggregate, RequestInterface
     public function _curlPrep(): self
     {
         // Check for required stuff.
-        if (!$this->uri) {
-            throw new RequestException(
-                'Attempting to send a request before defining a URI endpoint.',
-                98,
-                null,
-                $this
-            );
+        if ($this->uri === null) {
+            throw new RequestException($this, 'Attempting to send a request before defining a URI endpoint.');
         }
 
         if ($this->params === []) {
@@ -322,20 +317,13 @@ final class Request implements \IteratorAggregate, RequestInterface
 
         if ($this->hasClientSideCert()) {
             if (!\file_exists($this->client_key)) {
-                throw new RequestException(
-                    'Could not read Client Key',
-                    97,
-                    null,
-                    $this
-                );
+                throw new RequestException($this, 'Could not read Client Key');
             }
 
             if (!\file_exists($this->client_cert)) {
                 throw new RequestException(
-                    'Could not read Client Certificate',
-                    96,
-                    null,
-                    $this
+                    $this,
+                    'Could not read Client Certificate'
                 );
             }
 
@@ -373,14 +361,13 @@ final class Request implements \IteratorAggregate, RequestInterface
         $curl->setOpt(\CURLOPT_SSL_VERIFYPEER, $this->strict_ssl);
         // zero is safe for all curl versions
         $verifyValue = $this->strict_ssl + 0;
-        //Support for value 1 removed in cURL 7.28.1 value 2 valid in all versions
+        // support for value 1 removed in cURL 7.28.1 value 2 valid in all versions
         if ($verifyValue > 0) {
             ++$verifyValue;
         }
         $curl->setOpt(\CURLOPT_SSL_VERIFYHOST, $verifyValue);
         $curl->setOpt(\CURLOPT_RETURNTRANSFER, true);
 
-        // https://github.com/nategood/httpful/issues/84
         // set Content-Length to the size of the payload if present
         if ($this->payload !== []) {
             $curl->setOpt(\CURLOPT_POSTFIELDS, $this->serialized_payload);
@@ -391,7 +378,6 @@ final class Request implements \IteratorAggregate, RequestInterface
         }
 
         $headers = [];
-        // https://github.com/nategood/httpful/issues/37
         // except header removes any HTTP 1.1 Continue from response headers
         $headers[] = 'Expect:';
 
@@ -399,7 +385,7 @@ final class Request implements \IteratorAggregate, RequestInterface
             $headers[] = $this->buildUserAgent();
         }
 
-        $headers[] = "Content-Type: {$this->content_type}";
+        $headers[] = 'Content-Type: ' . $this->content_type;
 
         // allow custom Accept header if set
         if (!isset($this->headers['Accept'])) {
@@ -407,7 +393,7 @@ final class Request implements \IteratorAggregate, RequestInterface
             $accept = 'Accept: */*; q=0.5, text/plain; q=0.8, text/html;level=3;';
 
             if (!empty($this->expected_type)) {
-                $accept .= "q=0.9, {$this->expected_type}";
+                $accept .= 'q=0.9, ' . $this->expected_type;
             }
 
             $headers[] = $accept;
@@ -422,7 +408,7 @@ final class Request implements \IteratorAggregate, RequestInterface
             $headers[] = "${header}: ${value}";
         }
 
-        $url = \parse_url($this->uri);
+        $url = \parse_url((string) $this->uri);
 
         if (\is_array($url) === false) {
             throw new ConnectionErrorException('Unable to connect to "' . $this->uri . '". => "parse_url" === false');
@@ -452,15 +438,19 @@ final class Request implements \IteratorAggregate, RequestInterface
             switch ($this->_protocol_version) {
                 case '0.0':
                     $curl->setOpt(\CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_NONE);
+
                     break;
                 case '1.0':
                     $curl->setOpt(\CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_1_0);
+
                     break;
                 case '1.1':
                     $curl->setOpt(\CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_1_1);
+
                     break;
                 case '2.0':
                     $curl->setOpt(\CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_2_0);
+
                     break;
             }
         }
@@ -497,7 +487,11 @@ final class Request implements \IteratorAggregate, RequestInterface
      */
     public function _uriPrep()
     {
-        $url = \parse_url($this->uri);
+        if ($this->uri === null) {
+            throw new ConnectionErrorException('Unable to connect. => "uri" === null');
+        }
+
+        $url = \parse_url((string) $this->uri);
         $originalParams = [];
 
         if ($url !== false) {
@@ -509,23 +503,23 @@ final class Request implements \IteratorAggregate, RequestInterface
                 \parse_str($url['query'], $originalParams);
             }
 
-            $params = \array_merge($originalParams, (array) $this->params);
+            $params = \array_merge($originalParams, $this->params);
         } else {
-            $params = (array) $this->params;
+            $params = $this->params;
         }
 
         $queryString = \http_build_query($params);
 
-        if (\strpos($this->uri, '?') !== false) {
-            $this->uri = \substr(
-                $this->uri,
+        if (\strpos((string) $this->uri, '?') !== false) {
+            $this->uri = $this->uri->withQuery(\substr(
+                (string) $this->uri,
                 0,
-                \strpos($this->uri, '?')
-            );
+                \strpos((string) $this->uri, '?')
+            ));
         }
 
         if (\count($params)) {
-            $this->uri .= '?' . $queryString;
+            $this->uri = $this->uri->withQuery($queryString);
         }
     }
 
@@ -602,7 +596,7 @@ final class Request implements \IteratorAggregate, RequestInterface
 
         foreach ($files as $key => $file) {
             $mimeType = \finfo_file($fInfo, $file);
-            $this->payload[$key] = \curl_file_create($file, $mimeType, basename($file));
+            $this->payload[$key] = \curl_file_create($file, $mimeType, \basename($file));
         }
 
         \finfo_close($fInfo);
@@ -768,7 +762,7 @@ final class Request implements \IteratorAggregate, RequestInterface
     public static function delete(string $uri, string $mime = null): self
     {
         return (new self())->init(Helper::DELETE)
-            ->uri($uri)
+            ->setUriFromString($uri)
             ->mime($mime);
     }
 
@@ -979,7 +973,7 @@ final class Request implements \IteratorAggregate, RequestInterface
     public static function get(string $uri, string $mime = null): self
     {
         return (new self())->init(Helper::GET)
-            ->uri($uri)
+            ->setUriFromString($uri)
             ->mime($mime);
     }
 
@@ -1087,11 +1081,19 @@ final class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
-     * @return string
+     * @return \Httpful\Uri|\Psr\Http\Message\UriInterface|null
      */
-    public function getUri(): string
+    public function getUri()
     {
         return $this->uri;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUriString(): string
+    {
+        return (string) $this->uri;
     }
 
     /**
@@ -1189,7 +1191,7 @@ final class Request implements \IteratorAggregate, RequestInterface
     public static function head($uri): self
     {
         return (new self())->init(Helper::HEAD)
-            ->uri($uri)
+            ->setUriFromString($uri)
             ->mime(Mime::PLAIN);
     }
 
@@ -1342,7 +1344,7 @@ final class Request implements \IteratorAggregate, RequestInterface
      */
     public static function options($uri): self
     {
-        return (new self())->init(Helper::OPTIONS)->uri($uri);
+        return (new self())->init(Helper::OPTIONS)->setUriFromString($uri);
     }
 
     /**
@@ -1402,7 +1404,7 @@ final class Request implements \IteratorAggregate, RequestInterface
     public static function patch(string $uri, $payload = null, string $mime = null): self
     {
         return (new self())->init(Helper::PATCH)
-            ->uri($uri)
+            ->setUriFromString($uri)
             ->_setBody($payload, $mime);
     }
 
@@ -1418,7 +1420,7 @@ final class Request implements \IteratorAggregate, RequestInterface
     public static function post(string $uri, $payload = null, string $mime = null): self
     {
         return (new self())->init(Helper::POST)
-            ->uri($uri)
+            ->setUriFromString($uri)
             ->_setBody($payload, $mime);
     }
 
@@ -1434,7 +1436,7 @@ final class Request implements \IteratorAggregate, RequestInterface
     public static function put(string $uri, $payload = null, string $mime = null): self
     {
         return (new self())->init(Helper::PUT)
-            ->uri($uri)
+            ->setUriFromString($uri)
             ->_setBody($payload, $mime);
     }
 
@@ -1475,32 +1477,7 @@ final class Request implements \IteratorAggregate, RequestInterface
             throw new ConnectionErrorException('Unable to connect to "' . $this->uri . '". => "curl" === null');
         }
 
-        switch ($this->method) {
-            case Helper::DELETE:
-                $result = $this->_curl->delete($this->uri);
-                break;
-            case Helper::GET:
-                $result = $this->_curl->get($this->uri);
-                break;
-            case Helper::POST:
-                $result = $this->_curl->post($this->uri);
-                break;
-            case Helper::PUT:
-                $result = $this->_curl->put($this->uri);
-                break;
-            case Helper::HEAD:
-                $result = $this->_curl->head($this->uri);
-                break;
-            case Helper::PATCH:
-                $result = $this->_curl->patch($this->uri);
-                break;
-            case Helper::OPTIONS:
-                $result = $this->_curl->options($this->uri);
-                break;
-            default:
-                $result = $this->_curl->exec();
-        }
-
+        $result = $this->_curl->exec();
         $response = $this->_buildResponse($result);
 
         $this->_curl->close();
@@ -1724,13 +1701,25 @@ final class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
+     * @param UriInterface $uri
+     *
+     * @return self
+     */
+    public function setUri(UriInterface $uri): self
+    {
+        $this->uri = $uri;
+
+        return $this;
+    }
+
+    /**
      * @param string $uri
      *
      * @return self
      */
-    public function setUri(string $uri): self
+    public function setUriFromString(string $uri): self
     {
-        $this->uri = $uri;
+        $this->uri = new Uri($uri);
 
         return $this;
     }
@@ -1769,18 +1758,6 @@ final class Request implements \IteratorAggregate, RequestInterface
     public function timeout($timeout): self
     {
         $this->timeout = $timeout;
-
-        return $this;
-    }
-
-    /**
-     * @param string $uri
-     *
-     * @return self
-     */
-    public function uri($uri): self
-    {
-        $this->uri = $uri;
 
         return $this;
     }
@@ -1895,6 +1872,371 @@ final class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
+     * Retrieves the HTTP protocol version as a string.
+     *
+     * The string MUST contain only the HTTP version number (e.g., "1.1", "1.0").
+     *
+     * @return string HTTP protocol version
+     */
+    public function getProtocolVersion()
+    {
+        return $this->_protocol_version ?? '';
+    }
+
+    /**
+     * Return an instance with the specified HTTP protocol version.
+     *
+     * The version string MUST contain only the HTTP version number (e.g.,
+     * "1.1", "1.0").
+     *
+     * This method MUST be implemented in such a way as to retain the
+     * immutability of the message, and MUST return an instance that has the
+     * new protocol version.
+     *
+     * @param string $version HTTP protocol version
+     *
+     * @return static
+     */
+    public function withProtocolVersion($version)
+    {
+        $return = clone $this;
+
+        $return->_protocol_version = $version;
+
+        return $return;
+    }
+
+    /**
+     * Checks if a header exists by the given case-insensitive name.
+     *
+     * @param string $name case-insensitive header field name
+     *
+     * @return bool Returns true if any header names match the given header
+     *              name using a case-insensitive string comparison. Returns false if
+     *              no matching header name is found in the message.
+     */
+    public function hasHeader($name)
+    {
+        return $this->getHeaders() !== [];
+    }
+
+    /**
+     * Retrieves a message header value by the given case-insensitive name.
+     *
+     * This method returns an array of all the header values of the given
+     * case-insensitive header name.
+     *
+     * If the header does not appear in the message, this method MUST return an
+     * empty array.
+     *
+     * @param string $name case-insensitive header field name
+     *
+     * @return string[] An array of string values as provided for the given
+     *                  header. If the header does not appear in the message, this method MUST
+     *                  return an empty array.
+     */
+    public function getHeader($name)
+    {
+        $headers = $this->headers;
+
+        if (isset($headers[$name])) {
+            if (!\is_array($headers[$name])) {
+                return [$headers[$name]];
+            }
+
+            return $headers[$name];
+        }
+
+        return [];
+    }
+
+    /**
+     * Retrieves a comma-separated string of the values for a single header.
+     *
+     * This method returns all of the header values of the given
+     * case-insensitive header name as a string concatenated together using
+     * a comma.
+     *
+     * NOTE: Not all header values may be appropriately represented using
+     * comma concatenation. For such headers, use getHeader() instead
+     * and supply your own delimiter when concatenating.
+     *
+     * If the header does not appear in the message, this method MUST return
+     * an empty string.
+     *
+     * @param string $name case-insensitive header field name
+     *
+     * @return string A string of values as provided for the given header
+     *                concatenated together using a comma. If the header does not appear in
+     *                the message, this method MUST return an empty string.
+     */
+    public function getHeaderLine($name)
+    {
+        return $this->headers[$name];
+    }
+
+    /**
+     * Return an instance with the provided value replacing the specified header.
+     *
+     * While header names are case-insensitive, the casing of the header will
+     * be preserved by this function, and returned from getHeaders().
+     *
+     * This method MUST be implemented in such a way as to retain the
+     * immutability of the message, and MUST return an instance that has the
+     * new and/or updated header and value.
+     *
+     * @param string          $name  case-insensitive header field name
+     * @param string|string[] $value header value(s)
+     *
+     * @throws \InvalidArgumentException for invalid header names or values
+     *
+     * @return static
+     */
+    public function withHeader($name, $value)
+    {
+        $return = clone $this;
+
+        $return->headers[$name] = $value;
+
+        return $return;
+    }
+
+    /**
+     * Return an instance with the specified header appended with the given value.
+     *
+     * Existing values for the specified header will be maintained. The new
+     * value(s) will be appended to the existing list. If the header did not
+     * exist previously, it will be added.
+     *
+     * This method MUST be implemented in such a way as to retain the
+     * immutability of the message, and MUST return an instance that has the
+     * new header and/or value.
+     *
+     * @param string          $name  case-insensitive header field name to add
+     * @param string|string[] $value header value(s)
+     *
+     * @throws \InvalidArgumentException for invalid header names or values
+     *
+     * @return static
+     */
+    public function withAddedHeader($name, $value)
+    {
+        $return = clone $this;
+
+        if (isset($return->headers[$name])) {
+            $return->headers[$name] .= $value;
+        } else {
+            $return->headers[$name] = $value;
+        }
+
+        return $return;
+    }
+
+    /**
+     * Return an instance without the specified header.
+     *
+     * Header resolution MUST be done without case-sensitivity.
+     *
+     * This method MUST be implemented in such a way as to retain the
+     * immutability of the message, and MUST return an instance that removes
+     * the named header.
+     *
+     * @param string $name case-insensitive header field name to remove
+     *
+     * @return static
+     */
+    public function withoutHeader($name)
+    {
+        $return = clone $this;
+
+        if (isset($return->headers[$name])) {
+            unset($return->headers[$name]);
+        }
+
+        return $return;
+    }
+
+    /**
+     * Gets the body of the message.
+     *
+     * @return StreamInterface returns the body as a stream
+     */
+    public function getBody()
+    {
+        return Helper::stream($this->payload);
+    }
+
+    /**
+     * Return an instance with the specified message body.
+     *
+     * The body MUST be a StreamInterface object.
+     *
+     * This method MUST be implemented in such a way as to retain the
+     * immutability of the message, and MUST return a new instance that has the
+     * new body stream.
+     *
+     * @param StreamInterface $body
+     *
+     * @throws \InvalidArgumentException when the body is not valid
+     *
+     * @return static
+     *
+     * @internal
+     */
+    public function withBody(StreamInterface $body)
+    {
+        $stream = Helper::stream($body);
+
+        return $this->_setBody($stream->getContents());
+    }
+
+    /**
+     * Retrieves the message's request target.
+     *
+     * Retrieves the message's request-target either as it will appear (for
+     * clients), as it appeared at request (for servers), or as it was
+     * specified for the instance (see withRequestTarget()).
+     *
+     * In most cases, this will be the origin-form of the composed URI,
+     * unless a value was provided to the concrete implementation (see
+     * withRequestTarget() below).
+     *
+     * If no URI is available, and no request-target has been specifically
+     * provided, this method MUST return the string "/".
+     *
+     * @return string
+     */
+    public function getRequestTarget()
+    {
+        if ($this->uri === null) {
+            return '/';
+        }
+
+        $target = $this->uri->getPath();
+
+        if (!$target) {
+            $target = '/';
+        }
+
+        if ($this->uri->getQuery()) {
+            $target .= '?' . $this->uri->getQuery();
+        }
+
+        return $target;
+    }
+
+    /**
+     * Return an instance with the specific request-target.
+     *
+     * If the request needs a non-origin-form request-target — e.g., for
+     * specifying an absolute-form, authority-form, or asterisk-form —
+     * this method may be used to create an instance with the specified
+     * request-target, verbatim.
+     *
+     * This method MUST be implemented in such a way as to retain the
+     * immutability of the message, and MUST return an instance that has the
+     * changed request target.
+     *
+     * @see http://tools.ietf.org/html/rfc7230#section-5.3 (for the various
+     *     request-target forms allowed in request messages)
+     *
+     * @param mixed $requestTarget
+     *
+     * @return static
+     */
+    public function withRequestTarget($requestTarget)
+    {
+        if (\preg_match('#\\s#', $requestTarget)) {
+            throw new \InvalidArgumentException('Invalid request target provided; cannot contain whitespace');
+        }
+
+        $return = clone $this;
+
+        if ($return->uri !== null) {
+            $return->setUri($return->uri->withPath($requestTarget));
+        }
+
+        return $return;
+    }
+
+    /**
+     * Retrieves the HTTP method of the request.
+     *
+     * @return string returns the request method
+     */
+    public function getMethod()
+    {
+        return $this->method;
+    }
+
+    /**
+     * Return an instance with the provided HTTP method.
+     *
+     * While HTTP method names are typically all uppercase characters, HTTP
+     * method names are case-sensitive and thus implementations SHOULD NOT
+     * modify the given string.
+     *
+     * This method MUST be implemented in such a way as to retain the
+     * immutability of the message, and MUST return an instance that has the
+     * changed request method.
+     *
+     * @param string $method case-sensitive method
+     *
+     * @throws \InvalidArgumentException for invalid HTTP methods
+     *
+     * @return static
+     */
+    public function withMethod($method)
+    {
+        $return = clone $this;
+
+        $return->method = $method;
+
+        return $return;
+    }
+
+    /**
+     * Returns an instance with the provided URI.
+     *
+     * This method MUST update the Host header of the returned request by
+     * default if the URI contains a host component. If the URI does not
+     * contain a host component, any pre-existing Host header MUST be carried
+     * over to the returned request.
+     *
+     * You can opt-in to preserving the original state of the Host header by
+     * setting `$preserveHost` to `true`. When `$preserveHost` is set to
+     * `true`, this method interacts with the Host header in the following ways:
+     *
+     * - If the Host header is missing or empty, and the new URI contains
+     *   a host component, this method MUST update the Host header in the returned
+     *   request.
+     * - If the Host header is missing or empty, and the new URI does not contain a
+     *   host component, this method MUST NOT update the Host header in the returned
+     *   request.
+     * - If a Host header is present and non-empty, this method MUST NOT update
+     *   the Host header in the returned request.
+     *
+     * This method MUST be implemented in such a way as to retain the
+     * immutability of the message, and MUST return an instance that has the
+     * new UriInterface instance.
+     *
+     * @see http://tools.ietf.org/html/rfc3986#section-4.3
+     *
+     * @param UriInterface $uri          new request URI to use
+     * @param bool         $preserveHost preserve the original state of the Host header
+     *
+     * @return static
+     */
+    public function withUri(UriInterface $uri, $preserveHost = false)
+    {
+        $return = clone $this;
+
+        $return->uri = $uri;
+
+        return $return;
+    }
+
+    /**
      * @param string $error
      */
     private function _error($error)
@@ -1935,12 +2277,10 @@ final class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
-     * Turn payload from structured data into
-     * a string based on the current Mime type.
-     * This uses the auto_serialize option to determine
-     * it's course of action.  See serialize method for more.
-     * Renamed from _detectPayload to _serializePayload as of
-     * 2012-02-15.
+     * Turn payload from structured data into a string based on the current Mime type.
+     * This uses the auto_serialize option to determine it's course of action.
+     *
+     * See serialize method for more.
      *
      * Added in support for custom payload serializers.
      * The serialize_payload_method stuff still holds true though.
@@ -1966,6 +2306,8 @@ final class Request implements \IteratorAggregate, RequestInterface
             $this->serialize_payload_method === static::SERIALIZE_PAYLOAD_SMART
             &&
             \count($payload) === 1
+            &&
+            \array_keys($payload)[0] === 0
             &&
             \is_scalar($payload_first = \array_values($payload)[0])
         ) {
@@ -2072,7 +2414,7 @@ final class Request implements \IteratorAggregate, RequestInterface
         $headers = $this->_curl->getRawResponseHeaders();
 
         $body = UTF8::remove_left(
-            (string)$this->_curl->getRawResponse(),
+            (string) $this->_curl->getRawResponse(),
             $headers
         );
 
@@ -2108,6 +2450,14 @@ final class Request implements \IteratorAggregate, RequestInterface
         $this->mime($mimeType);
 
         if (!empty($payload)) {
+            if (\is_array($payload)) {
+                foreach ($payload as $key => $value) {
+                    $this->payload[$key] = $value;
+                }
+
+                return $this;
+            }
+
             $this->payload[] = $payload;
         }
 
@@ -2130,339 +2480,5 @@ final class Request implements \IteratorAggregate, RequestInterface
         $this->strict_ssl = $strict;
 
         return $this;
-    }
-
-    /**
-     * Retrieves the HTTP protocol version as a string.
-     *
-     * The string MUST contain only the HTTP version number (e.g., "1.1", "1.0").
-     *
-     * @return string HTTP protocol version.
-     */
-    public function getProtocolVersion()
-    {
-        return $this->_info['protocol_version'] ?? '';
-    }
-
-    /**
-     * Return an instance with the specified HTTP protocol version.
-     *
-     * The version string MUST contain only the HTTP version number (e.g.,
-     * "1.1", "1.0").
-     *
-     * This method MUST be implemented in such a way as to retain the
-     * immutability of the message, and MUST return an instance that has the
-     * new protocol version.
-     *
-     * @param string $version HTTP protocol version
-     *
-     * @return static
-     */
-    public function withProtocolVersion($version)
-    {
-        $return = clone $this;
-
-        $return->_protocol_version = $version;
-
-        return $return;
-    }
-
-    /**
-     * Checks if a header exists by the given case-insensitive name.
-     *
-     * @param string $name Case-insensitive header field name.
-     *
-     * @return bool Returns true if any header names match the given header
-     *     name using a case-insensitive string comparison. Returns false if
-     *     no matching header name is found in the message.
-     */
-    public function hasHeader($name)
-    {
-        return $this->getHeaders() !== [];
-    }
-
-    /**
-     * Retrieves a message header value by the given case-insensitive name.
-     *
-     * This method returns an array of all the header values of the given
-     * case-insensitive header name.
-     *
-     * If the header does not appear in the message, this method MUST return an
-     * empty array.
-     *
-     * @param string $name Case-insensitive header field name.
-     *
-     * @return string[] An array of string values as provided for the given
-     *    header. If the header does not appear in the message, this method MUST
-     *    return an empty array.
-     */
-    public function getHeader($name)
-    {
-        $headers = $this->headers;
-
-        if (isset($headers[$name])) {
-            if (!\is_array($headers[$name])) {
-                return [$headers[$name]];
-            }
-
-            return $headers[$name];
-        }
-
-        return [];
-    }
-
-    /**
-     * Retrieves a comma-separated string of the values for a single header.
-     *
-     * This method returns all of the header values of the given
-     * case-insensitive header name as a string concatenated together using
-     * a comma.
-     *
-     * NOTE: Not all header values may be appropriately represented using
-     * comma concatenation. For such headers, use getHeader() instead
-     * and supply your own delimiter when concatenating.
-     *
-     * If the header does not appear in the message, this method MUST return
-     * an empty string.
-     *
-     * @param string $name Case-insensitive header field name.
-     *
-     * @return string A string of values as provided for the given header
-     *    concatenated together using a comma. If the header does not appear in
-     *    the message, this method MUST return an empty string.
-     */
-    public function getHeaderLine($name)
-    {
-        return $this->headers[$name];
-    }
-
-    /**
-     * Return an instance with the provided value replacing the specified header.
-     *
-     * While header names are case-insensitive, the casing of the header will
-     * be preserved by this function, and returned from getHeaders().
-     *
-     * This method MUST be implemented in such a way as to retain the
-     * immutability of the message, and MUST return an instance that has the
-     * new and/or updated header and value.
-     *
-     * @param string          $name  Case-insensitive header field name.
-     * @param string|string[] $value Header value(s).
-     *
-     * @return static
-     * @throws \InvalidArgumentException for invalid header names or values.
-     */
-    public function withHeader($name, $value)
-    {
-        $return = clone $this;
-
-        $return->headers[$name] = $value;
-
-        return $return;
-    }
-
-    /**
-     * Return an instance with the specified header appended with the given value.
-     *
-     * Existing values for the specified header will be maintained. The new
-     * value(s) will be appended to the existing list. If the header did not
-     * exist previously, it will be added.
-     *
-     * This method MUST be implemented in such a way as to retain the
-     * immutability of the message, and MUST return an instance that has the
-     * new header and/or value.
-     *
-     * @param string          $name  Case-insensitive header field name to add.
-     * @param string|string[] $value Header value(s).
-     *
-     * @return static
-     * @throws \InvalidArgumentException for invalid header names or values.
-     */
-    public function withAddedHeader($name, $value)
-    {
-        $return = clone $this;
-
-        if (isset($return->headers[$name])) {
-            $return->headers[$name] .= $value;
-        } else {
-            $return->headers[$name] = $value;
-        }
-
-        return $return;
-    }
-
-    /**
-     * Return an instance without the specified header.
-     *
-     * Header resolution MUST be done without case-sensitivity.
-     *
-     * This method MUST be implemented in such a way as to retain the
-     * immutability of the message, and MUST return an instance that removes
-     * the named header.
-     *
-     * @param string $name Case-insensitive header field name to remove.
-     *
-     * @return static
-     */
-    public function withoutHeader($name)
-    {
-        $return = clone $this;
-
-        if (isset($return->headers[$name])) {
-            unset($return->headers[$name]);
-        }
-
-        return $return;
-    }
-
-    /**
-     * Gets the body of the message.
-     *
-     * @return StreamInterface Returns the body as a stream.
-     */
-    public function getBody()
-    {
-        return Helper::stream($this->payload);
-    }
-
-    /**
-     * Return an instance with the specified message body.
-     *
-     * The body MUST be a StreamInterface object.
-     *
-     * This method MUST be implemented in such a way as to retain the
-     * immutability of the message, and MUST return a new instance that has the
-     * new body stream.
-     *
-     * @param StreamInterface $body Body.
-     *
-     * @return static
-     * @throws \InvalidArgumentException When the body is not valid.
-     */
-    public function withBody(StreamInterface $body)
-    {
-        $stream = Helper::stream($body);
-
-        $this->payload[] = $stream->getContents();
-    }
-
-    /**
-     * Retrieves the message's request target.
-     *
-     * Retrieves the message's request-target either as it will appear (for
-     * clients), as it appeared at request (for servers), or as it was
-     * specified for the instance (see withRequestTarget()).
-     *
-     * In most cases, this will be the origin-form of the composed URI,
-     * unless a value was provided to the concrete implementation (see
-     * withRequestTarget() below).
-     *
-     * If no URI is available, and no request-target has been specifically
-     * provided, this method MUST return the string "/".
-     *
-     * @return string
-     */
-    public function getRequestTarget()
-    {
-        // TODO: Implement getRequestTarget() method.
-    }
-
-    /**
-     * Return an instance with the specific request-target.
-     *
-     * If the request needs a non-origin-form request-target — e.g., for
-     * specifying an absolute-form, authority-form, or asterisk-form —
-     * this method may be used to create an instance with the specified
-     * request-target, verbatim.
-     *
-     * This method MUST be implemented in such a way as to retain the
-     * immutability of the message, and MUST return an instance that has the
-     * changed request target.
-     *
-     * @link http://tools.ietf.org/html/rfc7230#section-5.3 (for the various
-     *     request-target forms allowed in request messages)
-     *
-     * @param mixed $requestTarget
-     *
-     * @return static
-     */
-    public function withRequestTarget($requestTarget)
-    {
-        // TODO: Implement withRequestTarget() method.
-    }
-
-    /**
-     * Retrieves the HTTP method of the request.
-     *
-     * @return string Returns the request method.
-     */
-    public function getMethod()
-    {
-        return $this->method;
-    }
-
-    /**
-     * Return an instance with the provided HTTP method.
-     *
-     * While HTTP method names are typically all uppercase characters, HTTP
-     * method names are case-sensitive and thus implementations SHOULD NOT
-     * modify the given string.
-     *
-     * This method MUST be implemented in such a way as to retain the
-     * immutability of the message, and MUST return an instance that has the
-     * changed request method.
-     *
-     * @param string $method Case-sensitive method.
-     *
-     * @return static
-     * @throws \InvalidArgumentException for invalid HTTP methods.
-     */
-    public function withMethod($method)
-    {
-        $return = clone $this;
-
-        $return->method = $method;
-
-        return $return;
-    }
-
-    /**
-     * Returns an instance with the provided URI.
-     *
-     * This method MUST update the Host header of the returned request by
-     * default if the URI contains a host component. If the URI does not
-     * contain a host component, any pre-existing Host header MUST be carried
-     * over to the returned request.
-     *
-     * You can opt-in to preserving the original state of the Host header by
-     * setting `$preserveHost` to `true`. When `$preserveHost` is set to
-     * `true`, this method interacts with the Host header in the following ways:
-     *
-     * - If the Host header is missing or empty, and the new URI contains
-     *   a host component, this method MUST update the Host header in the returned
-     *   request.
-     * - If the Host header is missing or empty, and the new URI does not contain a
-     *   host component, this method MUST NOT update the Host header in the returned
-     *   request.
-     * - If a Host header is present and non-empty, this method MUST NOT update
-     *   the Host header in the returned request.
-     *
-     * This method MUST be implemented in such a way as to retain the
-     * immutability of the message, and MUST return an instance that has the
-     * new UriInterface instance.
-     *
-     * @link http://tools.ietf.org/html/rfc3986#section-4.3
-     *
-     * @param UriInterface $uri          New request URI to use.
-     * @param bool         $preserveHost Preserve the original state of the Host header.
-     *
-     * @return static
-     */
-    public function withUri(UriInterface $uri, $preserveHost = false){
-        $return = clone $this;
-
-        $return->uri = (string) $uri;
-
-        return $return;
     }
 }
