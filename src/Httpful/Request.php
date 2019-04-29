@@ -556,7 +556,7 @@ final class Request implements \IteratorAggregate
 
         foreach ($files as $key => $file) {
             $mimeType = \finfo_file($fInfo, $file);
-            $this->payload[$key] = \curl_file_create($file, $mimeType);
+            $this->payload[$key] = \curl_file_create($file, $mimeType, basename($file));
         }
 
         \finfo_close($fInfo);
