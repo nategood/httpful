@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Httpful;
 
+use Httpful\Exception\ResponseException;
 use Httpful\Response\Headers;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
@@ -171,7 +172,7 @@ final class Response implements ResponseInterface
             ||
             \count($parts) < 2
         ) {
-            throw new \Exception('Unable to parse response code from HTTP response due to malformed response');
+            throw new ResponseException('Unable to parse response code from HTTP response due to malformed response');
         }
 
         return (int) $parts[1];

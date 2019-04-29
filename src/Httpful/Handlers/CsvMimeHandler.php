@@ -2,15 +2,14 @@
 
 declare(strict_types=1);
 
+namespace Httpful\Handlers;
+
+use Httpful\Exception\CsvParseException;
+
 /**
  * Mime Type: text/csv
  */
-namespace Httpful\Handlers;
-
-/**
- * Class CsvHandler
- */
-class CsvHandler extends DefaultHandler
+class CsvMimeHandler implements MimeHandlerInterface
 {
     /**
      * @param string $body
@@ -28,7 +27,7 @@ class CsvHandler extends DefaultHandler
         $parsed = [];
         $fp = \fopen('data://text/plain;base64,' . \base64_encode($body), 'rb');
         if ($fp === false) {
-            throw new \Exception('Unable to parse response as CSV');
+            throw new CsvParseException('Unable to parse response as CSV');
         }
 
         while (($r = \fgetcsv($fp)) !== false) {
@@ -36,7 +35,7 @@ class CsvHandler extends DefaultHandler
         }
 
         if (empty($parsed)) {
-            throw new \Exception('Unable to parse response as CSV');
+            throw new CsvParseException('Unable to parse response as CSV');
         }
 
         return $parsed;
@@ -51,7 +50,7 @@ class CsvHandler extends DefaultHandler
     {
         $fp = \fopen('php://temp/maxmemory:' . (6 * 1024 * 1024), 'r+b');
         if ($fp === false) {
-            throw new \Exception('Unable to parse response as CSV');
+            throw new CsvParseException('Unable to parse response as CSV');
         }
 
         $i = 0;

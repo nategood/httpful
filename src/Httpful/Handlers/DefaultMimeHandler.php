@@ -9,12 +9,7 @@ declare(strict_types=1);
  */
 namespace Httpful\Handlers;
 
-use voku\helper\UTF8;
-
-/**
- * Class MimeHandlerAdapter
- */
-class DefaultHandler implements MimeHandlerInterface
+class DefaultMimeHandler extends AbstractMimeHandler
 {
     /**
      * MimeHandlerAdapter constructor.
@@ -51,15 +46,5 @@ class DefaultHandler implements MimeHandlerInterface
     public function serialize($payload)
     {
         return $payload;
-    }
-
-    /**
-     * @param string $body
-     *
-     * @return string
-     */
-    protected function stripBom($body): string
-    {
-        return UTF8::remove_bom($body);
     }
 }

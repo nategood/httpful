@@ -8,10 +8,8 @@ declare(strict_types=1);
 namespace Httpful\Response;
 
 use Curl\CaseInsensitiveArray;
+use Httpful\Exception\ResponseHeaderException;
 
-/**
- * Class Headers
- */
 final class Headers extends CaseInsensitiveArray
 {
     /**
@@ -78,21 +76,21 @@ final class Headers extends CaseInsensitiveArray
      * @param string $offset
      * @param string $value
      *
-     * @throws \Exception
+     * @throws ResponseHeaderException
      */
     public function offsetSet($offset, $value)
     {
-        throw new \Exception('Headers are read-only.');
+        throw new ResponseHeaderException('Headers are read-only.');
     }
 
     /**
      * @param string $offset
      *
-     * @throws \Exception
+     * @throws ResponseHeaderException
      */
     public function offsetUnset($offset)
     {
-        throw new \Exception('Headers are read-only.');
+        throw new ResponseHeaderException('Headers are read-only.');
     }
 
     /**

@@ -9,7 +9,7 @@ use Psr\Http\Message\UriInterface;
 /**
  * PSR-7 URI implementation.
  */
-class Uri implements UriInterface
+final class Uri implements UriInterface
 {
     /**
      * Absolute http and https URIs require a host per RFC 7230 Section 2.7
@@ -19,6 +19,9 @@ class Uri implements UriInterface
      */
     const HTTP_DEFAULT_HOST = 'localhost';
 
+    /**
+     * @var array
+     */
     private static $defaultPorts = [
         'http'   => 80,
         'https'  => 443,
@@ -33,11 +36,23 @@ class Uri implements UriInterface
         'ldap'   => 389,
     ];
 
+    /**
+     * @var string
+     */
     private static $charUnreserved = 'a-zA-Z0-9_\-\.~';
 
+    /**
+     * @var string
+     */
     private static $charSubDelims = '!\$&\'\(\)\*\+,;=';
 
-    private static $replaceQuery = ['=' => '%3D', '&' => '%26'];
+    /**
+     * @var array
+     */
+    private static $replaceQuery = [
+        '=' => '%3D',
+        '&' => '%26',
+    ];
 
     /**
      * @var string uri scheme

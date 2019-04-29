@@ -22,7 +22,17 @@ Features
  - PSR-7: HTTP message interfaces
  - PSR-18: HTTP Client
 
-# Example
+# Examples
+
+```php
+<?php
+
+// Make a request to the GitHub API.
+$uri = 'https://api.github.com/users/voku';
+$response = \Httpful\Client::get($uri, \Httpful\Mime::JSON);
+
+echo $response->getBody()->name . ' joined GitHub on ' . date('M jS Y', strtotime($response->getBody()->created_at)) . "\n";
+```
 
 ```php
 <?php
@@ -50,7 +60,7 @@ Handlers are simple classes that are used to parse response bodies and serialize
 ```php
 <?php
 
-class SimpleCsvHandler extends \Httpful\Handlers\DefaultHandler
+class SimpleCsvHandler implements \Httpful\Handlers\MimeHandlerInterface
 {
     /**
      * Takes a response body, and turns it into 

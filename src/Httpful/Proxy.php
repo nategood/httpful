@@ -8,7 +8,7 @@ if (!\defined('CURLPROXY_SOCKS4')) {
     \define('CURLPROXY_SOCKS4', 4);
 }
 
-class Proxy
+final class Proxy
 {
     const HTTP = \CURLPROXY_HTTP;
 

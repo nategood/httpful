@@ -2,18 +2,14 @@
 
 declare(strict_types=1);
 
-/**
- * Mime Type: text/html
- * Mime Type: application/html+xml
- */
 namespace Httpful\Handlers;
 
 use voku\helper\HtmlDomParser;
 
 /**
- * Class HtmlHandler
+ * Mime Type: text/html
  */
-class HtmlHandler extends DefaultHandler
+class HtmlMimeHandler implements MimeHandlerInterface
 {
     /**
      * @param string $body

@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Httpful;
 
+use Httpful\Exception\ResponseException;
 use Psr\Http\Message\StreamInterface;
 
-class Http
+final class Http
 {
     const DELETE = 'DELETE';
 
@@ -92,7 +93,7 @@ class Http
         $codes = self::responseCodes();
 
         if (!\array_key_exists($code, $codes)) {
-            throw new \Exception('Unable to parse response code from HTTP response due to malformed response. Code: ' . $code);
+            throw new ResponseException('Unable to parse response code from HTTP response due to malformed response. Code: ' . $code);
         }
 
         return $codes[$code];
@@ -194,7 +195,7 @@ class Http
      *
      * @return array
      */
-    protected static function responseCodes(): array
+    private static function responseCodes(): array
     {
         return [
             100 => 'Continue',

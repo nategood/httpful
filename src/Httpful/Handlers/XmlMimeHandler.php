@@ -2,15 +2,14 @@
 
 declare(strict_types=1);
 
+namespace Httpful\Handlers;
+
+use Httpful\Exception\XmlParseException;
+
 /**
  * Mime Type: application/xml
  */
-namespace Httpful\Handlers;
-
-/**
- * Class XmlHandler
- */
-class XmlHandler extends DefaultHandler
+class XmlMimeHandler extends DefaultMimeHandler
 {
     /**
      * @var string xml namespace to use with simple_load_string
@@ -49,7 +48,7 @@ class XmlHandler extends DefaultHandler
 
         $parsed = \simplexml_load_string($body, \SimpleXMLElement::class, $this->libxml_opts, $this->namespace);
         if ($parsed === false) {
-            throw new \Exception('Unable to parse response as XML');
+            throw new XmlParseException('Unable to parse response as XML');
         }
 
         return $parsed;

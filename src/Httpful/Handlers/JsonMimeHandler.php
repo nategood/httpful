@@ -2,17 +2,14 @@
 
 declare(strict_types=1);
 
-/**
- * Mime Type: application/json
- */
 namespace Httpful\Handlers;
 
 use Httpful\Exception\JsonParseException;
 
 /**
- * Class JsonHandler
+ * Mime Type: application/json
  */
-class JsonHandler extends DefaultHandler
+class JsonMimeHandler extends DefaultMimeHandler
 {
     /**
      * @var bool

@@ -12,9 +12,9 @@ namespace Httpful\Test;
 
 use Httpful\Client;
 use Httpful\Exception\ConnectionErrorException;
-use Httpful\Handlers\DefaultHandler;
-use Httpful\Handlers\JsonHandler;
-use Httpful\Handlers\XmlHandler;
+use Httpful\Handlers\DefaultMimeHandler;
+use Httpful\Handlers\JsonMimeHandler;
+use Httpful\Handlers\XmlMimeHandler;
 use Httpful\Http;
 use Httpful\Mime;
 use Httpful\Request;
@@ -146,7 +146,7 @@ Transfer-Encoding: chunked\r\n";
                            $invoked = true;
                        }
                    )
-                ->setErrorCallback(
+                ->setErrorHandler(
                        static function ($error) { /* Be silent */
                        }
                    )
@@ -195,7 +195,7 @@ Transfer-Encoding: chunked\r\n";
     public function testCustomMimeRegistering()
     {
         // Register new mime type handler for "application/vnd.nategood.message+xml"
-        Setup::register(self::SAMPLE_VENDOR_TYPE, new DemoDefaultHandler());
+        Setup::registerMimeHandler(self::SAMPLE_VENDOR_TYPE, new DemoDefaultMimeHandler());
 
         static::assertTrue(Setup::hasParserRegistered(self::SAMPLE_VENDOR_TYPE));
 
@@ -441,9 +441,9 @@ Transfer-Encoding: chunked\r\n",
     {
         // Lazy test...
         $prev = Setup::setupGlobalMimeType(Mime::XML);
-        static::assertInstanceOf(DefaultHandler::class, $prev);
+        static::assertInstanceOf(DefaultMimeHandler::class, $prev);
         $conf = ['namespace' => 'http://example.com'];
-        Setup::register(Mime::XML, new XmlHandler($conf));
+        Setup::registerMimeHandler(Mime::XML, new XmlMimeHandler($conf));
         $new = Setup::setupGlobalMimeType(Mime::XML);
         static::assertNotSame($prev, $new);
         Setup::reset();
@@ -530,7 +530,7 @@ Transfer-Encoding: chunked\r\n",
 
     public function testParseJSON()
     {
-        $handler = new JsonHandler();
+        $handler = new JsonMimeHandler();
 
         $bodies = [
             'foo',
@@ -707,7 +707,7 @@ Content-Type: text/plain; charset=utf-8\r\n",
         try {
             /** @noinspection PhpUnusedParameterInspection */
             Request::get('malformed:url')
-                ->setErrorCallback(
+                ->setErrorHandler(
                        static function ($error) use (&$caught) {
                            $caught = true;
                        }
@@ -747,7 +747,7 @@ Content-Type: text/plain; charset=utf-8\r\n",
 /**
  * Class DemoMimeHandler
  */
-class DemoDefaultHandler extends DefaultHandler
+class DemoDefaultMimeHandler extends DefaultMimeHandler
 {
     /** @noinspection PhpMissingParentCallCommonInspection */
 

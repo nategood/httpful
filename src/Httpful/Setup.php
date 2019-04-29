@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Httpful;
 
-use Httpful\Handlers\DefaultHandler;
+use Httpful\Handlers\DefaultMimeHandler;
 use Httpful\Handlers\MimeHandlerInterface;
 use Psr\Log\LoggerInterface;
 
-class Setup
+final class Setup
 {
     /**
      * @var MimeHandlerInterface[]
@@ -23,12 +23,20 @@ class Setup
     /**
      * @var MimeHandlerInterface|null
      */
-    private static $mime_default;
+    private static $global_mime_handler;
 
     /**
      * @var callable|LoggerInterface|null
      */
-    private static $error_global_callback;
+    private static $global_error_handler;
+
+    /**
+     * @return callable|\Psr\Log\LoggerInterface|null
+     */
+    public static function getGlobalErrorHandler()
+    {
+        return self::$global_error_handler;
+    }
 
     /**
      * Does this particular Mime Type have a parser registered for it?
@@ -42,18 +50,6 @@ class Setup
         return isset(self::$mime_registrar[$mimeType]);
     }
 
-    public static function reset()
-    {
-        self::$mime_registrar = [];
-        self::$mime_registered = false;
-        self::$error_global_callback = null;
-        self::$mime_default = null;
-
-        self::initMimeHandlers();
-
-        self::setupGlobalMimeType();
-    }
-
     /**
      * Register default mime handlers.
      */
@@ -64,11 +60,11 @@ class Setup
         }
 
         $handlers = [
-            Mime::JSON => new \Httpful\Handlers\JsonHandler(),
-            Mime::XML  => new \Httpful\Handlers\XmlHandler(),
-            Mime::HTML => new \Httpful\Handlers\HtmlHandler(),
-            Mime::FORM => new \Httpful\Handlers\FormHandler(),
-            Mime::CSV  => new \Httpful\Handlers\CsvHandler(),
+            Mime::JSON => new \Httpful\Handlers\JsonMimeHandler(),
+            Mime::XML  => new \Httpful\Handlers\XmlMimeHandler(),
+            Mime::HTML => new \Httpful\Handlers\HtmlMimeHandler(),
+            Mime::FORM => new \Httpful\Handlers\FormMimeHandler(),
+            Mime::CSV  => new \Httpful\Handlers\CsvMimeHandler(),
         ];
 
         foreach ($handlers as $mime => $handler) {
@@ -77,25 +73,16 @@ class Setup
                 continue;
             }
 
-            self::register($mime, $handler);
+            self::registerMimeHandler($mime, $handler);
         }
 
         self::$mime_registered = true;
     }
 
     /**
-     * @param string               $mimeType
-     * @param MimeHandlerInterface $handler
-     */
-    public static function register($mimeType, MimeHandlerInterface $handler)
-    {
-        self::$mime_registrar[$mimeType] = $handler;
-    }
-
-    /**
      * @param callable|LoggerInterface|null $error_handler
      */
-    public static function setupGlobalErrorCallback($error_handler = null)
+    public static function registerGlobalErrorHandler($error_handler = null)
     {
         if (
             !$error_handler instanceof LoggerInterface
@@ -105,15 +92,39 @@ class Setup
             throw new \InvalidArgumentException('Only callable or LoggerInterface are allowed as global error callback.');
         }
 
-        self::$error_global_callback = $error_handler;
+        self::$global_error_handler = $error_handler;
     }
 
     /**
-     * @return callable|\Psr\Log\LoggerInterface|null
+     * @param \Httpful\Handlers\MimeHandlerInterface $global_mime_handler
      */
-    public static function getGlobalErrorCallback()
+    public static function registerGlobalMimeHandler(MimeHandlerInterface $global_mime_handler)
     {
-        return self::$error_global_callback;
+        self::$global_mime_handler = $global_mime_handler;
+    }
+
+    /**
+     * @param string               $mimeType
+     * @param MimeHandlerInterface $handler
+     */
+    public static function registerMimeHandler($mimeType, MimeHandlerInterface $handler)
+    {
+        self::$mime_registrar[$mimeType] = $handler;
+    }
+
+    /**
+     * @return MimeHandlerInterface
+     */
+    public static function reset(): MimeHandlerInterface
+    {
+        self::$mime_registrar = [];
+        self::$mime_registered = false;
+        self::$global_error_handler = null;
+        self::$global_mime_handler = null;
+
+        self::initMimeHandlers();
+
+        return self::setupGlobalMimeType();
     }
 
     /**
@@ -129,10 +140,10 @@ class Setup
             return self::$mime_registrar[$mimeType];
         }
 
-        if (empty(self::$mime_default)) {
-            self::$mime_default = new DefaultHandler();
+        if (empty(self::$global_mime_handler)) {
+            self::$global_mime_handler = new DefaultMimeHandler();
         }
 
-        return self::$mime_default;
+        return self::$global_mime_handler;
     }
 }

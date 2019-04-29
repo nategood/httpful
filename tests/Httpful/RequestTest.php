@@ -20,7 +20,7 @@ final class RequestTest extends TestCase
         $this->expectExceptionMessage('Unable to connect');
 
         // Silence the default logger via whenError override
-        Request::get('unavailable.url')->setErrorCallback(
+        Request::get('unavailable.url')->setErrorHandler(
         static function ($error) {
         }
     )->send();

@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Httpful\Handlers\DefaultHandler;
-use Httpful\Handlers\XmlHandler;
+use Httpful\Handlers\DefaultMimeHandler;
+use Httpful\Handlers\XmlMimeHandler;
 use Httpful\Mime;
 use Httpful\Setup;
 
@@ -14,11 +14,11 @@ require __DIR__ . '/../vendor/autoload.php';
 
 // Example setting a namespace for the XMLHandler parser
 $conf = ['namespace' => 'http://example.com'];
-Setup::register(Mime::XML, new XmlHandler($conf));
+Setup::registerMimeHandler(Mime::XML, new XmlMimeHandler($conf));
 
 // We can also add the parsers with our own ...
 
-class SimpleCsvHandler extends DefaultHandler
+class SimpleCsvMimeHandler extends DefaultMimeHandler
 {
     /**
      * Takes a response body, and turns it into
@@ -55,4 +55,4 @@ class SimpleCsvHandler extends DefaultHandler
     }
 }
 
-Setup::register('text/csv', new SimpleCsvHandler());
+Setup::registerMimeHandler('text/csv', new SimpleCsvMimeHandler());

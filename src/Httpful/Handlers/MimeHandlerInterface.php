@@ -2,16 +2,8 @@
 
 namespace Httpful\Handlers;
 
-/**
- * Class MimeHandlerAdapter
- */
 interface MimeHandlerInterface
 {
-    /**
-     * @param array $args
-     */
-    public function init(array $args);
-
     /**
      * @param string $body
      *

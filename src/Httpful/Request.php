@@ -143,7 +143,7 @@ final class Request implements \IteratorAggregate, RequestInterface
     /**
      * @var callable|LoggerInterface|null
      */
-    private $error_callback;
+    private $error_handler;
 
     /**
      * @var callable[]
@@ -268,10 +268,7 @@ final class Request implements \IteratorAggregate, RequestInterface
             }
 
             if (!\file_exists($this->client_cert)) {
-                throw new RequestException(
-                    $this,
-                    'Could not read Client Certificate'
-                );
+                throw new RequestException($this, 'Could not read Client Certificate');
             }
 
             $curl->setOpt(\CURLOPT_SSLCERTTYPE, $this->client_encoding);
@@ -915,9 +912,9 @@ final class Request implements \IteratorAggregate, RequestInterface
     /**
      * @return callable|LoggerInterface|null
      */
-    public function getErrorCallback()
+    public function getErrorHandler()
     {
-        return $this->error_callback;
+        return $this->error_handler;
     }
 
     /**
@@ -1536,13 +1533,13 @@ final class Request implements \IteratorAggregate, RequestInterface
      * Callback called to handle HTTP errors. When nothing is set, defaults
      * to logging via `error_log`.
      *
-     * @param callable|LoggerInterface|null $error_callback
+     * @param callable|LoggerInterface|null $error_handler
      *
      * @return self
      */
-    public function setErrorCallback($error_callback): self
+    public function setErrorHandler($error_handler): self
     {
-        $this->error_callback = $error_callback;
+        $this->error_handler = $error_handler;
 
         return $this;
     }
@@ -2113,26 +2110,26 @@ final class Request implements \IteratorAggregate, RequestInterface
     {
         // global error handling
 
-        $globalErrorHandler = Setup::getGlobalErrorCallback();
-        if ($globalErrorHandler) {
-            if ($this->error_callback instanceof LoggerInterface) {
+        $global_error_handler = Setup::getGlobalErrorHandler();
+        if ($global_error_handler) {
+            if ($global_error_handler instanceof LoggerInterface) {
                 // PSR-3 https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-3-logger-interface.md
-                $this->error_callback->error($error);
-            } elseif (\is_callable($this->error_callback)) {
+                $global_error_handler->error($error);
+            } elseif (\is_callable($global_error_handler)) {
                 // error callback
-                \call_user_func($this->error_callback, $error);
+                \call_user_func($global_error_handler, $error);
             }
         }
 
         // local error handling
 
-        if (isset($this->error_callback)) {
-            if ($this->error_callback instanceof LoggerInterface) {
+        if (isset($this->error_handler)) {
+            if ($this->error_handler instanceof LoggerInterface) {
                 // PSR-3 https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-3-logger-interface.md
-                $this->error_callback->error($error);
-            } elseif (\is_callable($this->error_callback)) {
+                $this->error_handler->error($error);
+            } elseif (\is_callable($this->error_handler)) {
                 // error callback
-                \call_user_func($this->error_callback, $error);
+                \call_user_func($this->error_handler, $error);
             }
         } else {
             /** @noinspection ForgottenDebugOutputInspection */

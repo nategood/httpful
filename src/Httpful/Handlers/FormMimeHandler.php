@@ -2,15 +2,12 @@
 
 declare(strict_types=1);
 
-/**
- * Mime Type: application/x-www-urlencoded
- */
 namespace Httpful\Handlers;
 
 /**
- * Class FormHandler
+ * Mime Type: application/x-www-urlencoded
  */
-class FormHandler extends DefaultHandler
+class FormMimeHandler implements MimeHandlerInterface
 {
     /**
      * @param string $body
