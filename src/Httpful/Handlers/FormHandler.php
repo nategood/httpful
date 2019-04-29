@@ -1,39 +1,39 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * Mime Type: application/x-www-urlencoded
- *
- * @author Nathan Good <me@nategood.com>
  */
-
 namespace Httpful\Handlers;
 
 /**
  * Class FormHandler
- *
- * @package Httpful\Handlers
  */
 class FormHandler extends MimeHandlerAdapter
 {
-  /**
-   * @param string $body
-   *
-   * @return mixed
-   */
-  public function parse($body)
-  {
-    $parsed = array();
-    parse_str($body, $parsed);
+    /**
+     * @param string $body
+     *
+     * @return array
+     */
+    public function parse($body)
+    {
+        // init
+        $parsed = [];
 
-    return $parsed;
-  }
+        \parse_str($body, $parsed);
 
-  /**
-   * @param mixed $payload
-   *
-   * @return string
-   */
-  public function serialize($payload): string
-  {
-    return http_build_query($payload, null, '&');
-  }
+        return $parsed;
+    }
+
+    /**
+     * @param mixed $payload
+     *
+     * @return string
+     */
+    public function serialize($payload)
+    {
+        return \http_build_query($payload, '', '&');
+    }
 }

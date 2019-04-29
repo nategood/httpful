@@ -1,0 +1,10 @@
+parameters:
+    reportUnmatchedIgnoredErrors: false
+    excludes_analyse:
+        - %rootDir%/vendor/*
+        - %rootDir%/tests/*
+    autoload_files:
+        - %rootDir%/vendor/autoload.php
+    ignoreErrors:
+        - '#function call_user_func expects callable#'
+        - '#Httpful\\Response\\Headers::__construct\(\) does not call parent constructor from Curl\\CaseInsensitiveArray\.#'

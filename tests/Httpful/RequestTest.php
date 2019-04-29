@@ -1,7 +1,6 @@
 <?php
-/**
- * @author nick fox <quixand gmail com>
- */
+
+declare(strict_types=1);
 
 namespace Httpful\Test;
 
@@ -11,23 +10,19 @@ use PHPUnit\Framework\TestCase;
 /**
  * Class RequestTest
  *
- * @package Httpful\Test
+ * @internal
  */
-class RequestTest extends TestCase
+final class RequestTest extends TestCase
 {
+    public function testGetInvalidURL()
+    {
+        $this->expectException(\Httpful\Exception\ConnectionErrorException::class);
+        $this->expectExceptionMessage('Unable to connect');
 
-  /**
-   * @author                   Nick Fox
-   * @expectedException        \Httpful\Exception\ConnectionErrorException
-   * @expectedExceptionMessage Unable to connect
-   */
-  public function testGet_InvalidURL()
-  {
-    // Silence the default logger via whenError override
-    Request::get('unavailable.url')->whenError(
-        function ($error) {
+        // Silence the default logger via whenError override
+        Request::get('unavailable.url')->setErrorCallback(
+        static function ($error) {
         }
     )->send();
-  }
-
+    }
 }

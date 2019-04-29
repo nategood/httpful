@@ -1,97 +1,97 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Httpful\Exception;
 
 /**
  * Class ConnectionErrorException
- *
- * @package Httpful\Exception
  */
-class ConnectionErrorException extends \Exception
+final class ConnectionErrorException extends \Exception implements \Psr\Http\Client\ClientExceptionInterface
 {
-  /**
-   * @var null|resource
-   */
-  public $curl_object = null;
+    /**
+     * @var \Curl\Curl|null
+     */
+    private $curl_object;
 
-  /**
-   * @var int
-   */
-  private $curlErrorNumber;
+    /**
+     * @var int
+     */
+    private $curlErrorNumber;
 
-  /**
-   * @var string
-   */
-  private $curlErrorString;
+    /**
+     * @var string
+     */
+    private $curlErrorString;
 
-  /**
-   * ConnectionErrorException constructor.
-   *
-   * @param string         $message
-   * @param int            $code
-   * @param \Exception|null $previous
-   * @param null           $curl_object
-   */
-  public function __construct($message, $code = 0, \Exception $previous = null, $curl_object = null)
-  {
-    $this->curl_object = $curl_object;
+    /**
+     * ConnectionErrorException constructor.
+     *
+     * @param string          $message
+     * @param int             $code
+     * @param \Exception|null $previous
+     * @param \Curl\Curl|null $curl_object
+     */
+    public function __construct($message, $code = 0, \Exception $previous = null, $curl_object = null)
+    {
+        $this->curl_object = $curl_object;
 
-    parent::__construct($message, $code, $previous);
-  }
+        parent::__construct($message, $code, $previous);
+    }
 
-  /**
-   * @return null|resource
-   */
-  public function getCurlObject()
-  {
-    return $this->curl_object;
-  }
+    /**
+     * @return int
+     */
+    public function getCurlErrorNumber(): int
+    {
+        return $this->curlErrorNumber;
+    }
 
-  /**
-   * @return string
-   */
-  public function getCurlErrorNumber(): string
-  {
-    return $this->curlErrorNumber;
-  }
+    /**
+     * @return string
+     */
+    public function getCurlErrorString(): string
+    {
+        return $this->curlErrorString;
+    }
 
-  /**
-   * @param string $curlErrorNumber
-   *
-   * @return $this
-   */
-  public function setCurlErrorNumber($curlErrorNumber)
-  {
-    $this->curlErrorNumber = $curlErrorNumber;
+    /**
+     * @return \Curl\Curl|null
+     */
+    public function getCurlObject()
+    {
+        return $this->curl_object;
+    }
 
-    return $this;
-  }
+    /**
+     * @param int $curlErrorNumber
+     *
+     * @return static
+     */
+    public function setCurlErrorNumber($curlErrorNumber)
+    {
+        $this->curlErrorNumber = $curlErrorNumber;
 
-  /**
-   * @return string
-   */
-  public function getCurlErrorString(): string
-  {
-    return $this->curlErrorString;
-  }
+        return $this;
+    }
 
-  /**
-   * @param string $curlErrorString
-   *
-   * @return $this
-   */
-  public function setCurlErrorString($curlErrorString)
-  {
-    $this->curlErrorString = $curlErrorString;
+    /**
+     * @param string $curlErrorString
+     *
+     * @return static
+     */
+    public function setCurlErrorString($curlErrorString)
+    {
+        $this->curlErrorString = $curlErrorString;
 
-    return $this;
-  }
+        return $this;
+    }
 
-  /**
-   * @return bool
-   */
-  public function wasTimeout(): bool
-  {
-    return $this->code === CURLE_OPERATION_TIMEOUTED;
-  }
+    /**
+     * @return bool
+     */
+    public function wasTimeout(): bool
+    {
+        return $this->code === \CURLE_OPERATION_TIMEOUTED;
+    }
 }
