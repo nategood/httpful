@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0
+
+ - FEATURE Add "PSR-3" logging
+ - FEATURE Add "PSR-18" HTTP Client - "\Httpful\Client"
+ - FEATURE Add "PSR-7" - RequestInterface && ResponseInterface
+ - fix issues reported by phpstan (level 7)
+ - make properties private && classes final
+
 ## 0.2.21
 
  - "Add convenience methods for appending parameters to query string." [PR #65](https://github.com/nategood/httpful/pull/65)
