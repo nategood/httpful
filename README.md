@@ -19,6 +19,7 @@ Features
  - Client Side Certificate Auth
  - Request "Templates"
  - PSR-3: Logger Interface
+ - PSR-7: HTTP message interfaces
  - PSR-18: HTTP Client
 
 # Example
@@ -29,9 +30,9 @@ Features
 // Make a request to the GitHub API with a custom
 // header of "X-Trvial-Header: Just as a demo".
 $uri = 'https://api.github.com/users/voku';
-$response = \Httpful\Client::getRequest($uri)->addHeader('X-Trvial-Header', 'Just as a demo')
-                                             ->expectsJson()
-                                             ->send();
+$response = \Httpful\Client::get_request($uri)->addHeader('X-Trvial-Header', 'Just as a demo')
+                                              ->expectsJson()
+                                              ->send();
 
 echo $response->getBody()->name . ' joined GitHub on ' . \date('M jS Y', \strtotime($response->getBody()->created_at)) . "\n";
 ```

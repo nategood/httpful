@@ -18,7 +18,7 @@ final class Client implements ClientInterface
      */
     public static function delete(string $uri, string $mime = Mime::JSON): Response
     {
-        return self::deleteRequest($uri, $mime)->send();
+        return self::delete_request($uri, $mime)->send();
     }
 
     /**
@@ -27,7 +27,7 @@ final class Client implements ClientInterface
      *
      * @return Request
      */
-    public static function deleteRequest(string $uri, string $mime = Mime::JSON): Request
+    public static function delete_request(string $uri, string $mime = Mime::JSON): Request
     {
         return Request::delete($uri, $mime);
     }
@@ -38,9 +38,9 @@ final class Client implements ClientInterface
      *
      * @return Response
      */
-    public static function get(string $uri, $mime = Mime::HTML): Response
+    public static function get(string $uri, $mime = Mime::PLAIN): Response
     {
-        return self::getRequest($uri, $mime)->send();
+        return self::get_request($uri, $mime)->send();
     }
 
     /**
@@ -49,7 +49,7 @@ final class Client implements ClientInterface
      *
      * @return Request
      */
-    public static function getRequest(string $uri, $mime = Mime::HTML): Request
+    public static function get_request(string $uri, $mime = Mime::PLAIN): Request
     {
         return Request::get($uri, $mime)->followRedirects();
     }
@@ -61,7 +61,7 @@ final class Client implements ClientInterface
      */
     public static function head(string $uri): Response
     {
-        return self::headRequest($uri)->send();
+        return self::head_request($uri)->send();
     }
 
     /**
@@ -69,7 +69,7 @@ final class Client implements ClientInterface
      *
      * @return Request
      */
-    public static function headRequest(string $uri): Request
+    public static function head_request(string $uri): Request
     {
         return Request::head($uri)->followRedirects();
     }
@@ -81,9 +81,9 @@ final class Client implements ClientInterface
      *
      * @return Response
      */
-    public static function patch(string $uri, $payload = null, string $mime = Mime::FORM): Response
+    public static function patch(string $uri, $payload = null, string $mime = Mime::PLAIN): Response
     {
-        return self::patchRequest($uri, $payload, $mime)->send();
+        return self::patch_request($uri, $payload, $mime)->send();
     }
 
     /**
@@ -93,7 +93,7 @@ final class Client implements ClientInterface
      *
      * @return Request
      */
-    public static function patchRequest(string $uri, $payload = null, string $mime = Mime::FORM): Request
+    public static function patch_request(string $uri, $payload = null, string $mime = Mime::PLAIN): Request
     {
         return Request::patch($uri, $payload, $mime);
     }
@@ -105,9 +105,9 @@ final class Client implements ClientInterface
      *
      * @return Response
      */
-    public static function post(string $uri, $payload = null, string $mime = Mime::FORM): Response
+    public static function post(string $uri, $payload = null, string $mime = Mime::PLAIN): Response
     {
-        return self::postRequest($uri, $payload, $mime)->send();
+        return self::post_request($uri, $payload, $mime)->send();
     }
 
     /**
@@ -117,7 +117,7 @@ final class Client implements ClientInterface
      *
      * @return Request
      */
-    public static function postRequest(string $uri, $payload = null, string $mime = Mime::FORM): Request
+    public static function post_request(string $uri, $payload = null, string $mime = Mime::PLAIN): Request
     {
         return Request::post($uri, $payload, $mime)->followRedirects();
     }
@@ -129,9 +129,9 @@ final class Client implements ClientInterface
      *
      * @return Response
      */
-    public static function put(string $uri, $payload = null, string $mime = Mime::JSON): Response
+    public static function put(string $uri, $payload = null, string $mime = Mime::PLAIN): Response
     {
-        return self::putRequest($uri, $payload, $mime)->send();
+        return self::put_request($uri, $payload, $mime)->send();
     }
 
     /**
@@ -141,7 +141,7 @@ final class Client implements ClientInterface
      *
      * @return Request
      */
-    public static function putRequest(string $uri, $payload = null, string $mime = Mime::JSON): Request
+    public static function put_request(string $uri, $payload = null, string $mime = Mime::JSON): Request
     {
         return Request::put($uri, $payload, $mime);
     }
@@ -153,7 +153,7 @@ final class Client implements ClientInterface
      */
     public static function options(string $uri): Response
     {
-        return self::optionsRequest($uri)->send();
+        return self::options_request($uri)->send();
     }
 
     /**
@@ -161,7 +161,7 @@ final class Client implements ClientInterface
      *
      * @return Request
      */
-    public static function optionsRequest(string $uri): Request
+    public static function options_request(string $uri): Request
     {
         return Request::options($uri);
     }

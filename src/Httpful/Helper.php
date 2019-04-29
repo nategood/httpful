@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Httpful;
 
+use Psr\Http\Message\StreamInterface;
+
 class Helper
 {
     const DELETE = 'DELETE';
@@ -101,9 +103,9 @@ class Helper
     /**
      * @param int $code
      *
+     * @return string
      * @throws \Exception
      *
-     * @return string
      */
     public static function reason(int $code): string
     {
@@ -114,14 +116,6 @@ class Helper
         }
 
         return $codes[$code];
-    }
-
-    /**
-     * @return array of HTTP method strings
-     */
-    public static function safeMethods(): array
-    {
-        return [self::HEAD, self::GET, self::OPTIONS, self::TRACE];
     }
 
     /**
@@ -188,5 +182,57 @@ class Helper
             509 => 'Bandwidth Limit Exceeded',
             510 => 'Not Extended',
         ];
+    }
+
+    /**
+     * @return array of HTTP method strings
+     */
+    public static function safeMethods(): array
+    {
+        return [self::HEAD, self::GET, self::OPTIONS, self::TRACE];
+    }
+
+    /**
+     * Create a new stream based on the input type.
+     *
+     * Options is an associative array that can contain the following keys:
+     * - metadata: Array of custom metadata.
+     * - size: Size of the stream.
+     *
+     * @param resource|string|null|int|float|bool|\Psr\Http\Message\StreamInterface|callable|\Iterator $resource
+     * @param array                                                                                    $options
+     *
+     * @return \Psr\Http\Message\StreamInterface
+     * @throws \InvalidArgumentException if the $resource arg is not valid.
+     */
+    public static function stream($resource = '', array $options = []): StreamInterface
+    {
+        if (is_scalar($resource)) {
+            $stream = fopen('php://temp', 'r+');
+            if ($resource !== '') {
+                fwrite($stream, $resource);
+                fseek($stream, 0);
+            }
+
+            return new Stream($stream, $options);
+        }
+        switch (gettype($resource)) {
+            case 'resource':
+                return new Stream($resource, $options);
+            case 'object':
+                if ($resource instanceof StreamInterface) {
+                    return $resource;
+                }
+
+                if (method_exists($resource, '__toString')) {
+                    return self::stream((string)$resource, $options);
+                }
+
+                break;
+            case 'NULL':
+                return new Stream(fopen('php://temp', 'r+'), $options);
+        }
+
+        throw new \InvalidArgumentException('Invalid resource type: ' . gettype($resource));
     }
 }

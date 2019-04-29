@@ -7,6 +7,8 @@ declare(strict_types=1);
  */
 namespace Httpful\Handlers;
 
+use Httpful\Exception\JsonParseException;
+
 /**
  * Class JsonHandler
  */
@@ -45,7 +47,7 @@ class JsonHandler extends MimeHandlerAdapter
 
         $parsed = \json_decode($body, $this->decode_as_array);
         if ($parsed === null && \strtolower($body) !== 'null') {
-            throw new \Exception('Unable to parse response as JSON: "' . \print_r($body, true) . '"');
+            throw new JsonParseException('Unable to parse response as JSON: ' . json_last_error_msg() . ' | "' . \print_r($body, true) . '"');
         }
 
         return $parsed;

@@ -322,7 +322,7 @@ Transfer-Encoding: chunked\r\n";
 
     public function testHttpClient()
     {
-        $get = Client::get('http://google.com?a=b');
+        $get = Client::get_request('http://google.com?a=b')->expectsHtml()->send();
         static::assertSame('http://www.google.com/?a=b', $get->getMetaData()['url']);
         static::assertInstanceOf(\voku\helper\HtmlDomParser::class, $get->getBody());
 
@@ -333,7 +333,7 @@ Transfer-Encoding: chunked\r\n";
 
         $post = Client::post('http://www.google.com?a=b');
         static::assertSame('http://www.google.com/?a=b', $post->getMetaData()['url']);
-        static::assertIsArray($post->getBody());
+        static::assertSame(405, $post->getStatusCode());
     }
 
     public function testUseTemplate()
@@ -545,8 +545,8 @@ Transfer-Encoding: chunked\r\n",
             /** @noinspection OnlyWritesOnParameterInspection */
             /** @noinspection PhpUnusedLocalVariableInspection */
             $result = $handler->parse('invalid{json');
-        } catch (\Exception $e) {
-            static::assertSame('Unable to parse response as JSON: "invalid{json"', $e->getMessage());
+        } catch (\Httpful\Exception\JsonParseException $e) {
+            static::assertSame('Unable to parse response as JSON: ' . json_last_error_msg() . ' | "invalid{json"', $e->getMessage());;
 
             return;
         }
