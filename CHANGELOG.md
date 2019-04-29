@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.0
+## 0.5.0
 
  - FEATURE Add "PSR-3" logging
  - FEATURE Add "PSR-18" HTTP Client - "\Httpful\Client"
@@ -8,7 +8,17 @@
  - fix issues reported by phpstan (level 7)
  - make properties private && classes final
 
-## 0.2.21
+## 0.4.x
+
+ - update vendor
+ - fix return types
+
+## 0.3.x
+
+ - drop support for < PHP7
+ - use return types
+
+## 0.2.x
 
  - "Add convenience methods for appending parameters to query string." [PR #65](https://github.com/nategood/httpful/pull/65)
  - "Give more information to the Exception object to enable better error handling" [PR #117](https://github.com/nategood/httpful/pull/117)
