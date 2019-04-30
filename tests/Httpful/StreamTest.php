@@ -18,7 +18,7 @@ final class StreamTest extends TestCase
 
         $stream = Http::stream($string);
 
-        self::assertSame($string, $stream->getContents());
+        static::assertSame($string, $stream->getContents());
     }
 
     public function testArray()
@@ -27,6 +27,6 @@ final class StreamTest extends TestCase
 
         $stream = Http::stream($array);
 
-        self::assertSame($array, $stream->getContents());
+        static::assertSame($array, $stream->getContents());
     }
 }

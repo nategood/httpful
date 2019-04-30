@@ -73,8 +73,8 @@ final class Stream implements StreamInterface
         $this->stream = $stream;
         $meta = \stream_get_meta_data($this->stream);
         $this->seekable = $meta['seekable'];
-        $this->readable = (bool)\preg_match(self::READABLE_MODES, $meta['mode']);
-        $this->writable = (bool)\preg_match(self::WRITABLE_MODES, $meta['mode']);
+        $this->readable = (bool) \preg_match(self::READABLE_MODES, $meta['mode']);
+        $this->writable = (bool) \preg_match(self::WRITABLE_MODES, $meta['mode']);
         $this->uri = $this->getMetadata('uri');
     }
 
@@ -91,7 +91,7 @@ final class Stream implements StreamInterface
         try {
             $this->seek(0);
 
-            return (string)\stream_get_contents($this->stream);
+            return (string) \stream_get_contents($this->stream);
         } catch (\Exception $e) {
             return '';
         }
@@ -131,7 +131,7 @@ final class Stream implements StreamInterface
     }
 
     /**
-     * @return bool|string
+     * @return mixed
      */
     public function getContents()
     {
@@ -147,7 +147,7 @@ final class Stream implements StreamInterface
 
         if ($this->serialized) {
             /** @noinspection UnserializeExploitsInspection */
-            $contents = unserialize($contents, []);
+            $contents = \unserialize($contents, []);
         }
 
         return $contents;
@@ -243,7 +243,7 @@ final class Stream implements StreamInterface
 
     public function seek($offset, $whence = \SEEK_SET)
     {
-        $whence = (int)$whence;
+        $whence = (int) $whence;
 
         if (!isset($this->stream)) {
             throw new \RuntimeException('Stream is detached');
