@@ -1,12 +1,18 @@
 # Changelog
 
+## 0.6.0
+ - make more properties private && classes final v2
+ - fix array usage with "Stream"
+ - move "Request->init" into the "__constructor"
+ - rename some internal classes + methods
+
 ## 0.5.0
 
  - FEATURE Add "PSR-3" logging
  - FEATURE Add "PSR-18" HTTP Client - "\Httpful\Client"
  - FEATURE Add "PSR-7" - RequestInterface && ResponseInterface
  - fix issues reported by phpstan (level 7)
- - make properties private && classes final
+ - make properties private && classes final v1
 
 ## 0.4.x
 
