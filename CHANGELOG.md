@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.1
+
+ - fix "addHeaders()"
+
 ## 0.7.0
 
  - fix return types of "Handlers"
