@@ -38,6 +38,11 @@ final class Stream implements StreamInterface
     private $customMetadata;
 
     /**
+     * @var bool
+     */
+    private $serialized;
+
+    /**
      * This constructor accepts an associative array of options.
      *
      * - size: (int) If a read stream would otherwise have an indeterminate
@@ -63,11 +68,13 @@ final class Stream implements StreamInterface
 
         $this->customMetadata = $options['metadata'] ?? [];
 
+        $this->serialized = $options['serialized'] ?? false;
+
         $this->stream = $stream;
         $meta = \stream_get_meta_data($this->stream);
         $this->seekable = $meta['seekable'];
-        $this->readable = (bool) \preg_match(self::READABLE_MODES, $meta['mode']);
-        $this->writable = (bool) \preg_match(self::WRITABLE_MODES, $meta['mode']);
+        $this->readable = (bool)\preg_match(self::READABLE_MODES, $meta['mode']);
+        $this->writable = (bool)\preg_match(self::WRITABLE_MODES, $meta['mode']);
         $this->uri = $this->getMetadata('uri');
     }
 
@@ -84,7 +91,7 @@ final class Stream implements StreamInterface
         try {
             $this->seek(0);
 
-            return (string) \stream_get_contents($this->stream);
+            return (string)\stream_get_contents($this->stream);
         } catch (\Exception $e) {
             return '';
         }
@@ -123,6 +130,9 @@ final class Stream implements StreamInterface
         return \feof($this->stream);
     }
 
+    /**
+     * @return bool|string
+     */
     public function getContents()
     {
         if (!isset($this->stream)) {
@@ -133,6 +143,11 @@ final class Stream implements StreamInterface
 
         if ($contents === false) {
             throw new \RuntimeException('Unable to read stream contents');
+        }
+
+        if ($this->serialized) {
+            /** @noinspection UnserializeExploitsInspection */
+            $contents = unserialize($contents, []);
         }
 
         return $contents;
@@ -228,7 +243,7 @@ final class Stream implements StreamInterface
 
     public function seek($offset, $whence = \SEEK_SET)
     {
-        $whence = (int) $whence;
+        $whence = (int)$whence;
 
         if (!isset($this->stream)) {
             throw new \RuntimeException('Stream is detached');

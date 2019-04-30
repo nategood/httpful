@@ -128,6 +128,15 @@ final class Http
      */
     public static function stream($resource = '', array $options = []): StreamInterface
     {
+        // init
+        $options['serialized'] = false;
+
+        if (\is_array($resource)) {
+            $resource = \serialize($resource);
+
+            $options['serialized'] = true;
+        }
+
         if (\is_scalar($resource)) {
             $stream = \fopen('php://temp', 'r+b');
 
@@ -139,27 +148,6 @@ final class Http
                 \fwrite($stream, (string) $resource);
                 \fseek($stream, 0);
             }
-
-            return new Stream($stream, $options);
-        }
-
-        if (\is_array($resource)) {
-            $stream = \fopen('php://temp', 'r+b');
-
-            if (!\is_resource($stream)) {
-                throw new \RuntimeException('fopen must create a resource');
-            }
-
-            foreach ($resource as $resourceItem) {
-                if (
-                    \is_scalar($resourceItem)
-                    &&
-                    $resourceItem !== ''
-                ) {
-                    \fwrite($stream, (string) $resourceItem);
-                }
-            }
-            \fseek($stream, 0);
 
             return new Stream($stream, $options);
         }

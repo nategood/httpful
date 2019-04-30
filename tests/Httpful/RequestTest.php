@@ -8,8 +8,6 @@ use Httpful\Request;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Class RequestTest
- *
  * @internal
  */
 final class RequestTest extends TestCase

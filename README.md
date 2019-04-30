@@ -19,8 +19,8 @@ Features
  - Client Side Certificate Auth
  - Request "Templates"
  - PSR-3: Logger Interface
- - PSR-7: HTTP message interfaces
- - PSR-18: HTTP Client
+ - PSR-7: HTTP Message Interface
+ - PSR-18: HTTP Client Interface
 
 # Examples
 

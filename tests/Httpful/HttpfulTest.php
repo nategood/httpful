@@ -28,8 +28,6 @@ use PHPUnit\Framework\TestCase;
 /** @noinspection PhpMultipleClassesDeclarationsInOneFile */
 
 /**
- * Class HttpfulTest
- *
  * @internal
  */
 final class HttpfulTest extends TestCase
