@@ -5,7 +5,7 @@ namespace Httpful\Handlers;
 interface MimeHandlerInterface
 {
     /**
-     * @param string $body
+     * @param mixed $body
      *
      * @return mixed
      */

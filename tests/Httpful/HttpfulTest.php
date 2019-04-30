@@ -2,15 +2,8 @@
 
 declare(strict_types=1);
 
-/**
- * Port over the original tests into a more traditional PHPUnit
- * format.  Still need to hook into a lightweight HTTP server to
- * better test some things (e.g. obscure cURL settings).  I've moved
- * the old tests and node.js server to the tests/.legacy directory.
- */
 namespace Httpful\Test;
 
-use Httpful\Client;
 use Httpful\Exception\ConnectionErrorException;
 use Httpful\Handlers\DefaultMimeHandler;
 use Httpful\Handlers\JsonMimeHandler;
@@ -316,23 +309,6 @@ Transfer-Encoding: chunked\r\n";
         $body = self::SAMPLE_HTML_RESPONSE;
         $request = Request::post(self::TEST_URL, $body)->mime(Mime::HTML)->_curlPrep();
         static::assertSame($body, $request->getSerializedPayload());
-    }
-
-    public function testHttpClient()
-    {
-        $get = Client::get_request('http://google.com?a=b')->expectsHtml()->send();
-        static::assertSame('http://www.google.com/?a=b', $get->getMetaData()['url']);
-        static::assertInstanceOf(\voku\helper\HtmlDomParser::class, $get->getBody());
-
-        $head = Client::head('http://www.google.com?a=b');
-        static::assertSame('http://www.google.com/?a=b', $head->getMetaData()['url']);
-        /** @noinspection PhpUnitTestsInspection */
-        static::assertInternalType('string', $head->getBody());
-        static::assertSame('1.1', $head->getProtocolVersion());
-
-        $post = Client::post('http://www.google.com?a=b');
-        static::assertSame('http://www.google.com/?a=b', $post->getMetaData()['url']);
-        static::assertSame(405, $post->getStatusCode());
     }
 
     public function testUseTemplate()

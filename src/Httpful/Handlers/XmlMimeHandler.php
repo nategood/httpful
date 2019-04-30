@@ -35,8 +35,6 @@ class XmlMimeHandler extends DefaultMimeHandler
     /**
      * @param string $body
      *
-     * @throws \Exception if unable to parse
-     *
      * @return \SimpleXMLElement|null
      */
     public function parse($body)
@@ -56,8 +54,6 @@ class XmlMimeHandler extends DefaultMimeHandler
 
     /**
      * @param mixed $payload
-     *
-     * @throws \Exception if unable to serialize
      *
      * @return false|string
      */

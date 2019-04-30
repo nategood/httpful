@@ -29,7 +29,7 @@ class DefaultMimeHandler extends AbstractMimeHandler
     }
 
     /**
-     * @param string $body
+     * @param mixed $body
      *
      * @return mixed
      */

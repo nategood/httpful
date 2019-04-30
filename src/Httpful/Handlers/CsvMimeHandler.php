@@ -16,7 +16,7 @@ class CsvMimeHandler implements MimeHandlerInterface
      *
      * @throws \Exception
      *
-     * @return mixed
+     * @return array|null
      */
     public function parse($body)
     {
@@ -24,7 +24,9 @@ class CsvMimeHandler implements MimeHandlerInterface
             return null;
         }
 
+        // init
         $parsed = [];
+
         $fp = \fopen('data://text/plain;base64,' . \base64_encode($body), 'rb');
         if ($fp === false) {
             throw new CsvParseException('Unable to parse response as CSV');

@@ -44,6 +44,30 @@ final class Client implements ClientInterface
     }
 
     /**
+     * @param string $uri
+     *
+     * @throws \Httpful\Exception\ConnectionErrorException
+     *
+     * @return \voku\helper\HtmlDomParser|null
+     */
+    public static function get_dom(string $uri)
+    {
+        return self::get_request($uri, Mime::HTML)->send()->getBody();
+    }
+
+    /**
+     * @param string $uri
+     *
+     * @throws \Httpful\Exception\ConnectionErrorException
+     *
+     * @return false|string
+     */
+    public static function get_json(string $uri)
+    {
+        return self::get_request($uri, Mime::JSON)->send()->getBody();
+    }
+
+    /**
      * @param string      $uri
      * @param string|null $mime
      *
@@ -52,6 +76,18 @@ final class Client implements ClientInterface
     public static function get_request(string $uri, $mime = Mime::PLAIN): Request
     {
         return Request::get($uri, $mime)->followRedirects();
+    }
+
+    /**
+     * @param string $uri
+     *
+     * @throws \Httpful\Exception\ConnectionErrorException
+     *
+     * @return \SimpleXMLElement|null
+     */
+    public static function get_xml(string $uri)
+    {
+        return self::get_request($uri, Mime::HTML)->send()->getBody();
     }
 
     /**
@@ -72,6 +108,26 @@ final class Client implements ClientInterface
     public static function head_request(string $uri): Request
     {
         return Request::head($uri)->followRedirects();
+    }
+
+    /**
+     * @param string $uri
+     *
+     * @return Response
+     */
+    public static function options(string $uri): Response
+    {
+        return self::options_request($uri)->send();
+    }
+
+    /**
+     * @param string $uri
+     *
+     * @return Request
+     */
+    public static function options_request(string $uri): Request
+    {
+        return Request::options($uri);
     }
 
     /**
@@ -113,6 +169,32 @@ final class Client implements ClientInterface
     /**
      * @param string     $uri
      * @param mixed|null $payload
+     *
+     * @throws \Httpful\Exception\ConnectionErrorException
+     *
+     * @return \voku\helper\HtmlDomParser|null
+     */
+    public static function post_dom(string $uri, $payload = null)
+    {
+        return self::post_request($uri, $payload, Mime::HTML)->send()->getBody();
+    }
+
+    /**
+     * @param string     $uri
+     * @param mixed|null $payload
+     *
+     * @throws \Httpful\Exception\ConnectionErrorException
+     *
+     * @return false|string
+     */
+    public static function post_json(string $uri, $payload = null)
+    {
+        return self::post_request($uri, $payload, Mime::JSON)->send()->getBody();
+    }
+
+    /**
+     * @param string     $uri
+     * @param mixed|null $payload
      * @param string     $mime
      *
      * @return Request
@@ -120,6 +202,19 @@ final class Client implements ClientInterface
     public static function post_request(string $uri, $payload = null, string $mime = Mime::PLAIN): Request
     {
         return Request::post($uri, $payload, $mime)->followRedirects();
+    }
+
+    /**
+     * @param string     $uri
+     * @param mixed|null $payload
+     *
+     * @throws \Httpful\Exception\ConnectionErrorException
+     *
+     * @return \SimpleXMLElement|null
+     */
+    public static function post_xml(string $uri, $payload = null)
+    {
+        return self::post_request($uri, $payload, Mime::HTML)->send()->getBody();
     }
 
     /**
@@ -144,26 +239,6 @@ final class Client implements ClientInterface
     public static function put_request(string $uri, $payload = null, string $mime = Mime::JSON): Request
     {
         return Request::put($uri, $payload, $mime);
-    }
-
-    /**
-     * @param string $uri
-     *
-     * @return Response
-     */
-    public static function options(string $uri): Response
-    {
-        return self::options_request($uri)->send();
-    }
-
-    /**
-     * @param string $uri
-     *
-     * @return Request
-     */
-    public static function options_request(string $uri): Request
-    {
-        return Request::options($uri);
     }
 
     /**

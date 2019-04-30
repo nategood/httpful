@@ -47,3 +47,6 @@ if ($php_major < 5.4 || \stripos(\PHP_OS, 'WIN') === 0) {
         \posix_kill($pid, \SIGKILL);
     });
 }
+
+/** @noinspection PhpUndefinedConstantInspection */
+\define('TEST_SERVER', WEB_SERVER_HOST . ':' . WEB_SERVER_PORT);

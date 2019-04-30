@@ -31,9 +31,7 @@ class JsonMimeHandler extends DefaultMimeHandler
     /**
      * @param string $body
      *
-     * @throws \Exception
-     *
-     * @return mixed
+     * @return mixed|null
      */
     public function parse($body)
     {

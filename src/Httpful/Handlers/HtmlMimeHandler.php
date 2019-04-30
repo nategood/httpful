@@ -9,25 +9,30 @@ use voku\helper\HtmlDomParser;
 /**
  * Mime Type: text/html
  */
-class HtmlMimeHandler implements MimeHandlerInterface
+class HtmlMimeHandler extends DefaultMimeHandler
 {
     /**
      * @param string $body
      *
-     * @return mixed
+     * @return \voku\helper\HtmlDomParser|null
      */
     public function parse($body)
     {
+        $body = $this->stripBom($body);
+        if (empty($body)) {
+            return null;
+        }
+
         return HtmlDomParser::str_get_html($body);
     }
 
     /**
      * @param mixed $payload
      *
-     * @return false|string
+     * @return string
      */
     public function serialize($payload)
     {
-        return (string) HtmlDomParser::str_get_html($payload);
+        return (string) $payload;
     }
 }
