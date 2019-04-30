@@ -15,9 +15,6 @@ use Httpful\Response;
 use Httpful\Setup;
 use PHPUnit\Framework\TestCase;
 
-/** @noinspection PhpUndefinedConstantInspection */
-\define('TEST_SERVER', WEB_SERVER_HOST . ':' . WEB_SERVER_PORT);
-
 /** @noinspection PhpMultipleClassesDeclarationsInOneFile */
 
 /**
@@ -171,6 +168,23 @@ Transfer-Encoding: chunked\r\n";
         $r->_curlPrep();
         static::assertContains($accept, $r->getRawHeaders());
         static::assertSame($accept, $r->getHeaders()['Accept']);
+    }
+
+    public function testCustomHeaders()
+    {
+        $accept = 'application/api-1.0+json';
+        $r = Request::get('http://example.com/')
+                    ->addHeaders(
+                        [
+                            'Accept' => $accept,
+                            'Foo' => 'Bar',
+                        ]
+                    );
+
+        $r->_curlPrep();
+        static::assertContains($accept, $r->getRawHeaders());
+        static::assertSame($accept, $r->getHeaders()['Accept']);
+        static::assertSame('Bar', $r->getHeaders()['Foo']);
     }
 
     public function testCustomHeader()

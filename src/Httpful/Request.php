@@ -499,11 +499,13 @@ final class Request implements \IteratorAggregate, RequestInterface
      */
     public function addHeaders(array $headers): self
     {
+        $return = clone $this;
+
         foreach ($headers as $header => $value) {
-            $this->addHeader($header, $value);
+            $return = $return->addHeader($header, $value);
         }
 
-        return $this;
+        return $return;
     }
 
     /**
@@ -667,12 +669,59 @@ final class Request implements \IteratorAggregate, RequestInterface
     /**
      * @return self
      */
+    public function contentTypeCsv(): self
+    {
+        $this->content_type = Mime::getFullMime(Mime::CSV);
+
+        return $this;
+    }
+
+    /**
+     * @return self
+     */
+    public function contentTypeForm(): self
+    {
+        $this->content_type = Mime::getFullMime(Mime::FORM);
+
+        return $this;
+    }
+
+    /**
+     * @return self
+     */
+    public function contentTypeHtml(): self
+    {
+        $this->content_type = Mime::getFullMime(Mime::HTML);
+
+        return $this;
+    }
+
+    /**
+     * @return self
+     */
     public function contentTypeJson(): self
     {
         $this->content_type = Mime::getFullMime(Mime::JSON);
-        if ($this->isUpload()) {
-            $this->neverSerializePayload();
-        }
+
+        return $this;
+    }
+
+    /**
+     * @return self
+     */
+    public function contentTypePlain(): self
+    {
+        $this->content_type = Mime::getFullMime(Mime::PLAIN);
+
+        return $this;
+    }
+
+    /**
+     * @return self
+     */
+    public function contentTypeXml(): self
+    {
+        $this->content_type = Mime::getFullMime(Mime::XML);
 
         return $this;
     }
@@ -2254,6 +2303,8 @@ final class Request implements \IteratorAggregate, RequestInterface
             \array_keys($payload)[0] === 0
             &&
             \is_scalar($payload_first = \array_values($payload)[0])
+            &&
+            !\is_array($payload_first)
         ) {
             return $payload_first;
         }

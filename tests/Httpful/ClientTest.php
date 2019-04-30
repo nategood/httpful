@@ -40,4 +40,10 @@ final class ClientTest extends TestCase
         static::assertSame('http://www.google.com/?a=b', $post->getMetaData()['url']);
         static::assertSame(405, $post->getStatusCode());
     }
+
+    public function testHttpFormClient()
+    {
+        $get = Client::post_request('http://google.com?a=b', ['a' => ['=', ' ', 2, 'ö']])->contentTypeForm()->_curlPrep();
+        static::assertSame('0=%3D&1=+&2=2&3=%C3%B6', $get->getSerializedPayload());
+    }
 }

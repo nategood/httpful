@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Httpful;
 
+use Httpful\Handlers\CsvMimeHandler;
 use Httpful\Handlers\DefaultMimeHandler;
+use Httpful\Handlers\FormMimeHandler;
+use Httpful\Handlers\HtmlMimeHandler;
+use Httpful\Handlers\JsonMimeHandler;
 use Httpful\Handlers\MimeHandlerInterface;
+use Httpful\Handlers\XmlMimeHandler;
 use Psr\Log\LoggerInterface;
 
 final class Setup
@@ -60,11 +65,15 @@ final class Setup
         }
 
         $handlers = [
-            Mime::JSON => new \Httpful\Handlers\JsonMimeHandler(),
-            Mime::XML  => new \Httpful\Handlers\XmlMimeHandler(),
-            Mime::HTML => new \Httpful\Handlers\HtmlMimeHandler(),
-            Mime::FORM => new \Httpful\Handlers\FormMimeHandler(),
-            Mime::CSV  => new \Httpful\Handlers\CsvMimeHandler(),
+            Mime::CSV   => new CsvMimeHandler(),
+            Mime::FORM  => new FormMimeHandler(),
+            Mime::HTML  => new HtmlMimeHandler(),
+            Mime::JS    => new DefaultMimeHandler(),
+            Mime::JSON  => new JsonMimeHandler(),
+            Mime::PLAIN => new DefaultMimeHandler(),
+            Mime::XHTML => new HtmlMimeHandler(),
+            Mime::XML   => new XmlMimeHandler(),
+            Mime::YAML  => new DefaultMimeHandler(),
         ];
 
         foreach ($handlers as $mime => $handler) {
@@ -96,7 +105,7 @@ final class Setup
     }
 
     /**
-     * @param \Httpful\Handlers\MimeHandlerInterface $global_mime_handler
+     * @param MimeHandlerInterface $global_mime_handler
      */
     public static function registerGlobalMimeHandler(MimeHandlerInterface $global_mime_handler)
     {
