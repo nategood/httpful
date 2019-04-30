@@ -1,6 +1,12 @@
 # Changelog
 
+## 0.7.0
+
+ - fix return types of "Handlers"
+ - add more helper functions for "Client" (with auto-completion via phpdoc)
+
 ## 0.6.0
+
  - make more properties private && classes final v2
  - fix array usage with "Stream"
  - move "Request->init" into the "__constructor"
