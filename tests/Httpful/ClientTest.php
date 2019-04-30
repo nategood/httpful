@@ -16,12 +16,12 @@ final class ClientTest extends TestCase
     public function testGetDom()
     {
         $dom = Client::get_dom('http://google.com?a=b');
-        self::assertInstanceOf(HtmlDomParser::class, $dom);
+        static::assertInstanceOf(HtmlDomParser::class, $dom);
 
         $html = $dom->find('html');
 
         /** @noinspection PhpUnitTestsInspection */
-        self::assertTrue(strpos((string)$html, '<html') !== false);
+        static::assertTrue(\strpos((string) $html, '<html') !== false);
     }
 
     public function testHttpClient()
