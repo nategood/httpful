@@ -4,17 +4,23 @@ declare(strict_types=1);
 
 namespace Httpful;
 
+use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\StreamInterface;
+use Psr\Http\Message\UploadedFileFactoryInterface;
 use Psr\Http\Message\UploadedFileInterface;
+use Psr\Http\Message\UriFactoryInterface;
 use Psr\Http\Message\UriInterface;
 
 /**
  * Psr Factory
  */
-class Factory
+class Factory implements RequestFactoryInterface, ServerRequestFactoryInterface, StreamFactoryInterface, ResponseFactoryInterface, UriFactoryInterface, UploadedFileFactoryInterface
 {
     /**
      * @param string      $method
@@ -23,7 +29,7 @@ class Factory
      *
      * @return RequestInterface
      */
-    public function createRequest(string $method, string $uri, string $mime = null): RequestInterface
+    public function createRequest(string $method, $uri, string $mime = null): RequestInterface
     {
         return (new Request($method, $mime))->setUriFromString($uri);
     }
@@ -42,12 +48,12 @@ class Factory
     /**
      * @param string      $method
      * @param string      $uri
-     * @param string|null $mime
      * @param array       $serverParams
+     * @param string|null $mime
      *
      * @return ServerRequestInterface
      */
-    public function createServerRequest(string $method, string $uri, string $mime = null, array $serverParams = []): ServerRequestInterface
+    public function createServerRequest(string $method, $uri, array $serverParams = [], $mime = null): ServerRequestInterface
     {
         return (new ServerRequest($method, $mime, null, $serverParams))->setUriFromString($uri);
     }
@@ -108,7 +114,8 @@ class Factory
         int $error = \UPLOAD_ERR_OK,
         string $clientFilename = null,
         string $clientMediaType = null
-    ): UploadedFileInterface {
+    ): UploadedFileInterface
+    {
         if ($size === null) {
             $size = (int) $stream->getSize();
         }
