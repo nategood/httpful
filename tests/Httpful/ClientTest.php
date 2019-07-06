@@ -65,7 +65,11 @@ final class ClientTest extends TestCase
         $http = new Factory();
 
         $response = (new Client())->sendRequest(
-            $http->createRequest(Http::GET, "https://postman-echo.com/get?{$query}", Mime::JSON)
+            $http->createRequest(
+                Http::GET,
+                "https://postman-echo.com/get?{$query}",
+                Mime::JSON
+            )
         );
 
         static::assertSame('1.1', $response->getProtocolVersion());
@@ -74,6 +78,28 @@ final class ClientTest extends TestCase
         $result = $response->getRawBody();
         /** @noinspection PhpUndefinedFieldInspection */
         static::assertSame($expected_params, (array) $result->args);
+    }
+
+    public function testSendFormRequest()
+    {
+        $expected_params = [
+            'foo1' => 'bar1',
+            'foo2' => 'bar2',
+        ];
+        $query = \http_build_query($expected_params);
+        $http = new Factory();
+
+        $response = (new Client())->sendRequest(
+            ($http->createRequest(
+                Http::POST,
+                "https://postman-echo.com/post?{$query}",
+                Mime::FORM
+            ))
+        );
+
+        static::assertSame('1.1', $response->getProtocolVersion());
+        static::assertSame(200, $response->getStatusCode());
+        static::assertContains('"content-type":"application/x-www-form-urlencoded"', (string) $response);
     }
 
     public function testJsonHelper()

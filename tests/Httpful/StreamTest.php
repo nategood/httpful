@@ -103,9 +103,6 @@ final class StreamTest extends TestCase
         static::assertEmpty($stream->getMetadata());
     }
 
-    /**
-     *
-     */
     public function testConstructorInitializesProperties()
     {
         $handle = \fopen('php://temp', 'r+b');

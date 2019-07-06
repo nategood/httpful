@@ -114,8 +114,7 @@ class Factory implements RequestFactoryInterface, ServerRequestFactoryInterface,
         int $error = \UPLOAD_ERR_OK,
         string $clientFilename = null,
         string $clientMediaType = null
-    ): UploadedFileInterface
-    {
+    ): UploadedFileInterface {
         if ($size === null) {
             $size = (int) $stream->getSize();
         }
