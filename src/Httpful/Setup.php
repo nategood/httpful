@@ -13,7 +13,7 @@ use Httpful\Handlers\MimeHandlerInterface;
 use Httpful\Handlers\XmlMimeHandler;
 use Psr\Log\LoggerInterface;
 
-final class Setup
+class Setup
 {
     /**
      * @var MimeHandlerInterface[]

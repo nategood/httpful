@@ -25,6 +25,10 @@ final class Headers extends CaseInsensitiveArray
     {
         if ($initial !== null) {
             foreach ($initial as $key => $value) {
+                if (!\is_array($value)) {
+                    $value = [$value];
+                }
+
                 parent::offsetSet($key, $value);
             }
         }
@@ -102,6 +106,15 @@ final class Headers extends CaseInsensitiveArray
     }
 
     /**
+     * @param string $offset the offset to store the data at (case-insensitive)
+     * @param mixed  $value  the data to store at the specified offset
+     */
+    public function forceSet($offset, $value)
+    {
+        parent::offsetSet($offset, $value);
+    }
+
+    /**
      * @return array
      */
     public function toArray(): array
@@ -109,7 +122,15 @@ final class Headers extends CaseInsensitiveArray
         // init
         $return = [];
 
-        foreach ($this as $key => $value) {
+        $that = clone $this;
+
+        foreach ($that as $key => $value) {
+            if (\is_array($value)) {
+                foreach ($value as $keyInner => $valueInner) {
+                    $value[$keyInner] = \trim($valueInner, " \t");
+                }
+            }
+
             $return[$key] = $value;
         }
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.0
+
+ - fix implementation of PSR standards + many tests
+
 ## 0.7.1
 
  - fix "addHeaders()"

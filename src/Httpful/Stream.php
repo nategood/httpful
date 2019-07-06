@@ -6,10 +6,7 @@ namespace Httpful;
 
 use Psr\Http\Message\StreamInterface;
 
-/**
- * @internal
- */
-final class Stream implements StreamInterface
+class Stream implements StreamInterface
 {
     /**
      * Resource modes.
@@ -22,6 +19,22 @@ final class Stream implements StreamInterface
     const READABLE_MODES = '/r|a\+|ab\+|w\+|wb\+|x\+|xb\+|c\+|cb\+/';
 
     const WRITABLE_MODES = '/a|w|r\+|rb\+|rw|x|c/';
+
+    /** @var array Hash of readable and writable stream types */
+    const READ_WRITE_HASH = [
+        'read' => [
+            'r'   => true, 'w+' => true, 'r+' => true, 'x+' => true, 'c+' => true,
+            'rb'  => true, 'w+b' => true, 'r+b' => true, 'x+b' => true,
+            'c+b' => true, 'rt' => true, 'w+t' => true, 'r+t' => true,
+            'x+t' => true, 'c+t' => true, 'a+' => true,
+        ],
+        'write' => [
+            'w'   => true, 'w+' => true, 'rw' => true, 'r+' => true, 'x+' => true,
+            'c+'  => true, 'wb' => true, 'w+b' => true, 'r+b' => true,
+            'x+b' => true, 'c+b' => true, 'w+t' => true, 'r+t' => true,
+            'x+t' => true, 'c+t' => true, 'a' => true, 'a+' => true,
+        ],
+    ];
 
     private $stream;
 
@@ -103,6 +116,8 @@ final class Stream implements StreamInterface
             if (\is_resource($this->stream)) {
                 \fclose($this->stream);
             }
+
+            /** @noinspection UnusedFunctionResultInspection */
             $this->detach();
         }
     }
@@ -121,6 +136,73 @@ final class Stream implements StreamInterface
         return $result;
     }
 
+    /**
+     * @param mixed $body
+     *
+     * @return StreamInterface
+     */
+    public static function createNotNull($body = ''): StreamInterface
+    {
+        $stream = static::create($body);
+        if ($stream === null) {
+            $stream = static::create();
+        }
+
+        \assert($stream instanceof self);
+
+        return $stream;
+    }
+
+    /**
+     * Creates a new PSR-7 stream.
+     *
+     * @param mixed $body
+     *
+     * @return StreamInterface|null
+     */
+    public static function create($body = '')
+    {
+        if ($body instanceof StreamInterface) {
+            return $body;
+        }
+
+        if ($body === null) {
+            $body = '';
+        } elseif (\is_numeric($body)) {
+            $body = (string) $body;
+        } elseif (
+            \is_array($body)
+            ||
+            $body instanceof \Serializable
+        ) {
+            $body = \serialize($body);
+        }
+
+        if (\is_string($body)) {
+            $resource = \fopen('php://temp', 'rwb+');
+            if ($resource !== false) {
+                \fwrite($resource, $body);
+                $body = $resource;
+            }
+        }
+
+        if (\is_resource($body)) {
+            $new = new static($body);
+            $meta = \stream_get_meta_data($new->stream);
+            $new->seekable = $meta['seekable'];
+            $new->readable = isset(self::READ_WRITE_HASH['read'][$meta['mode']]);
+            $new->writable = isset(self::READ_WRITE_HASH['write'][$meta['mode']]);
+            $new->uri = $new->getMetadata('uri');
+
+            return $new;
+        }
+
+        return null;
+    }
+
+    /**
+     * @return bool
+     */
     public function eof()
     {
         if (!isset($this->stream)) {
@@ -153,6 +235,11 @@ final class Stream implements StreamInterface
         return $contents;
     }
 
+    /**
+     * @param string|null $key
+     *
+     * @return array|mixed|null
+     */
     public function getMetadata($key = null)
     {
         if (!isset($this->stream)) {
@@ -172,6 +259,9 @@ final class Stream implements StreamInterface
         return $meta[$key] ?? null;
     }
 
+    /**
+     * @return int|mixed|null
+     */
     public function getSize()
     {
         if ($this->size !== null) {
@@ -197,29 +287,45 @@ final class Stream implements StreamInterface
         return null;
     }
 
+    /**
+     * @return bool
+     */
     public function isReadable()
     {
         return $this->readable;
     }
 
+    /**
+     * @return bool
+     */
     public function isSeekable()
     {
         return $this->seekable;
     }
 
+    /**
+     * @return bool
+     */
     public function isWritable()
     {
         return $this->writable;
     }
 
+    /**
+     * @param int $length
+     *
+     * @return string
+     */
     public function read($length)
     {
         if (!isset($this->stream)) {
             throw new \RuntimeException('Stream is detached');
         }
+
         if (!$this->readable) {
             throw new \RuntimeException('Cannot read from non-readable stream');
         }
+
         if ($length < 0) {
             throw new \RuntimeException('Length parameter cannot be negative');
         }
@@ -241,6 +347,10 @@ final class Stream implements StreamInterface
         $this->seek(0);
     }
 
+    /**
+     * @param int $offset
+     * @param int $whence
+     */
     public function seek($offset, $whence = \SEEK_SET)
     {
         $whence = (int) $whence;
@@ -259,6 +369,9 @@ final class Stream implements StreamInterface
         }
     }
 
+    /**
+     * @return int
+     */
     public function tell()
     {
         if (!isset($this->stream)) {
@@ -266,7 +379,6 @@ final class Stream implements StreamInterface
         }
 
         $result = \ftell($this->stream);
-
         if ($result === false) {
             throw new \RuntimeException('Unable to determine stream position');
         }
@@ -274,6 +386,11 @@ final class Stream implements StreamInterface
         return $result;
     }
 
+    /**
+     * @param string $string
+     *
+     * @return int
+     */
     public function write($string)
     {
         if (!isset($this->stream)) {

@@ -8,7 +8,7 @@ use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
-final class Client implements ClientInterface
+class Client implements ClientInterface
 {
     /**
      * @param string $uri
@@ -46,25 +46,21 @@ final class Client implements ClientInterface
     /**
      * @param string $uri
      *
-     * @throws \Httpful\Exception\ConnectionErrorException
-     *
      * @return \voku\helper\HtmlDomParser|null
      */
     public static function get_dom(string $uri)
     {
-        return self::get_request($uri, Mime::HTML)->send()->getBody();
+        return self::get_request($uri, Mime::HTML)->send()->getRawBody();
     }
 
     /**
      * @param string $uri
      *
-     * @throws \Httpful\Exception\ConnectionErrorException
-     *
      * @return false|string
      */
     public static function get_json(string $uri)
     {
-        return self::get_request($uri, Mime::JSON)->send()->getBody();
+        return self::get_request($uri, Mime::JSON)->send()->getRawBody();
     }
 
     /**
@@ -81,13 +77,11 @@ final class Client implements ClientInterface
     /**
      * @param string $uri
      *
-     * @throws \Httpful\Exception\ConnectionErrorException
-     *
      * @return \SimpleXMLElement|null
      */
     public static function get_xml(string $uri)
     {
-        return self::get_request($uri, Mime::HTML)->send()->getBody();
+        return self::get_request($uri, Mime::HTML)->send()->getRawBody();
     }
 
     /**
@@ -170,26 +164,22 @@ final class Client implements ClientInterface
      * @param string     $uri
      * @param mixed|null $payload
      *
-     * @throws \Httpful\Exception\ConnectionErrorException
-     *
      * @return \voku\helper\HtmlDomParser|null
      */
     public static function post_dom(string $uri, $payload = null)
     {
-        return self::post_request($uri, $payload, Mime::HTML)->send()->getBody();
+        return self::post_request($uri, $payload, Mime::HTML)->send()->getRawBody();
     }
 
     /**
      * @param string     $uri
      * @param mixed|null $payload
      *
-     * @throws \Httpful\Exception\ConnectionErrorException
-     *
      * @return false|string
      */
     public static function post_json(string $uri, $payload = null)
     {
-        return self::post_request($uri, $payload, Mime::JSON)->send()->getBody();
+        return self::post_request($uri, $payload, Mime::JSON)->send()->getRawBody();
     }
 
     /**
@@ -208,13 +198,11 @@ final class Client implements ClientInterface
      * @param string     $uri
      * @param mixed|null $payload
      *
-     * @throws \Httpful\Exception\ConnectionErrorException
-     *
      * @return \SimpleXMLElement|null
      */
     public static function post_xml(string $uri, $payload = null)
     {
-        return self::post_request($uri, $payload, Mime::HTML)->send()->getBody();
+        return self::post_request($uri, $payload, Mime::HTML)->send()->getRawBody();
     }
 
     /**
@@ -242,12 +230,16 @@ final class Client implements ClientInterface
     }
 
     /**
-     * @param RequestInterface $request
+     * @param Request|RequestInterface $request
      *
      * @return ResponseInterface
      */
     public function sendRequest(RequestInterface $request): ResponseInterface
     {
+        if ($request instanceof Request) {
+            return $request->send();
+        }
+
         return Request::{$request->getMethod()}($request->getUri())->send();
     }
 }

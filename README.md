@@ -44,7 +44,7 @@ $response = \Httpful\Client::get_request($uri)->addHeader('X-Foo-Header', 'Just 
                                               ->expectsJson()
                                               ->send();
 
-echo $response->getBody()->name . ' joined GitHub on ' . date('M jS Y', strtotime($response->getBody()->created_at)) . "\n";
+echo $response->getRawBody()->name . ' joined GitHub on ' . date('M jS Y', strtotime($response->getRawBody()->created_at)) . "\n";
 ```
 
 # Installation

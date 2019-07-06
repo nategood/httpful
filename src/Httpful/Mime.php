@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Httpful;
 
-final class Mime
+class Mime
 {
     const CSV = 'text/csv';
 

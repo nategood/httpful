@@ -7,7 +7,7 @@ namespace Httpful;
 use Httpful\Exception\ResponseException;
 use Psr\Http\Message\StreamInterface;
 
-final class Http
+class Http
 {
     const DELETE = 'DELETE';
 
@@ -24,6 +24,23 @@ final class Http
     const PUT = 'PUT';
 
     const TRACE = 'TRACE';
+
+    /**
+     * @return array
+     */
+    public static function allMethods(): array
+    {
+        return [
+            self::HEAD,
+            self::POST,
+            self::GET,
+            self::PUT,
+            self::DELETE,
+            self::OPTIONS,
+            self::TRACE,
+            self::PATCH,
+        ];
+    }
 
     /**
      * @return array list of (always) idempotent HTTP methods
@@ -176,6 +193,16 @@ final class Http
         }
 
         throw new \InvalidArgumentException('Invalid resource type: ' . \gettype($resource));
+    }
+
+    /**
+     * @param int $code
+     *
+     * @return bool
+     */
+    public static function responseCodeExists(int $code): bool
+    {
+        return \array_key_exists($code, self::responseCodes());
     }
 
     /**

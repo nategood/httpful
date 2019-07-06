@@ -180,7 +180,7 @@ return PhpCsFixer\Config::create()
                                 'php_unit_no_expectation_annotation'            => true,
                                 'php_unit_ordered_covers'                       => true,
                                 'php_unit_set_up_tear_down_visibility'          => true,
-                                'php_unit_strict'                               => true,
+                                'php_unit_strict'                               => false,
                                 'php_unit_test_annotation'                      => true,
                                 'php_unit_test_case_static_method_calls'        => true,
                                 'php_unit_test_class_requires_covers'           => false,

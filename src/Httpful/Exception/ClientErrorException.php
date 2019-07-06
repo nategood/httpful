@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Httpful\Exception;
 
-/**
- * Class ConnectionErrorException
- */
-final class ConnectionErrorException extends \Exception implements \Psr\Http\Client\ClientExceptionInterface
+final class ClientErrorException extends \Exception implements \Psr\Http\Client\ClientExceptionInterface
 {
     /**
      * @var \Curl\Curl|null

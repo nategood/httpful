@@ -6,18 +6,19 @@ namespace Httpful;
 
 use Httpful\Exception\ResponseException;
 use Httpful\Response\Headers;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 
-final class Response implements ResponseInterface
+class Response implements ResponseInterface
 {
     /**
-     * @var mixed
+     * @var StreamInterface
      */
     private $body;
 
     /**
-     * @var string
+     * @var mixed|null
      */
     private $raw_body;
 
@@ -27,12 +28,12 @@ final class Response implements ResponseInterface
     private $headers;
 
     /**
-     * @var string
+     * @var mixed|null
      */
     private $raw_headers;
 
     /**
-     * @var Request
+     * @var RequestInterface|null
      */
     private $request;
 
@@ -79,29 +80,50 @@ final class Response implements ResponseInterface
     private $is_mime_personal = false;
 
     /**
-     * @param string  $body
-     * @param string  $headers
-     * @param Request $request
-     * @param array   $meta_data
+     * @param StreamInterface|string|null $body
+     * @param array|string|null           $headers
+     * @param RequestInterface|null       $request
+     * @param array                       $meta_data
+     *                                               <p>e.g. [protocol_version] = '1.1'</p>
      */
     public function __construct(
-        string $body,
-        string $headers,
-        Request $request,
+        $body = null,
+        $headers = null,
+        RequestInterface $request = null,
         array $meta_data = []
     ) {
+        if (!($body instanceof Stream)) {
+            $this->raw_body = $body;
+            $body = Stream::create($body);
+        }
+
         $this->request = $request;
         $this->raw_headers = $headers;
-        $this->raw_body = $body;
         $this->meta_data = $meta_data;
 
-        $this->code = $this->_parseCode($headers);
-        $this->reason = Http::reason((int) $this->code);
-        $this->headers = Response\Headers::fromString($headers);
+        if (!isset($this->meta_data['protocol_version'])) {
+            $this->meta_data['protocol_version'] = '1.1';
+        }
+
+        if (\is_string($headers)) {
+            $this->code = $this->_getResponseCodeFromHeaderString($headers);
+            $this->reason = Http::reason($this->code);
+            $this->headers = Response\Headers::fromString($headers);
+        } elseif (\is_array($headers)) {
+            $this->code = 200;
+            $this->reason = Http::reason($this->code);
+            $this->headers = new Response\Headers($headers);
+        } else {
+            $this->code = 200;
+            $this->reason = Http::reason($this->code);
+            $this->headers = new Response\Headers();
+        }
 
         $this->_interpretHeaders();
 
-        $this->body = $this->_parse($body);
+        $bodyParsed = $this->_parse($body);
+        $this->body = Stream::createNotNull($bodyParsed);
+        $this->raw_body = $bodyParsed;
     }
 
     /**
@@ -109,57 +131,41 @@ final class Response implements ResponseInterface
      */
     public function __toString()
     {
-        return $this->raw_body;
+        if ($this->body->getSize() > 0) {
+            return (string) $this->body;
+        }
+
+        if (\is_string($this->raw_body)) {
+            return (string) $this->raw_body;
+        }
+
+        return (string) \json_encode($this->raw_body);
     }
 
-    /**
-     * Parse the response into a clean data structure
-     * (most often an associative array) based on the expected
-     * Mime type.
-     *
-     * @param string $body Http response body
-     *
-     * @return mixed the response parse accordingly
-     */
-    public function _parse($body)
+    public function __clone()
     {
-        // If the user decided to forgo the automatic smart parsing, short circuit.
-        if (!$this->request->isAutoParse()) {
-            return $body;
-        }
-
-        // If provided, use custom parsing callback.
-        if ($this->request->hasParseCallback()) {
-            return \call_user_func($this->request->getParseCallback(), $body);
-        }
-
-        // Decide how to parse the body of the response in the following order:
-        //
-        //  1. If provided, use the mime type specifically set as part of the `Request`
-        //  2. If a MimeHandler is registered for the content type, use it
-        //  3. If provided, use the "parent type" of the mime type from the response
-        //  4. Default to the content-type provided in the response
-        $parse_with = $this->request->getExpectedType();
-        if (empty($parse_with)) {
-            if (Setup::hasParserRegistered($this->content_type)) {
-                $parse_with = $this->content_type;
-            } else {
-                $parse_with = $this->parent_type;
-            }
-        }
-
-        return Setup::setupGlobalMimeType($parse_with)->parse($body);
+        $this->headers = clone $this->headers;
     }
 
     /**
      * @param string $headers
      *
-     * @throws \Exception
+     * @throws ResponseException if we are unable to parse response code from HTTP response
      *
      * @return int
+     *
+     * @internal
      */
-    public function _parseCode($headers): int
+    public function _getResponseCodeFromHeaderString($headers): int
     {
+        // If there was a redirect, we will get headers from one then one request,
+        // but will are only interested in the last request.
+        $headersTmp = \explode("\r\n\r\n", $headers);
+        $headersTmpCount = \count($headersTmp);
+        if ($headersTmpCount >= 2) {
+            $headers = $headersTmp[$headersTmpCount - 2];
+        }
+
         $end = \strpos($headers, "\r\n");
         if ($end === false) {
             $end = \strlen($headers);
@@ -168,9 +174,9 @@ final class Response implements ResponseInterface
         $parts = \explode(' ', \substr($headers, 0, $end));
 
         if (
-            !\is_numeric($parts[1])
-            ||
             \count($parts) < 2
+            ||
+            !\is_numeric($parts[1])
         ) {
             throw new ResponseException('Unable to parse response code from HTTP response due to malformed response');
         }
@@ -179,23 +185,332 @@ final class Response implements ResponseInterface
     }
 
     /**
-     * Parse text headers from response into array of key value pairs.
-     *
-     * @param string $headers
-     *
-     * @return string[]
-     */
-    public function _parseHeaders($headers): array
-    {
-        return Headers::fromString($headers)->toArray();
-    }
-
-    /**
-     * @return mixed
+     * @return StreamInterface
      */
     public function getBody()
     {
         return $this->body;
+    }
+
+    /**
+     * Retrieves a message header value by the given case-insensitive name.
+     *
+     * This method returns an array of all the header values of the given
+     * case-insensitive header name.
+     *
+     * If the header does not appear in the message, this method MUST return an
+     * empty array.
+     *
+     * @param string $name case-insensitive header field name
+     *
+     * @return string[] An array of string values as provided for the given
+     *                  header. If the header does not appear in the message, this method MUST
+     *                  return an empty array.
+     */
+    public function getHeader($name)
+    {
+        if ($this->headers->offsetExists($name)) {
+            $value = $this->headers->offsetGet($name);
+
+            if (!\is_array($value)) {
+                return [\trim($value, " \t")];
+            }
+
+            foreach ($value as $keyInner => $valueInner) {
+                $value[$keyInner] = \trim($valueInner, " \t");
+            }
+
+            return $value;
+        }
+
+        return [];
+    }
+
+    /**
+     * Retrieves a comma-separated string of the values for a single header.
+     *
+     * This method returns all of the header values of the given
+     * case-insensitive header name as a string concatenated together using
+     * a comma.
+     *
+     * NOTE: Not all header values may be appropriately represented using
+     * comma concatenation. For such headers, use getHeader() instead
+     * and supply your own delimiter when concatenating.
+     *
+     * If the header does not appear in the message, this method MUST return
+     * an empty string.
+     *
+     * @param string $name case-insensitive header field name
+     *
+     * @return string A string of values as provided for the given header
+     *                concatenated together using a comma. If the header does not appear in
+     *                the message, this method MUST return an empty string.
+     */
+    public function getHeaderLine($name): string
+    {
+        return \implode(', ', $this->getHeader($name));
+    }
+
+    /**
+     * @return array
+     */
+    public function getHeaders(): array
+    {
+        return $this->headers->toArray();
+    }
+
+    /**
+     * Retrieves the HTTP protocol version as a string.
+     *
+     * The string MUST contain only the HTTP version number (e.g., "1.1", "1.0").
+     *
+     * @return string HTTP protocol version
+     */
+    public function getProtocolVersion()
+    {
+        if (isset($this->meta_data['protocol_version'])) {
+            return $this->meta_data['protocol_version'];
+        }
+
+        return '1.1';
+    }
+
+    /**
+     * Gets the response reason phrase associated with the status code.
+     *
+     * Because a reason phrase is not a required element in a response
+     * status line, the reason phrase value MAY be null. Implementations MAY
+     * choose to return the default RFC 7231 recommended reason phrase (or those
+     * listed in the IANA HTTP Status Code Registry) for the response's
+     * status code.
+     *
+     * @see http://tools.ietf.org/html/rfc7231#section-6
+     * @see http://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
+     *
+     * @return string reason phrase; must return an empty string if none present
+     */
+    public function getReasonPhrase()
+    {
+        return $this->reason;
+    }
+
+    /**
+     * Gets the response status code.
+     *
+     * The status code is a 3-digit integer result code of the server's attempt
+     * to understand and satisfy the request.
+     *
+     * @return int status code
+     */
+    public function getStatusCode()
+    {
+        return $this->code;
+    }
+
+    /**
+     * Checks if a header exists by the given case-insensitive name.
+     *
+     * @param string $name case-insensitive header field name
+     *
+     * @return bool Returns true if any header names match the given header
+     *              name using a case-insensitive string comparison. Returns false if
+     *              no matching header name is found in the message.
+     */
+    public function hasHeader($name)
+    {
+        return $this->headers->offsetExists($name);
+    }
+
+    /**
+     * Return an instance with the specified header appended with the given value.
+     *
+     * Existing values for the specified header will be maintained. The new
+     * value(s) will be appended to the existing list. If the header did not
+     * exist previously, it will be added.
+     *
+     * This method MUST be implemented in such a way as to retain the
+     * immutability of the message, and MUST return an instance that has the
+     * new header and/or value.
+     *
+     * @param string          $name  case-insensitive header field name to add
+     * @param string|string[] $value header value(s)
+     *
+     * @throws \InvalidArgumentException for invalid header names or values
+     *
+     * @return static
+     */
+    public function withAddedHeader($name, $value)
+    {
+        $return = clone $this;
+
+        if (!\is_array($value)) {
+            $value = [$value];
+        }
+
+        if ($return->headers->offsetExists($name)) {
+            $return->headers->forceSet($name, \array_merge_recursive($return->headers->offsetGet($name), $value));
+        } else {
+            $return->headers->forceSet($name, $value);
+        }
+
+        return $return;
+    }
+
+    /**
+     * Return an instance with the specified message body.
+     *
+     * The body MUST be a StreamInterface object.
+     *
+     * This method MUST be implemented in such a way as to retain the
+     * immutability of the message, and MUST return a new instance that has the
+     * new body stream.
+     *
+     * @param StreamInterface $body body
+     *
+     * @throws \InvalidArgumentException when the body is not valid
+     *
+     * @return static
+     */
+    public function withBody(StreamInterface $body)
+    {
+        $return = clone $this;
+
+        $return->body = $body;
+
+        return $return;
+    }
+
+    /**
+     * Return an instance with the provided value replacing the specified header.
+     *
+     * While header names are case-insensitive, the casing of the header will
+     * be preserved by this function, and returned from getHeaders().
+     *
+     * This method MUST be implemented in such a way as to retain the
+     * immutability of the message, and MUST return an instance that has the
+     * new and/or updated header and value.
+     *
+     * @param string          $name  case-insensitive header field name
+     * @param string|string[] $value header value(s)
+     *
+     * @throws \InvalidArgumentException for invalid header names or values
+     *
+     * @return static
+     */
+    public function withHeader($name, $value)
+    {
+        $return = clone $this;
+
+        if (!\is_array($value)) {
+            $value = [$value];
+        }
+
+        $return->headers->forceSet($name, $value);
+
+        return $return;
+    }
+
+    /**
+     * @param string[] $header
+     *
+     * @return static
+     */
+    public function withHeaders(array $header)
+    {
+        $new = clone $this;
+
+        foreach ($header as  $name => $value) {
+            $new = $new->withHeader($name, $value);
+        }
+
+        return $new;
+    }
+
+    /**
+     * Return an instance with the specified HTTP protocol version.
+     *
+     * The version string MUST contain only the HTTP version number (e.g.,
+     * "1.1", "1.0").
+     *
+     * This method MUST be implemented in such a way as to retain the
+     * immutability of the message, and MUST return an instance that has the
+     * new protocol version.
+     *
+     * @param string $version HTTP protocol version
+     *
+     * @return static
+     */
+    public function withProtocolVersion($version)
+    {
+        $return = clone $this;
+
+        $return->meta_data['protocol_version'] = $version;
+
+        return $return;
+    }
+
+    /**
+     * Return an instance with the specified status code and, optionally, reason phrase.
+     *
+     * If no reason phrase is specified, implementations MAY choose to default
+     * to the RFC 7231 or IANA recommended reason phrase for the response's
+     * status code.
+     *
+     * This method MUST be implemented in such a way as to retain the
+     * immutability of the message, and MUST return an instance that has the
+     * updated status and reason phrase.
+     *
+     * @see http://tools.ietf.org/html/rfc7231#section-6
+     * @see http://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
+     *
+     * @param int    $code         the 3-digit integer result code to set
+     * @param string $reasonPhrase the reason phrase to use with the
+     *                             provided status code; if none is provided, implementations MAY
+     *                             use the defaults as suggested in the HTTP specification
+     *
+     * @throws \InvalidArgumentException for invalid status code arguments
+     *
+     * @return static
+     */
+    public function withStatus($code, $reasonPhrase = null)
+    {
+        $return = clone $this;
+
+        $return->code = (int) $code;
+
+        if (Http::responseCodeExists($return->code)) {
+            $return->reason = Http::reason($return->code);
+        } else {
+            $return->reason = '';
+        }
+
+        if ($reasonPhrase !== null) {
+            $return->reason = $reasonPhrase;
+        }
+
+        return $return;
+    }
+
+    /**
+     * Return an instance without the specified header.
+     *
+     * Header resolution MUST be done without case-sensitivity.
+     *
+     * This method MUST be implemented in such a way as to retain the
+     * immutability of the message, and MUST return an instance that removes
+     * the named header.
+     *
+     * @param string $name case-insensitive header field name to remove
+     *
+     * @return static
+     */
+    public function withoutHeader($name)
+    {
+        $return = clone $this;
+
+        $return->headers->forceUnset($name);
+
+        return $return;
     }
 
     /**
@@ -215,19 +530,19 @@ final class Response implements ResponseInterface
     }
 
     /**
-     * @return array
-     */
-    public function getHeaders(): array
-    {
-        return $this->headers->toArray();
-    }
-
-    /**
      * @return Headers
      */
     public function getHeadersObject(): Headers
     {
         return $this->headers;
+    }
+
+    /**
+     * @return array
+     */
+    public function getMetaData(): array
+    {
+        return $this->meta_data;
     }
 
     /**
@@ -239,19 +554,19 @@ final class Response implements ResponseInterface
     }
 
     /**
+     * @return mixed
+     */
+    public function getRawBody()
+    {
+        return $this->raw_body;
+    }
+
+    /**
      * @return string
      */
     public function getRawHeaders(): string
     {
         return $this->raw_headers;
-    }
-
-    /**
-     * @return array
-     */
-    public function getMetaData(): array
-    {
-        return $this->meta_data;
     }
 
     /**
@@ -297,275 +612,53 @@ final class Response implements ResponseInterface
     }
 
     /**
-     * Retrieves the HTTP protocol version as a string.
+     * Parse the response into a clean data structure
+     * (most often an associative array) based on the expected
+     * Mime type.
      *
-     * The string MUST contain only the HTTP version number (e.g., "1.1", "1.0").
+     * @param StreamInterface|null $body Http response body
      *
-     * @return string HTTP protocol version
+     * @return mixed the response parse accordingly
      */
-    public function getProtocolVersion()
+    private function _parse($body)
     {
-        return $this->meta_data['protocol_version'];
-    }
+        // If the user decided to forgo the automatic smart parsing, short circuit.
+        if (
+            $this->request instanceof Request
+            &&
+            !$this->request->isAutoParse()
+        ) {
+            return $body;
+        }
 
-    /**
-     * Return an instance with the specified HTTP protocol version.
-     *
-     * The version string MUST contain only the HTTP version number (e.g.,
-     * "1.1", "1.0").
-     *
-     * This method MUST be implemented in such a way as to retain the
-     * immutability of the message, and MUST return an instance that has the
-     * new protocol version.
-     *
-     * @param string $version HTTP protocol version
-     *
-     * @return static
-     */
-    public function withProtocolVersion($version)
-    {
-        $return = clone $this;
+        // If provided, use custom parsing callback.
+        if (
+            $this->request instanceof Request
+            &&
+            $this->request->hasParseCallback()
+        ) {
+            return \call_user_func($this->request->getParseCallback(), $body);
+        }
 
-        $this->meta_data['protocol_version'] = $version;
+        // Decide how to parse the body of the response in the following order:
+        //
+        //  1. If provided, use the mime type specifically set as part of the `Request`
+        //  2. If a MimeHandler is registered for the content type, use it
+        //  3. If provided, use the "parent type" of the mime type from the response
+        //  4. Default to the content-type provided in the response
+        if ($this->request instanceof Request) {
+            $parse_with = $this->request->getExpectedType();
+        }
 
-        return $return;
-    }
-
-    /**
-     * Checks if a header exists by the given case-insensitive name.
-     *
-     * @param string $name case-insensitive header field name
-     *
-     * @return bool Returns true if any header names match the given header
-     *              name using a case-insensitive string comparison. Returns false if
-     *              no matching header name is found in the message.
-     */
-    public function hasHeader($name)
-    {
-        return (bool) $this->raw_headers;
-    }
-
-    /**
-     * Retrieves a message header value by the given case-insensitive name.
-     *
-     * This method returns an array of all the header values of the given
-     * case-insensitive header name.
-     *
-     * If the header does not appear in the message, this method MUST return an
-     * empty array.
-     *
-     * @param string $name case-insensitive header field name
-     *
-     * @return string[] An array of string values as provided for the given
-     *                  header. If the header does not appear in the message, this method MUST
-     *                  return an empty array.
-     */
-    public function getHeader($name)
-    {
-        $headers = $this->headers->toArray();
-
-        if (isset($headers[$name])) {
-            if (!\is_array($headers[$name])) {
-                return [$headers[$name]];
+        if (empty($parse_with)) {
+            if (Setup::hasParserRegistered($this->content_type)) {
+                $parse_with = $this->content_type;
+            } else {
+                $parse_with = $this->parent_type;
             }
-
-            return $headers[$name];
         }
 
-        return [];
-    }
-
-    /**
-     * Retrieves a comma-separated string of the values for a single header.
-     *
-     * This method returns all of the header values of the given
-     * case-insensitive header name as a string concatenated together using
-     * a comma.
-     *
-     * NOTE: Not all header values may be appropriately represented using
-     * comma concatenation. For such headers, use getHeader() instead
-     * and supply your own delimiter when concatenating.
-     *
-     * If the header does not appear in the message, this method MUST return
-     * an empty string.
-     *
-     * @param string $name case-insensitive header field name
-     *
-     * @return string A string of values as provided for the given header
-     *                concatenated together using a comma. If the header does not appear in
-     *                the message, this method MUST return an empty string.
-     */
-    public function getHeaderLine($name)
-    {
-        return $this->headers[$name];
-    }
-
-    /**
-     * Return an instance with the provided value replacing the specified header.
-     *
-     * While header names are case-insensitive, the casing of the header will
-     * be preserved by this function, and returned from getHeaders().
-     *
-     * This method MUST be implemented in such a way as to retain the
-     * immutability of the message, and MUST return an instance that has the
-     * new and/or updated header and value.
-     *
-     * @param string          $name  case-insensitive header field name
-     * @param string|string[] $value header value(s)
-     *
-     * @throws \InvalidArgumentException for invalid header names or values
-     *
-     * @return static
-     */
-    public function withHeader($name, $value)
-    {
-        $return = clone $this;
-
-        $return->headers[$name] = $value;
-
-        return $return;
-    }
-
-    /**
-     * Return an instance with the specified header appended with the given value.
-     *
-     * Existing values for the specified header will be maintained. The new
-     * value(s) will be appended to the existing list. If the header did not
-     * exist previously, it will be added.
-     *
-     * This method MUST be implemented in such a way as to retain the
-     * immutability of the message, and MUST return an instance that has the
-     * new header and/or value.
-     *
-     * @param string          $name  case-insensitive header field name to add
-     * @param string|string[] $value header value(s)
-     *
-     * @throws \InvalidArgumentException for invalid header names or values
-     *
-     * @return static
-     */
-    public function withAddedHeader($name, $value)
-    {
-        $return = clone $this;
-
-        if (isset($return->headers[$name])) {
-            $return->headers[$name] .= $value;
-        } else {
-            $return->headers[$name] = $value;
-        }
-
-        return $return;
-    }
-
-    /**
-     * Return an instance without the specified header.
-     *
-     * Header resolution MUST be done without case-sensitivity.
-     *
-     * This method MUST be implemented in such a way as to retain the
-     * immutability of the message, and MUST return an instance that removes
-     * the named header.
-     *
-     * @param string $name case-insensitive header field name to remove
-     *
-     * @return static
-     */
-    public function withoutHeader($name)
-    {
-        $return = clone $this;
-
-        $return->headers->forceUnset($name);
-
-        return $return;
-    }
-
-    /**
-     * Return an instance with the specified message body.
-     *
-     * The body MUST be a StreamInterface object.
-     *
-     * This method MUST be implemented in such a way as to retain the
-     * immutability of the message, and MUST return a new instance that has the
-     * new body stream.
-     *
-     * @param StreamInterface $body body
-     *
-     * @throws \InvalidArgumentException when the body is not valid
-     *
-     * @return static
-     */
-    public function withBody(StreamInterface $body)
-    {
-        $return = clone $this;
-
-        $return->body = $body;
-
-        return $return;
-    }
-
-    /**
-     * Gets the response status code.
-     *
-     * The status code is a 3-digit integer result code of the server's attempt
-     * to understand and satisfy the request.
-     *
-     * @return int status code
-     */
-    public function getStatusCode()
-    {
-        return $this->code;
-    }
-
-    /**
-     * Return an instance with the specified status code and, optionally, reason phrase.
-     *
-     * If no reason phrase is specified, implementations MAY choose to default
-     * to the RFC 7231 or IANA recommended reason phrase for the response's
-     * status code.
-     *
-     * This method MUST be implemented in such a way as to retain the
-     * immutability of the message, and MUST return an instance that has the
-     * updated status and reason phrase.
-     *
-     * @see http://tools.ietf.org/html/rfc7231#section-6
-     * @see http://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
-     *
-     * @param int    $code         the 3-digit integer result code to set
-     * @param string $reasonPhrase the reason phrase to use with the
-     *                             provided status code; if none is provided, implementations MAY
-     *                             use the defaults as suggested in the HTTP specification
-     *
-     * @throws \InvalidArgumentException for invalid status code arguments
-     *
-     * @return static
-     */
-    public function withStatus($code, $reasonPhrase = '')
-    {
-        $return = clone $this;
-
-        $return->code = $code;
-        $return->reason = $reasonPhrase;
-
-        return $return;
-    }
-
-    /**
-     * Gets the response reason phrase associated with the status code.
-     *
-     * Because a reason phrase is not a required element in a response
-     * status line, the reason phrase value MAY be null. Implementations MAY
-     * choose to return the default RFC 7231 recommended reason phrase (or those
-     * listed in the IANA HTTP Status Code Registry) for the response's
-     * status code.
-     *
-     * @see http://tools.ietf.org/html/rfc7231#section-6
-     * @see http://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
-     *
-     * @return string reason phrase; must return an empty string if none present
-     */
-    public function getReasonPhrase()
-    {
-        return $this->reason;
+        return Setup::setupGlobalMimeType($parse_with)->parse((string) $body);
     }
 
     /**
@@ -575,10 +668,12 @@ final class Response implements ResponseInterface
     private function _interpretHeaders()
     {
         // Parse the Content-Type and charset
-        $content_type = $this->headers['Content-Type'] ?? '';
-        $content_type = \explode(';', $content_type);
+        $content_type = $this->headers['Content-Type'] ?? [];
+        foreach ($content_type as $content_type_inner) {
+            $content_type = \array_merge(\explode(';', $content_type_inner));
+        }
 
-        $this->content_type = $content_type[0];
+        $this->content_type = $content_type[0] ?? '';
         if (
             \count($content_type) === 2
             &&

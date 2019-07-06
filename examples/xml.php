@@ -21,6 +21,6 @@ $responseSimple = \Httpful\Client::get($uri);
 
 // -------------------------------------------------------
 
-if ($responseComplex->getBody() === $responseSimple->getBody()) {
+if ($responseComplex->getRawBody() === $responseSimple->getRawBody()) {
     echo ' - same output - ';
 }
