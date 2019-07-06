@@ -103,6 +103,9 @@ final class StreamTest extends TestCase
         static::assertEmpty($stream->getMetadata());
     }
 
+    /**
+     *
+     */
     public function testConstructorInitializesProperties()
     {
         $handle = \fopen('php://temp', 'r+b');
@@ -112,7 +115,7 @@ final class StreamTest extends TestCase
         static::assertTrue($stream->isWritable());
         static::assertTrue($stream->isSeekable());
         static::assertSame('php://temp', $stream->getMetadata('uri'));
-        static::assertIsArray($stream->getMetadata());
+        static::assertInternalType('array', $stream->getMetadata());
         static::assertSame(4, $stream->getSize());
         static::assertFalse($stream->eof());
         $stream->close();
