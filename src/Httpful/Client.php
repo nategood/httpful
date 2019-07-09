@@ -87,6 +87,16 @@ class Client implements ClientInterface
     /**
      * @param string $uri
      *
+     * @return array
+     */
+    public static function get_form(string $uri)
+    {
+        return self::get_request($uri, Mime::FORM)->send()->getRawBody();
+    }
+
+    /**
+     * @param string $uri
+     *
      * @return Response
      */
     public static function head(string $uri): Response
@@ -185,6 +195,17 @@ class Client implements ClientInterface
     /**
      * @param string     $uri
      * @param mixed|null $payload
+     *
+     * @return array
+     */
+    public static function post_form(string $uri, $payload = null)
+    {
+        return self::post_request($uri, $payload, Mime::FORM)->send()->getRawBody();
+    }
+
+    /**
+     * @param string     $uri
+     * @param mixed|null $payload
      * @param string     $mime
      *
      * @return Request
@@ -232,7 +253,7 @@ class Client implements ClientInterface
     /**
      * @param Request|RequestInterface $request
      *
-     * @return ResponseInterface
+     * @return Response|ResponseInterface
      */
     public function sendRequest(RequestInterface $request): ResponseInterface
     {

@@ -51,7 +51,7 @@ final class ClientTest extends TestCase
 
     public function testHttpFormClient()
     {
-        $get = Client::post_request('http://google.com?a=b', ['a' => ['=', ' ', 2, 'ö']])->contentTypeForm()->_curlPrep();
+        $get = Client::post_request('http://google.com?a=b', ['a' => ['=', ' ', 2, 'ö']])->withContentTypeForm()->_curlPrep();
         static::assertSame('0=%3D&1=+&2=2&3=%C3%B6', $get->getSerializedPayload());
     }
 
@@ -76,30 +76,45 @@ final class ClientTest extends TestCase
         static::assertSame(200, $response->getStatusCode());
         \assert($response instanceof Response);
         $result = $response->getRawBody();
-        /** @noinspection PhpUndefinedFieldInspection */
-        static::assertSame($expected_params, (array) $result->args);
+        static::assertSame($expected_params, $result['args']);
     }
 
     public function testSendFormRequest()
     {
-        $expected_params = [
+        $expected_data = [
             'foo1' => 'bar1',
             'foo2' => 'bar2',
         ];
-        $query = \http_build_query($expected_params);
+
+        $response = Client::post_form('https://postman-echo.com/post', $expected_data);
+
+        static::assertSame($expected_data, $response['form'], 'server received x-www-form POST data');
+    }
+
+    public function testSendJsonRequest()
+    {
+        $expected_data = [
+            'foo1' => 123,
+            'foo2' => 456,
+        ];
+
         $http = new Factory();
 
+        $body = $http->createStream(
+            \json_encode($expected_data)
+        );
+
         $response = (new Client())->sendRequest(
-            ($http->createRequest(
+            $http->createRequest(
                 Http::POST,
-                "https://postman-echo.com/post?{$query}",
-                Mime::FORM
-            ))
+                'https://postman-echo.com/post',
+                Mime::JSON
+            )->withBody($body)
         );
 
         static::assertSame('1.1', $response->getProtocolVersion());
         static::assertSame(200, $response->getStatusCode());
-        static::assertContains('"content-type":"application/x-www-form-urlencoded"', (string) $response);
+        static::assertContains('"content-type":"application\/json"', (string) $response);
     }
 
     public function testJsonHelper()
@@ -111,25 +126,81 @@ final class ClientTest extends TestCase
         $query = \http_build_query($expected_params);
 
         $response = Client::get_json("https://postman-echo.com/get?{$query}");
-        /** @noinspection PhpUndefinedFieldInspection */
-        static::assertSame($expected_params, (array) $response->args);
+
+        static::assertSame($expected_params, $response['args']);
+    }
+
+    public function testReceiveHeader()
+    {
+        $http = new Factory();
+
+        $response = (new Client())->sendRequest(
+            $http->createRequest(
+                Http::GET,
+                'https://postman-echo.com/headers',
+                Mime::JSON
+            )->withHeader('X-Hello', 'Hello World')
+        );
+
+        static::assertSame('1.1', $response->getProtocolVersion());
+        static::assertSame(200, $response->getStatusCode());
+
+        static::assertSame(
+            'application/json; charset=utf-8',
+            $response->getHeaderLine('Content-Type'),
+            'Response model was populated with headers'
+        );
+
+        static::assertSame(
+            'Hello World',
+            \json_decode((string) $response, true)['headers']['x-hello'],
+            'server received custom header'
+        );
+    }
+
+    public function testReceiveHeaders()
+    {
+        $http = new Factory();
+
+        $response = (new Client())->sendRequest(
+            $http->createRequest(
+                Http::GET,
+                'https://postman-echo.com/response-headers?x-hello[]=one&x-hello[]=two',
+                Mime::JSON
+            )
+        );
+
+        static::assertSame('1.1', $response->getProtocolVersion());
+        static::assertSame(200, $response->getStatusCode());
+
+        static::assertSame(
+            'application/json; charset=utf-8',
+            $response->getHeaderLine('Content-Type'),
+            'Response model was populated with headers'
+        );
+
+        static::assertSame(
+            ['one', 'two'],
+            $response->getHeader('X-Hello'),
+            'Can parse multi-line header'
+        );
     }
 
     public function testSelfSignedCertificate()
     {
         $this->expectException(NetworkExceptionInterface::class);
         $this->expectExceptionMessageRegExp('/.*certificat.*/');
-        $client = (new Client());
-        $request = (new Request('GET'))->setUriFromString('https://self-signed.badssl.com/')->enableStrictSSL();
+        $client = new Client();
+        $request = (new Request('GET'))->withUriFromString('https://self-signed.badssl.com/')->enableStrictSSL();
         /** @noinspection UnusedFunctionResultInspection */
         $client->sendRequest($request);
     }
 
     public function testIgnoreCertificateErrors()
     {
-        $client = (new Client());
+        $client = new Client();
         $request = (new Request('GET', Mime::PLAIN))
-            ->setUriFromString('https://self-signed.badssl.com/')
+            ->withUriFromString('https://self-signed.badssl.com/')
             ->disableStrictSSL();
         $response = $client->sendRequest($request);
 
@@ -138,9 +209,9 @@ final class ClientTest extends TestCase
 
         // ---
 
-        $client = (new Client());
+        $client = new Client();
         $request = (new Request('GET', Mime::HTML))
-            ->setUriFromString('https://self-signed.badssl.com/')
+            ->withUriFromString('https://self-signed.badssl.com/')
             ->disableStrictSSL();
         $response = $client->sendRequest($request);
 
@@ -152,7 +223,7 @@ final class ClientTest extends TestCase
     public function testPageNotFound()
     {
         $client = new Client();
-        $request = (new Request('GET'))->setUriFromString('http://www.google.com/DOES/NOT/EXISTS');
+        $request = (new Request('GET'))->withUriFromString('http://www.google.com/DOES/NOT/EXISTS');
         $response = $client->sendRequest($request);
         static::assertEquals(404, $response->getStatusCode());
         static::assertContains('<title>Error 404 (Not Found)', (string) $response->getBody());
@@ -163,7 +234,7 @@ final class ClientTest extends TestCase
         $this->expectException(NetworkExceptionInterface::class);
         $this->expectExceptionMessage('Could not resolve host: www.does.not.exists');
         $client = new Client();
-        $request = (new Request('GET'))->setUriFromString('http://www.does.not.exists');
+        $request = (new Request('GET'))->withUriFromString('http://www.does.not.exists');
         /** @noinspection UnusedFunctionResultInspection */
         $client->sendRequest($request);
     }
@@ -173,7 +244,7 @@ final class ClientTest extends TestCase
         $this->expectException(RequestExceptionInterface::class);
         $this->expectExceptionMessage("Unknown HTTP method: 'ASD'");
         $client = new Client();
-        $request = (new Request('ASD'))->setUriFromString('http://www.google.it');
+        $request = (new Request('ASD'))->withUriFromString('http://www.google.it');
         /** @noinspection UnusedFunctionResultInspection */
         $client->sendRequest($request);
     }
@@ -181,7 +252,7 @@ final class ClientTest extends TestCase
     public function testGet()
     {
         $client = new Client();
-        $request = (new Request('GET'))->setUriFromString('https://ideato.it/robots.txt');
+        $request = (new Request('GET'))->withUriFromString('https://ideato.it/robots.txt');
         $response = $client->sendRequest($request);
         static::assertEquals(200, $response->getStatusCode());
         static::assertStringStartsWith('User-agent:', (string) $response->getBody());
@@ -192,7 +263,7 @@ final class ClientTest extends TestCase
     public function testCookie()
     {
         $client = new Client();
-        $request = (new Request('GET'))->setUriFromString('https://httpbin.org/get');
+        $request = (new Request('GET'))->withUriFromString('https://httpbin.org/get');
         $request = $request->withAddedCookie('name', 'value');
         $response = $client->sendRequest($request);
         static::assertEquals(200, $response->getStatusCode());
@@ -204,7 +275,7 @@ final class ClientTest extends TestCase
     public function testMultipleCookies()
     {
         $client = new Client();
-        $request = (new Request('GET'))->setUriFromString('https://httpbin.org/get');
+        $request = (new Request('GET'))->withUriFromString('https://httpbin.org/get');
         $request = $request->withAddedCookie('name', 'value');
         $request = $request->withAddedCookie('foo', 'bar');
         $response = $client->sendRequest($request);
@@ -219,7 +290,7 @@ final class ClientTest extends TestCase
         $client = new Client();
         $dataToSend = ['abc' => 'def'];
         $request = (new Request('PUT', Mime::JSON))
-            ->setUriFromString('https://httpbin.org/put')
+            ->withUriFromString('https://httpbin.org/put')
             ->withBodyFromArray($dataToSend);
         $response = $client->sendRequest($request);
         static::assertEquals(200, $response->getStatusCode());
@@ -228,15 +299,26 @@ final class ClientTest extends TestCase
         static::assertEquals($dataToSend, $dataSent);
     }
 
-    public function testItFollowsRedirect()
+    public function testFollowsRedirect()
     {
         $client = new Client();
         $request = (new Request('GET'))
-            ->setUriFromString('http://httpbin.org/redirect-to?url=http%3A%2F%2Fwww.google.it%2Frobots.txt&status_code=301')
+            ->withUriFromString('http://httpbin.org/redirect-to?url=http%3A%2F%2Fwww.google.it%2Frobots.txt&status_code=301')
             ->followRedirects();
         $response = $client->sendRequest($request);
         static::assertStringStartsWith('User-agent:', (string) $response->getBody());
         static::assertEquals(200, $response->getStatusCode());
+    }
+
+    public function testNotFollowsRedirect()
+    {
+        $client = new Client();
+        $request = (new Request('GET'))
+            ->withUriFromString('http://httpbin.org/redirect-to?url=http%3A%2F%2Fwww.google.it%2Frobots.txt&status_code=301')
+            ->doNotFollowRedirects();
+        $response = $client->sendRequest($request);
+        static::assertSame('', (string) $response->getBody());
+        static::assertEquals(301, $response->getStatusCode());
     }
 
     public function testExpiredTimeout()
@@ -244,8 +326,8 @@ final class ClientTest extends TestCase
         $this->expectException(NetworkExceptionInterface::class);
         $this->expectExceptionMessageRegExp('/Timeout was reached/');
         $client = new Client();
-        $request = (new Request())->setUriFromString('http://slowwly.robertomurray.co.uk/delay/10000/url/http://www.example.com')
-            ->setConnectionTimeoutInSeconds(0.001);
+        $request = (new Request())->withUriFromString('http://slowwly.robertomurray.co.uk/delay/10000/url/http://www.example.com')
+            ->withConnectionTimeoutInSeconds(0.001);
         /** @noinspection UnusedFunctionResultInspection */
         $client->sendRequest($request);
     }
@@ -253,8 +335,8 @@ final class ClientTest extends TestCase
     public function testNotExpiredTimeout()
     {
         $client = new Client();
-        $request = (new Request('GET'))->setUriFromString('https://www.google.com/robots.txt')
-            ->setConnectionTimeoutInSeconds(10);
+        $request = (new Request('GET'))->withUriFromString('https://www.google.com/robots.txt')
+            ->withConnectionTimeoutInSeconds(10);
         $response = $client->sendRequest($request);
         static::assertEquals(200, $response->getStatusCode());
     }

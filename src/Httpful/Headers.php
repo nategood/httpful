@@ -5,7 +5,7 @@
 
 declare(strict_types=1);
 
-namespace Httpful\Response;
+namespace Httpful;
 
 use Curl\CaseInsensitiveArray;
 use Httpful\Exception\ResponseHeaderException;
@@ -29,9 +29,78 @@ final class Headers extends CaseInsensitiveArray
                     $value = [$value];
                 }
 
+                $this->_validateAndTrimHeader($key, $value);
+
                 parent::offsetSet($key, $value);
             }
         }
+    }
+
+    /**
+     * Make sure the header complies with RFC 7230.
+     *
+     * Header names must be a non-empty string consisting of token characters.
+     *
+     * Header values must be strings consisting of visible characters with all optional
+     * leading and trailing whitespace stripped. This method will always strip such
+     * optional whitespace. Note that the method does not allow folding whitespace within
+     * the values as this was deprecated for almost all instances by the RFC.
+     *
+     * header-field = field-name ":" OWS field-value OWS
+     * field-name   = 1*( "!" / "#" / "$" / "%" / "&" / "'" / "*" / "+" / "-" / "." / "^"
+     *              / "_" / "`" / "|" / "~" / %x30-39 / ( %x41-5A / %x61-7A ) )
+     * OWS          = *( SP / HTAB )
+     * field-value  = *( ( %x21-7E / %x80-FF ) [ 1*( SP / HTAB ) ( %x21-7E / %x80-FF ) ] )
+     *
+     * @see https://tools.ietf.org/html/rfc7230#section-3.2.4
+     *
+     * @param mixed $header
+     * @param mixed $values
+     *
+     * @return string[]
+     */
+    private function _validateAndTrimHeader($header, $values): array
+    {
+        if (
+            !\is_string($header)
+            ||
+            \preg_match("@^[!#$%&'*+.^_`|~0-9A-Za-z-]+$@", $header) !== 1
+        ) {
+            throw new \InvalidArgumentException('Header name must be an RFC 7230 compatible string.');
+        }
+
+        if (!\is_array($values)) {
+            // This is simple, just one value.
+            if (
+                (!\is_numeric($values) && !\is_string($values))
+                ||
+                \preg_match("@^[ \t\x21-\x7E\x80-\xFF]*$@", (string) $values) !== 1
+            ) {
+                throw new \InvalidArgumentException('Header values must be RFC 7230 compatible strings.');
+            }
+
+            return [\trim((string) $values, " \t")];
+        }
+
+        if (empty($values)) {
+            throw new \InvalidArgumentException('Header values must be a string or an array of strings, empty array given.');
+        }
+
+        // Assert Non empty array
+        $returnValues = [];
+        foreach ($values as $v) {
+            if (
+                (!\is_numeric($v) && !\is_string($v))
+                ||
+                \preg_match("@^[ \t\x21-\x7E\x80-\xFF]*$@", (string) $v) !== 1
+            ) {
+                throw new \InvalidArgumentException('Header values must be RFC 7230 compatible strings.');
+            }
+
+            $returnValues[] = \trim((string) $v, " \t");
+        }
+
+        return $returnValues;
     }
 
     /**
@@ -42,12 +111,11 @@ final class Headers extends CaseInsensitiveArray
     public static function fromString($string): self
     {
         // init
-        $parse_headers = [];
+        $parsed_headers = [];
 
         $headers = \preg_split("/[\r\n]+/", $string, -1, \PREG_SPLIT_NO_EMPTY);
-
         if ($headers === false) {
-            return new self($parse_headers);
+            return new self($parsed_headers);
         }
 
         $headersCount = \count($headers);
@@ -61,19 +129,15 @@ final class Headers extends CaseInsensitiveArray
             list($key, $raw_value) = \explode(':', $header, 2);
             $key = \trim($key);
             $value = \trim($raw_value);
-            if (\array_key_exists($key, $parse_headers)) {
-                // See HTTP RFC Sec 4.2 Paragraph 5
-                // http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
-                // If a header appears more than once, it must also be able to
-                // be represented as a single header with a comma-separated
-                // list of values.  We transform accordingly.
-                $parse_headers[$key] .= ',' . $value;
+
+            if (\array_key_exists($key, $parsed_headers)) {
+                $parsed_headers[$key][] = $value;
             } else {
-                $parse_headers[$key] = $value;
+                $parsed_headers[$key][] = $value;
             }
         }
 
-        return new self($parse_headers);
+        return new self($parsed_headers);
     }
 
     /**
@@ -111,6 +175,8 @@ final class Headers extends CaseInsensitiveArray
      */
     public function forceSet($offset, $value)
     {
+        $this->_validateAndTrimHeader($offset, $value);
+
         parent::offsetSet($offset, $value);
     }
 

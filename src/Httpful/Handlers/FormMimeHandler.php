@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Httpful\Handlers;
 
+use voku\helper\UTF8;
+
 /**
  * Mime Type: application/x-www-urlencoded
  */
@@ -16,6 +18,11 @@ class FormMimeHandler implements MimeHandlerInterface
      */
     public function parse($body)
     {
+        // special: form-data with json response
+        if (UTF8::is_json($body)) {
+            return \json_decode($body, true);
+        }
+
         // init
         $parsed = [];
 

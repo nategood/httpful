@@ -38,7 +38,7 @@ final class ServerRequestTest extends TestCase
 
     public function testCookieParams()
     {
-        $request1 = (new ServerRequest('GET'))->setUriFromString('/');
+        $request1 = (new ServerRequest('GET'))->withUriFromString('/');
 
         $params = ['name' => 'value'];
 

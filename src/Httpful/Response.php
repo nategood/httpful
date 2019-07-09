@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Httpful;
 
 use Httpful\Exception\ResponseException;
-use Httpful\Response\Headers;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
+use voku\helper\UTF8;
 
 class Response implements ResponseInterface
 {
@@ -108,15 +108,15 @@ class Response implements ResponseInterface
         if (\is_string($headers)) {
             $this->code = $this->_getResponseCodeFromHeaderString($headers);
             $this->reason = Http::reason($this->code);
-            $this->headers = Response\Headers::fromString($headers);
+            $this->headers = Headers::fromString($headers);
         } elseif (\is_array($headers)) {
             $this->code = 200;
             $this->reason = Http::reason($this->code);
-            $this->headers = new Response\Headers($headers);
+            $this->headers = new Headers($headers);
         } else {
             $this->code = 200;
             $this->reason = Http::reason($this->code);
-            $this->headers = new Response\Headers();
+            $this->headers = new Headers();
         }
 
         $this->_interpretHeaders();
@@ -131,7 +131,15 @@ class Response implements ResponseInterface
      */
     public function __toString()
     {
-        if ($this->body->getSize() > 0) {
+        if (
+            $this->body->getSize() > 0
+            &&
+            !(
+                $this->raw_body
+                &&
+                UTF8::is_serialized((string) $this->body)
+            )
+        ) {
             return (string) $this->body;
         }
 
@@ -316,7 +324,7 @@ class Response implements ResponseInterface
      *              name using a case-insensitive string comparison. Returns false if
      *              no matching header name is found in the message.
      */
-    public function hasHeader($name)
+    public function hasHeader($name): bool
     {
         return $this->headers->offsetExists($name);
     }
@@ -341,19 +349,19 @@ class Response implements ResponseInterface
      */
     public function withAddedHeader($name, $value)
     {
-        $return = clone $this;
+        $new = clone $this;
 
         if (!\is_array($value)) {
             $value = [$value];
         }
 
-        if ($return->headers->offsetExists($name)) {
-            $return->headers->forceSet($name, \array_merge_recursive($return->headers->offsetGet($name), $value));
+        if ($new->headers->offsetExists($name)) {
+            $new->headers->forceSet($name, \array_merge_recursive($new->headers->offsetGet($name), $value));
         } else {
-            $return->headers->forceSet($name, $value);
+            $new->headers->forceSet($name, $value);
         }
 
-        return $return;
+        return $new;
     }
 
     /**
@@ -373,11 +381,11 @@ class Response implements ResponseInterface
      */
     public function withBody(StreamInterface $body)
     {
-        $return = clone $this;
+        $new = clone $this;
 
-        $return->body = $body;
+        $new->body = $body;
 
-        return $return;
+        return $new;
     }
 
     /**
@@ -399,15 +407,15 @@ class Response implements ResponseInterface
      */
     public function withHeader($name, $value)
     {
-        $return = clone $this;
+        $new = clone $this;
 
         if (!\is_array($value)) {
             $value = [$value];
         }
 
-        $return->headers->forceSet($name, $value);
+        $new->headers->forceSet($name, $value);
 
-        return $return;
+        return $new;
     }
 
     /**
@@ -442,11 +450,11 @@ class Response implements ResponseInterface
      */
     public function withProtocolVersion($version)
     {
-        $return = clone $this;
+        $new = clone $this;
 
-        $return->meta_data['protocol_version'] = $version;
+        $new->meta_data['protocol_version'] = $version;
 
-        return $return;
+        return $new;
     }
 
     /**
@@ -474,21 +482,21 @@ class Response implements ResponseInterface
      */
     public function withStatus($code, $reasonPhrase = null)
     {
-        $return = clone $this;
+        $new = clone $this;
 
-        $return->code = (int) $code;
+        $new->code = (int) $code;
 
-        if (Http::responseCodeExists($return->code)) {
-            $return->reason = Http::reason($return->code);
+        if (Http::responseCodeExists($new->code)) {
+            $new->reason = Http::reason($new->code);
         } else {
-            $return->reason = '';
+            $new->reason = '';
         }
 
         if ($reasonPhrase !== null) {
-            $return->reason = $reasonPhrase;
+            $new->reason = $reasonPhrase;
         }
 
-        return $return;
+        return $new;
     }
 
     /**
@@ -506,11 +514,11 @@ class Response implements ResponseInterface
      */
     public function withoutHeader($name)
     {
-        $return = clone $this;
+        $new = clone $this;
 
-        $return->headers->forceUnset($name);
+        $new->headers->forceUnset($name);
 
-        return $return;
+        return $new;
     }
 
     /**

@@ -45,6 +45,14 @@ class DefaultMimeHandler extends AbstractMimeHandler
      */
     public function serialize($payload)
     {
+        if (
+            \is_array($payload)
+            ||
+            $payload instanceof \Serializable
+        ) {
+            $payload = \serialize($payload);
+        }
+
         return $payload;
     }
 }

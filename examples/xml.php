@@ -11,7 +11,7 @@ $uri = 'https://www.w3schools.com/xml/note.xml';
 // -------------------------------------------------------
 
 $responseComplex = \Httpful\Client::get_request($uri)
-    ->expectsType(Mime::PLAIN)
+    ->withExpectedType(Mime::PLAIN)
     ->followRedirects(true)
     ->send();
 

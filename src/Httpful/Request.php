@@ -72,18 +72,9 @@ class Request implements \IteratorAggregate, RequestInterface
     private $method = Http::GET;
 
     /**
-     * Map of all registered headers, as original name => array of values
-     *
-     * @var array
+     * @var Headers
      */
-    private $headers = [];
-
-    /**
-     * Map of lowercase header name => original name at registration
-     *
-     * @var array
-     */
-    private $headerNames = [];
+    private $headers;
 
     /**
      * @var string
@@ -210,6 +201,7 @@ class Request implements \IteratorAggregate, RequestInterface
         self $template = null
     ) {
         $this->_template = $template;
+        $this->headers = new Headers();
 
         // fallback
         if (!isset($this->_template)) {
@@ -218,9 +210,9 @@ class Request implements \IteratorAggregate, RequestInterface
         }
 
         $this->_setDefaultsFromTemplate()
-            ->_method($method)
-            ->contentType($mime, Mime::PLAIN)
-            ->expectsType($mime, Mime::PLAIN);
+            ->_setMethod($method)
+            ->_withContentType($mime, Mime::PLAIN)
+            ->_withExpectedType($mime, Mime::PLAIN);
     }
 
     /**
@@ -330,7 +322,7 @@ class Request implements \IteratorAggregate, RequestInterface
             $curl->setOpt(\CURLOPT_POSTFIELDS, $this->serialized_payload);
 
             if (!$this->isUpload()) {
-                $this->headers['Content-Length'] = $this->_determineLength($this->serialized_payload);
+                $this->headers->forceSet('Content-Length', $this->_determineLength($this->serialized_payload));
             }
         }
 
@@ -357,8 +349,12 @@ class Request implements \IteratorAggregate, RequestInterface
         }
 
         // Solve a bug on squid proxy, NONE/411 when miss content length.
-        if (!isset($this->headers['Content-Length']) && !$this->isUpload()) {
-            $this->headers['Content-Length'] = 0;
+        if (
+            $this->headers->offsetExists('Content-Length')
+            &&
+            !$this->isUpload()
+        ) {
+            $this->headers->forceSet('Content-Length',0);
         }
 
         foreach ($this->headers as $header => $value) {
@@ -424,22 +420,6 @@ class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
-     * @param string|null $str payload
-     *
-     * @return int length of payload in bytes
-     *
-     * @internal
-     */
-    public function _determineLength($str): int
-    {
-        if ($str === null) {
-            return 0;
-        }
-
-        return \strlen($str);
-    }
-
-    /**
      * Takes care of building the query string to be used in the request URI.
      *
      * Any existing query string parameters, either passed as part of the URI
@@ -474,128 +454,20 @@ class Request implements \IteratorAggregate, RequestInterface
         $queryString = \http_build_query($params);
 
         if (\strpos((string) $this->uri, '?') !== false) {
-            $this->setUri($this->uri->withQuery(
-                \substr(
-                    (string) $this->uri,
-                    0,
-                    \strpos((string) $this->uri, '?')
+            $this->_withUri(
+                $this->uri->withQuery(
+                    \substr(
+                        (string) $this->uri,
+                        0,
+                        \strpos((string) $this->uri, '?')
+                    )
                 )
-            ));
+            );
         }
 
         if (\count($params)) {
-            $this->setUri($this->uri->withQuery($queryString));
+            $this->_withUri($this->uri->withQuery($queryString));
         }
-    }
-
-    /**
-     * Add an additional header to the request
-     * and return an immutable version from this object.
-     *
-     * @param string $header_name
-     * @param string $value
-     *
-     * @return static
-     */
-    public function addHeader($header_name, $value): self
-    {
-        $new = clone $this;
-
-        $new->headers[$header_name] = $value;
-
-        return $new;
-    }
-
-    /**
-     * Add group of headers all at once.
-     *
-     * Note: This is here just as a convenience in very specific cases.
-     * The preferred "readable" way would be to leverage the support for custom header methods.
-     *
-     * @param string[] $headers
-     *
-     * @return static
-     */
-    public function addHeaders(array $headers): self
-    {
-        $new = clone $this;
-
-        foreach ($headers as $header => $value) {
-            $new->_setHeaders([$header => $value]);
-        }
-
-        return $new;
-    }
-
-    /**
-     * Semi-reluctantly added this as a way to add in curl opts
-     * that are not otherwise accessible from the rest of the API.
-     *
-     * @param int   $curl_opt
-     * @param mixed $curl_opt_val
-     *
-     * @return static
-     */
-    public function addOnCurlOption($curl_opt, $curl_opt_val): self
-    {
-        $this->additional_curl_opts[$curl_opt] = $curl_opt_val;
-
-        return $this;
-    }
-
-    /**
-     * @return static
-     *
-     * @see Request::serializePayload()
-     */
-    public function alwaysSerializePayload(): self
-    {
-        return $this->serializePayload(static::SERIALIZE_PAYLOAD_ALWAYS);
-    }
-
-    /**
-     * @param array $files
-     *
-     * @return static
-     */
-    public function attach($files): self
-    {
-        $fInfo = \finfo_open(\FILEINFO_MIME_TYPE);
-
-        if ($fInfo === false) {
-            throw new \Exception('finfo_open() did not work');
-        }
-
-        foreach ($files as $key => $file) {
-            $mimeType = \finfo_file($fInfo, $file);
-            if ($mimeType !== false) {
-                $this->payload[$key] = \curl_file_create($file, $mimeType, \basename($file));
-            }
-        }
-
-        \finfo_close($fInfo);
-
-        $this->contentType(Mime::UPLOAD);
-
-        return $this;
-    }
-
-    /**
-     * User Basic Auth.
-     *
-     * Only use when over SSL/TSL/HTTPS.
-     *
-     * @param string $username
-     * @param string $password
-     *
-     * @return static
-     */
-    public function basicAuth($username, $password): self
-    {
-        $this->username = $username;
-        $this->password = $password;
-
-        return $this;
     }
 
     /**
@@ -673,94 +545,6 @@ class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
-     * @param string|null $mime     use a constant from Mime::*
-     * @param string|null $fallback use a constant from Mime::*
-     *
-     * @return static
-     */
-    public function contentType($mime, string $fallback = null): self
-    {
-        if (empty($mime) && empty($fallback)) {
-            return $this;
-        }
-
-        if (empty($mime)) {
-            $mime = $fallback;
-        }
-
-        if (empty($mime)) {
-            return $this;
-        }
-
-        $this->content_type = Mime::getFullMime($mime);
-        if ($this->isUpload()) {
-            $this->neverSerializePayload();
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return static
-     */
-    public function contentTypeCsv(): self
-    {
-        $this->content_type = Mime::getFullMime(Mime::CSV);
-
-        return $this;
-    }
-
-    /**
-     * @return static
-     */
-    public function contentTypeForm(): self
-    {
-        $this->content_type = Mime::getFullMime(Mime::FORM);
-
-        return $this;
-    }
-
-    /**
-     * @return static
-     */
-    public function contentTypeHtml(): self
-    {
-        $this->content_type = Mime::getFullMime(Mime::HTML);
-
-        return $this;
-    }
-
-    /**
-     * @return static
-     */
-    public function contentTypeJson(): self
-    {
-        $this->content_type = Mime::getFullMime(Mime::JSON);
-
-        return $this;
-    }
-
-    /**
-     * @return static
-     */
-    public function contentTypePlain(): self
-    {
-        $this->content_type = Mime::getFullMime(Mime::PLAIN);
-
-        return $this;
-    }
-
-    /**
-     * @return static
-     */
-    public function contentTypeXml(): self
-    {
-        $this->content_type = Mime::getFullMime(Mime::XML);
-
-        return $this;
-    }
-
-    /**
      * HTTP Method Delete
      *
      * @param string|UriInterface $uri  optional uri to use
@@ -775,8 +559,8 @@ class Request implements \IteratorAggregate, RequestInterface
         }
 
         return (new self(Http::DELETE))
-            ->setUriFromString($uri)
-            ->mime($mime);
+            ->withUriFromString($uri)
+            ->withMimeType($mime);
     }
 
     /**
@@ -787,11 +571,13 @@ class Request implements \IteratorAggregate, RequestInterface
      *
      * @return static
      */
-    public function digestAuth($username, $password): self
+    public function withDigestAuth($username, $password): self
     {
-        $this->addOnCurlOption(\CURLOPT_HTTPAUTH, \CURLAUTH_DIGEST);
+        $new = clone $this;
 
-        return $this->basicAuth($username, $password);
+        $new = $new->withCurlOption(\CURLOPT_HTTPAUTH, \CURLAUTH_DIGEST);
+
+        return $new->withBasicAuth($username, $password);
     }
 
     /**
@@ -845,7 +631,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function expectsCsv(): self
     {
-        return $this->expectsType(Mime::CSV);
+        return $this->withExpectedType(Mime::CSV);
     }
 
     /**
@@ -853,7 +639,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function expectsForm(): self
     {
-        return $this->expectsType(Mime::FORM);
+        return $this->withExpectedType(Mime::FORM);
     }
 
     /**
@@ -861,7 +647,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function expectsHtml(): self
     {
-        return $this->expectsType(Mime::HTML);
+        return $this->withExpectedType(Mime::HTML);
     }
 
     /**
@@ -869,7 +655,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function expectsJavascript(): self
     {
-        return $this->expectsType(Mime::JS);
+        return $this->withExpectedType(Mime::JS);
     }
 
     /**
@@ -877,7 +663,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function expectsJs(): self
     {
-        return $this->expectsType(Mime::JS);
+        return $this->withExpectedType(Mime::JS);
     }
 
     /**
@@ -885,7 +671,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function expectsJson(): self
     {
-        return $this->expectsType(Mime::JSON);
+        return $this->withExpectedType(Mime::JSON);
     }
 
     /**
@@ -893,7 +679,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function expectsPlain(): self
     {
-        return $this->expectsType(Mime::PLAIN);
+        return $this->withExpectedType(Mime::PLAIN);
     }
 
     /**
@@ -901,32 +687,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function expectsText(): self
     {
-        return $this->expectsType(Mime::PLAIN);
-    }
-
-    /**
-     * @param string|null $mime     use a constant from Mime::*
-     * @param string|null $fallback use a constant from Mime::*
-     *
-     * @return static
-     */
-    public function expectsType($mime, string $fallback = null): self
-    {
-        if (empty($mime) && empty($fallback)) {
-            return $this;
-        }
-
-        if (empty($mime)) {
-            $mime = $fallback;
-        }
-
-        if (empty($mime)) {
-            return $this;
-        }
-
-        $this->expected_type = Mime::getFullMime($mime);
-
-        return $this;
+        return $this->withExpectedType(Mime::PLAIN);
     }
 
     /**
@@ -934,7 +695,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function expectsUpload(): self
     {
-        return $this->expectsType(Mime::UPLOAD);
+        return $this->withExpectedType(Mime::UPLOAD);
     }
 
     /**
@@ -942,7 +703,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function expectsXhtml(): self
     {
-        return $this->expectsType(Mime::XHTML);
+        return $this->withExpectedType(Mime::XHTML);
     }
 
     /**
@@ -950,7 +711,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function expectsXml(): self
     {
-        return $this->expectsType(Mime::XML);
+        return $this->withExpectedType(Mime::XML);
     }
 
     /**
@@ -958,7 +719,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function expectsYaml(): self
     {
-        return $this->expectsType(Mime::YAML);
+        return $this->withExpectedType(Mime::YAML);
     }
 
     /**
@@ -999,8 +760,8 @@ class Request implements \IteratorAggregate, RequestInterface
         }
 
         return (new self(Http::GET))
-            ->setUriFromString($uri)
-            ->mime($mime);
+            ->withUriFromString($uri)
+            ->withMimeType($mime);
     }
 
     /**
@@ -1030,14 +791,21 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function getHeader($name): array
     {
-        $name = \strtolower($name);
-        if (!isset($this->headerNames[$name])) {
-            return [];
+        if ($this->headers->offsetExists($name)) {
+            $value = $this->headers->offsetGet($name);
+
+            if (!\is_array($value)) {
+                return [\trim($value, " \t")];
+            }
+
+            foreach ($value as $keyInner => $valueInner) {
+                $value[$keyInner] = \trim($valueInner, " \t");
+            }
+
+            return $value;
         }
 
-        $name = $this->headerNames[$name];
-
-        return $this->headers[$name];
+        return [];
     }
 
     /**
@@ -1070,7 +838,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function getHeaders(): array
     {
-        return $this->headers;
+        return $this->headers->toArray();
     }
 
     /**
@@ -1131,7 +899,7 @@ class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
-     * @return \Httpful\Uri|\Psr\Http\Message\UriInterface|null
+     * @return Uri|UriInterface|null
      */
     public function getUri()
     {
@@ -1149,7 +917,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function hasHeader($name): bool
     {
-        return isset($this->headerNames[\strtolower($name)]);
+        return $this->headers->offsetExists($name);
     }
 
     /**
@@ -1178,7 +946,15 @@ class Request implements \IteratorAggregate, RequestInterface
 
         $new = clone $this;
 
-        $new->_setHeaders([$name => $value]);
+        if (!\is_array($value)) {
+            $value = [$value];
+        }
+
+        if ($new->headers->offsetExists($name)) {
+            $new->headers->forceSet($name, \array_merge_recursive($new->headers->offsetGet($name), $value));
+        } else {
+            $new->headers->forceSet($name, $value);
+        }
 
         return $new;
     }
@@ -1197,58 +973,14 @@ class Request implements \IteratorAggregate, RequestInterface
      * @throws \InvalidArgumentException when the body is not valid
      *
      * @return static
-     *
-     * @internal
      */
     public function withBody(StreamInterface $body)
     {
         $stream = Http::stream($body);
 
-        return $this->_setBody($stream->getContents(), null);
-    }
+        $new = clone $this;
 
-    /**
-     * @param string $body
-     *
-     * @return static
-     */
-    public function withBodyFromString(string $body)
-    {
-        $stream = Http::stream($body);
-
-        return $this->_setBody($stream->getContents(), null);
-    }
-
-    /**
-     * @param array $body
-     *
-     * @return static
-     */
-    public function withBodyFromArray(array $body)
-    {
-        return $this->_setBody($body, null);
-    }
-
-    /**
-     * @param string $name
-     * @param string $value
-     *
-     * @return static
-     */
-    public function withCookie(string $name, string $value): self
-    {
-        return $this->withHeader('Cookie', "${name}=${value}");
-    }
-
-    /**
-     * @param string $name
-     * @param string $value
-     *
-     * @return static
-     */
-    public function withAddedCookie(string $name, string $value): self
-    {
-        return $this->withAddedHeader('Cookie', "${name}=${value}");
+        return $new->_setBody($stream, null);
     }
 
     /**
@@ -1270,33 +1002,13 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function withHeader($name, $value): self
     {
-        $value = $this->_validateAndTrimHeader($name, $value);
-        $normalized = \strtolower($name);
-
         $new = clone $this;
 
-        if (isset($new->headerNames[$normalized])) {
-            unset($new->headers[$new->headerNames[$normalized]]);
+        if (!\is_array($value)) {
+            $value = [$value];
         }
 
-        $new->headerNames[$normalized] = $name;
-        $new->headers[$name] = $value;
-
-        return $new;
-    }
-
-    /**
-     * @param string[] $header
-     *
-     * @return static
-     */
-    public function withHeaders(array $header)
-    {
-        $new = clone $this;
-
-        foreach ($header as  $name => $value) {
-            $new = $new->withHeader($name, $value);
-        }
+        $new->headers->forceSet($name, $value);
 
         return $new;
     }
@@ -1322,7 +1034,7 @@ class Request implements \IteratorAggregate, RequestInterface
     {
         $new = clone $this;
 
-        $new->_method($method);
+        $new->_setMethod($method);
 
         return $new;
     }
@@ -1378,7 +1090,7 @@ class Request implements \IteratorAggregate, RequestInterface
         $new = clone $this;
 
         if ($new->uri !== null) {
-            $new->setUri($new->uri->withPath($requestTarget));
+            $new->_withUri($new->uri->withPath($requestTarget));
         }
 
         return $new;
@@ -1418,15 +1130,30 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function withUri(UriInterface $uri, $preserveHost = false)
     {
+        $new = clone $this;
+
+        return $new->_withUri($uri, $preserveHost);
+    }
+
+    /**
+     * @param UriInterface $uri
+     * @param bool         $preserveHost
+     *
+     * @return static
+     */
+    private function _withUri(UriInterface $uri, $preserveHost = false): self
+    {
         if ($this->uri === $uri) {
             return $this;
         }
 
-        $new = clone $this;
+        $this->uri = $uri;
 
-        $new->setUri($uri);
+        if (!$preserveHost) {
+            $this->_updateHostFromUri();
+        }
 
-        return $new;
+        return $this;
     }
 
     /**
@@ -1444,16 +1171,9 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function withoutHeader($name): self
     {
-        $normalized = \strtolower($name);
-        if (!isset($this->headerNames[$normalized])) {
-            return $this;
-        }
-
-        $name = $this->headerNames[$normalized];
-
         $new = clone $this;
 
-        unset($new->headers[$name], $new->headerNames[$normalized]);
+        $new->headers->forceUnset($name);
 
         return $new;
     }
@@ -1660,8 +1380,8 @@ class Request implements \IteratorAggregate, RequestInterface
         }
 
         return (new self(Http::HEAD))
-            ->setUriFromString($uri)
-            ->mime(Mime::PLAIN);
+            ->withUriFromString($uri)
+            ->withMimeType(Mime::PLAIN);
     }
 
     /**
@@ -1689,46 +1409,13 @@ class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
-     * Helper function to set the Content type and Expected as same in one swoop.
-     *
-     * @param string|null $mime mime type to use for content type and expected return type
-     *
-     * @return static
-     */
-    public function mime($mime): self
-    {
-        if (empty($mime)) {
-            return $this;
-        }
-
-        $this->expected_type = Mime::getFullMime($mime);
-        $this->content_type = $this->expected_type;
-
-        if ($this->isUpload()) {
-            $this->neverSerializePayload();
-        }
-
-        return $this;
-    }
-
-    /**
-     * @param string|null $mime
-     *
-     * @return static
-     */
-    public function mimeType($mime): self
-    {
-        return $this->mime($mime);
-    }
-
-    /**
      * @return static
      *
-     * @see Request::serializePayload()
+     * @see Request::serializePayloadMode()
      */
     public function neverSerializePayload(): self
     {
-        return $this->serializePayload(static::SERIALIZE_PAYLOAD_NEVER);
+        return $this->serializePayloadMode(static::SERIALIZE_PAYLOAD_NEVER);
     }
 
     /**
@@ -1737,11 +1424,13 @@ class Request implements \IteratorAggregate, RequestInterface
      *
      * @return static
      */
-    public function ntlmAuth($username, $password): self
+    public function withNtlmAuth($username, $password): self
     {
-        $this->addOnCurlOption(\CURLOPT_HTTPAUTH, \CURLAUTH_NTLM);
+        $new = clone $this;
 
-        return $this->basicAuth($username, $password);
+        $new->withCurlOption(\CURLOPT_HTTPAUTH, \CURLAUTH_NTLM);
+
+        return $new->withBasicAuth($username, $password);
     }
 
     /**
@@ -1754,55 +1443,10 @@ class Request implements \IteratorAggregate, RequestInterface
     public static function options($uri): self
     {
         if ($uri instanceof UriInterface) {
-            $uri = $uri->__toString();
+            $uri = (string) $uri;
         }
 
-        return (new self(Http::OPTIONS))->setUriFromString($uri);
-    }
-
-    /**
-     * Add additional parameter to be appended to the query string.
-     *
-     * @param string $key
-     * @param string $value
-     *
-     * @return static this
-     */
-    public function param($key, $value): self
-    {
-        if ($key && $value) {
-            $this->params[$key] = $value;
-        }
-
-        return $this;
-    }
-
-    /**
-     * Add additional parameters to be appended to the query string.
-     *
-     * Takes an associative array of key/value pairs as an argument.
-     *
-     * @param array $params
-     *
-     * @return static this
-     */
-    public function params(array $params): self
-    {
-        $this->params = \array_merge($this->params, $params);
-
-        return $this;
-    }
-
-    /**
-     * @param callable $callback
-     *
-     * @return static
-     *
-     * @see Request::parseResponsesWith()
-     */
-    public function parseResponsesWith(callable $callback): self
-    {
-        return $this->setParseCallback($callback);
+        return (new self(Http::OPTIONS))->withUriFromString($uri);
     }
 
     /**
@@ -1821,7 +1465,7 @@ class Request implements \IteratorAggregate, RequestInterface
         }
 
         return (new self(Http::PATCH))
-            ->setUriFromString($uri)
+            ->withUriFromString($uri)
             ->_setBody($payload, null, $mime);
     }
 
@@ -1841,7 +1485,7 @@ class Request implements \IteratorAggregate, RequestInterface
         }
 
         return (new self(Http::POST))
-            ->setUriFromString($uri)
+            ->withUriFromString($uri)
             ->_setBody($payload, null, $mime);
     }
 
@@ -1861,7 +1505,7 @@ class Request implements \IteratorAggregate, RequestInterface
         }
 
         return (new self(Http::PUT))
-            ->setUriFromString($uri)
+            ->withUriFromString($uri)
             ->_setBody($payload, null, $mime);
     }
 
@@ -1888,7 +1532,7 @@ class Request implements \IteratorAggregate, RequestInterface
     /**
      * Actually send off the request, and parse the response
      *
-     *@throws NetworkErrorException when unable to parse or communicate w server
+     * @throws NetworkErrorException when unable to parse or communicate w server
      *
      * @return Response with parsed results
      */
@@ -1916,7 +1560,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function sendsCsv(): self
     {
-        return $this->contentType(Mime::CSV);
+        return $this->withContentType(Mime::CSV);
     }
 
     /**
@@ -1924,7 +1568,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function sendsForm(): self
     {
-        return $this->contentType(Mime::FORM);
+        return $this->withContentType(Mime::FORM);
     }
 
     /**
@@ -1932,7 +1576,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function sendsHtml(): self
     {
-        return $this->contentType(Mime::HTML);
+        return $this->withContentType(Mime::HTML);
     }
 
     /**
@@ -1940,7 +1584,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function sendsJavascript(): self
     {
-        return $this->contentType(Mime::JS);
+        return $this->withContentType(Mime::JS);
     }
 
     /**
@@ -1948,7 +1592,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function sendsJs(): self
     {
-        return $this->contentType(Mime::JS);
+        return $this->withContentType(Mime::JS);
     }
 
     /**
@@ -1956,7 +1600,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function sendsJson(): self
     {
-        return $this->contentType(Mime::JSON);
+        return $this->withContentType(Mime::JSON);
     }
 
     /**
@@ -1964,7 +1608,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function sendsPlain(): self
     {
-        return $this->contentType(Mime::PLAIN);
+        return $this->withContentType(Mime::PLAIN);
     }
 
     /**
@@ -1972,7 +1616,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function sendsText(): self
     {
-        return $this->contentType(Mime::PLAIN);
+        return $this->withContentType(Mime::PLAIN);
     }
 
     /**
@@ -1980,7 +1624,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function sendsUpload(): self
     {
-        return $this->contentType(Mime::UPLOAD);
+        return $this->withContentType(Mime::UPLOAD);
     }
 
     /**
@@ -1988,7 +1632,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function sendsXhtml(): self
     {
-        return $this->contentType(Mime::XHTML);
+        return $this->withContentType(Mime::XHTML);
     }
 
     /**
@@ -1996,173 +1640,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function sendsXml(): self
     {
-        return $this->contentType(Mime::XML);
-    }
-
-    /**
-     * @return static
-     */
-    public function sendsYaml(): self
-    {
-        return $this->contentType(Mime::YAML);
-    }
-
-    /**
-     * Determine how/if we use the built in serialization by
-     * setting the serialize_payload_method
-     * The default (SERIALIZE_PAYLOAD_SMART) is...
-     *  - if payload is not a scalar (object/array)
-     *    use the appropriate serialize method according to
-     *    the Content-Type of this request.
-     *  - if the payload IS a scalar (int, float, string, bool)
-     *    than just return it as is.
-     * When this option is set SERIALIZE_PAYLOAD_ALWAYS,
-     * it will always use the appropriate
-     * serialize option regardless of whether payload is scalar or not
-     * When this option is set SERIALIZE_PAYLOAD_NEVER,
-     * it will never use any of the serialization methods.
-     * Really the only use for this is if you want the serialize methods
-     * to handle strings or not (e.g. Blah is not valid JSON, but "Blah"
-     * is).  Forcing the serialization helps prevent that kind of error from
-     * happening.
-     *
-     * @param int $mode
-     *
-     * @return static
-     */
-    public function serializePayload($mode): self
-    {
-        $this->serialize_payload_method = $mode;
-
-        return $this;
-    }
-
-    /**
-     * @param callable $callback
-     *
-     * @return static
-     *
-     * @see Request::registerPayloadSerializer()
-     */
-    public function serializePayloadWith(callable $callback): self
-    {
-        return $this->registerPayloadSerializer('*', $callback);
-    }
-
-    /**
-     * Specify a HTTP connection timeout
-     *
-     * @param float|int $connection_timeout seconds to timeout the HTTP connection
-     *
-     * @throws \InvalidArgumentException
-     *
-     * @return static
-     */
-    public function setConnectionTimeoutInSeconds($connection_timeout): self
-    {
-        if (!\preg_match('/^\d+(\.\d+)?/', (string) $connection_timeout)) {
-            throw new \InvalidArgumentException(
-                'Invalid connection timeout provided: ' . \var_export($connection_timeout, true)
-            );
-        }
-
-        $this->connection_timeout = $connection_timeout;
-
-        return $this;
-    }
-
-    /**
-     * Callback called to handle HTTP errors. When nothing is set, defaults
-     * to logging via `error_log`.
-     *
-     * @param callable|LoggerInterface|null $error_handler
-     *
-     * @return static
-     */
-    public function setErrorHandler($error_handler): self
-    {
-        $this->error_handler = $error_handler;
-
-        return $this;
-    }
-
-    /**
-     * Use a custom function to parse the response.
-     *
-     * @param callable $callback Takes the raw body of
-     *                           the http response and returns a mixed
-     *
-     * @return static
-     */
-    public function setParseCallback(callable $callback): self
-    {
-        $this->parse_callback = $callback;
-
-        return $this;
-    }
-
-    /**
-     * @param callable|null $send_callback
-     *
-     * @return static
-     */
-    public function setSendCallback($send_callback): self
-    {
-        if (!empty($send_callback)) {
-            $this->send_callbacks[] = $send_callback;
-        }
-
-        return $this;
-    }
-
-    /**
-     * @param UriInterface $uri
-     *
-     * @return static
-     */
-    public function setUri(UriInterface $uri): self
-    {
-        $this->uri = $uri;
-
-        $this->_updateHostFromUri();
-
-        return $this;
-    }
-
-    /**
-     * @param string $body
-     *
-     * @return static
-     */
-    public function setBodyFromString(string $body): self
-    {
-        $this->_setBody($body);
-
-        return $this;
-    }
-
-    /**
-     * @param string $uri
-     *
-     * @return static
-     */
-    public function setUriFromString(string $uri): self
-    {
-        $this->setUri(new Uri($uri));
-
-        return $this;
-    }
-
-    /**
-     * Sets user agent.
-     *
-     * @param string $userAgent
-     *
-     * @return static
-     */
-    public function setUserAgent($userAgent): self
-    {
-        return $this->addHeader('User-Agent', $userAgent);
+        return $this->withContentType(Mime::XML);
     }
 
     /**
@@ -2170,11 +1648,11 @@ class Request implements \IteratorAggregate, RequestInterface
      *
      * @return static
      *
-     * @see Request::serializePayload()
+     * @see Request::serializePayloadMode()
      */
     public function smartSerializePayload(): self
     {
-        return $this->serializePayload(static::SERIALIZE_PAYLOAD_SMART);
+        return $this->serializePayloadMode(static::SERIALIZE_PAYLOAD_SMART);
     }
 
     /**
@@ -2204,7 +1682,7 @@ class Request implements \IteratorAggregate, RequestInterface
      *
      * @return static
      */
-    public function useProxy(
+    public function withProxy(
         $proxy_host,
         $proxy_port = 80,
         $auth_type = null,
@@ -2212,15 +1690,17 @@ class Request implements \IteratorAggregate, RequestInterface
         $auth_password = null,
         $proxy_type = Proxy::HTTP
     ): self {
-        $this->addOnCurlOption(\CURLOPT_PROXY, "{$proxy_host}:{$proxy_port}");
-        $this->addOnCurlOption(\CURLOPT_PROXYTYPE, $proxy_type);
+        $new = clone $this;
+
+        $new = $new->withCurlOption(\CURLOPT_PROXY, "{$proxy_host}:{$proxy_port}");
+        $new = $new->withCurlOption(\CURLOPT_PROXYTYPE, $proxy_type);
 
         if (\in_array($auth_type, [\CURLAUTH_BASIC, \CURLAUTH_NTLM], true)) {
-            $this->addOnCurlOption(\CURLOPT_PROXYAUTH, $auth_type)
-                ->addOnCurlOption(\CURLOPT_PROXYUSERPWD, "{$auth_username}:{$auth_password}");
+            $new = $new->withCurlOption(\CURLOPT_PROXYAUTH, $auth_type);
+            $new = $new->withCurlOption(\CURLOPT_PROXYUSERPWD, "{$auth_username}:{$auth_password}");
         }
 
-        return $this;
+        return $new;
     }
 
     /**
@@ -2235,7 +1715,7 @@ class Request implements \IteratorAggregate, RequestInterface
      *
      * @return static
      *
-     * @see Request::useProxy
+     * @see Request::withProxy
      */
     public function useSocks4Proxy(
         $proxy_host,
@@ -2244,7 +1724,7 @@ class Request implements \IteratorAggregate, RequestInterface
         $auth_username = null,
         $auth_password = null
     ): self {
-        return $this->useProxy(
+        return $this->withProxy(
             $proxy_host,
             $proxy_port,
             $auth_type,
@@ -2265,7 +1745,7 @@ class Request implements \IteratorAggregate, RequestInterface
      *
      * @return static
      *
-     * @see Request::useProxy
+     * @see Request::withProxy
      */
     public function useSocks5Proxy(
         $proxy_host,
@@ -2274,7 +1754,7 @@ class Request implements \IteratorAggregate, RequestInterface
         $auth_username = null,
         $auth_password = null
     ): self {
-        return $this->useProxy(
+        return $this->withProxy(
             $proxy_host,
             $proxy_port,
             $auth_type,
@@ -2285,36 +1765,454 @@ class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
+     * @param string $name
+     * @param string $value
+     *
+     * @return static
+     */
+    public function withAddedCookie(string $name, string $value): self
+    {
+        return $this->withAddedHeader('Cookie', "${name}=${value}");
+    }
+
+    /**
+     * @param array $files
+     *
+     * @return static
+     */
+    public function withAttachment($files): self
+    {
+        $new = clone $this;
+
+        $fInfo = \finfo_open(\FILEINFO_MIME_TYPE);
+        if ($fInfo === false) {
+            /** @noinspection ForgottenDebugOutputInspection */
+            \error_log('finfo_open() did not work', \E_USER_WARNING);
+
+            return $new;
+        }
+
+        foreach ($files as $key => $file) {
+            $mimeType = \finfo_file($fInfo, $file);
+            if ($mimeType !== false) {
+                $new->payload[$key] = \curl_file_create($file, $mimeType, \basename($file));
+            }
+        }
+
+        \finfo_close($fInfo);
+
+        $new = $new->_withContentType(Mime::UPLOAD);
+
+        return $new;
+    }
+
+    /**
+     * User Basic Auth.
+     *
+     * Only use when over SSL/TSL/HTTPS.
+     *
+     * @param string $username
+     * @param string $password
+     *
+     * @return static
+     */
+    public function withBasicAuth($username, $password): self
+    {
+        $new = clone $this;
+        $new->username = $username;
+        $new->password = $password;
+
+        return $new;
+    }
+
+    /**
+     * @param array $body
+     *
+     * @return static
+     */
+    public function withBodyFromArray(array $body)
+    {
+        return $this->_setBody($body, null);
+    }
+
+    /**
+     * @param string $body
+     *
+     * @return static
+     */
+    public function withBodyFromString(string $body)
+    {
+        $stream = Http::stream($body);
+
+        return $this->_setBody($stream->getContents(), null);
+    }
+
+    /**
+     * Specify a HTTP connection timeout
+     *
+     * @param float|int $connection_timeout seconds to timeout the HTTP connection
+     *
+     * @throws \InvalidArgumentException
+     *
+     * @return static
+     */
+    public function withConnectionTimeoutInSeconds($connection_timeout): self
+    {
+        if (!\preg_match('/^\d+(\.\d+)?/', (string) $connection_timeout)) {
+            throw new \InvalidArgumentException(
+                'Invalid connection timeout provided: ' . \var_export($connection_timeout, true)
+            );
+        }
+
+        $new = clone $this;
+
+        $new->connection_timeout = $connection_timeout;
+
+        return $new;
+    }
+
+    /**
+     * @param string|null $mime     use a constant from Mime::*
+     * @param string|null $fallback use a constant from Mime::*
+     *
+     * @return static
+     */
+    public function withContentType($mime, string $fallback = null): self
+    {
+        $new = clone $this;
+
+        return $new->_withContentType($mime, $fallback);
+    }
+
+    /**
+     * @return static
+     */
+    public function withContentTypeCsv(): self
+    {
+        $new = clone $this;
+        $new->content_type = Mime::getFullMime(Mime::CSV);
+
+        return $new;
+    }
+
+    /**
+     * @return static
+     */
+    public function withContentTypeForm(): self
+    {
+        $new = clone $this;
+        $new->content_type = Mime::getFullMime(Mime::FORM);
+
+        return $new;
+    }
+
+    /**
+     * @return static
+     */
+    public function withContentTypeHtml(): self
+    {
+        $new = clone $this;
+        $new->content_type = Mime::getFullMime(Mime::HTML);
+
+        return $new;
+    }
+
+    /**
+     * @return static
+     */
+    public function withContentTypeJson(): self
+    {
+        $new = clone $this;
+        $new->content_type = Mime::getFullMime(Mime::JSON);
+
+        return $new;
+    }
+
+    /**
+     * @return static
+     */
+    public function withContentTypePlain(): self
+    {
+        $new = clone $this;
+        $new->content_type = Mime::getFullMime(Mime::PLAIN);
+
+        return $new;
+    }
+
+    /**
+     * @return static
+     */
+    public function withContentTypeXml(): self
+    {
+        $new = clone $this;
+        $new->content_type = Mime::getFullMime(Mime::XML);
+
+        return $new;
+    }
+
+    /**
+     * @return static
+     */
+    public function withContentTypeYaml(): self
+    {
+        return $this->withContentType(Mime::YAML);
+    }
+
+    /**
+     * @param string $name
+     * @param string $value
+     *
+     * @return static
+     */
+    public function withCookie(string $name, string $value): self
+    {
+        return $this->withHeader('Cookie', "${name}=${value}");
+    }
+
+    /**
+     * Semi-reluctantly added this as a way to add in curl opts
+     * that are not otherwise accessible from the rest of the API.
+     *
+     * @param int   $curl_opt
+     * @param mixed $curl_opt_val
+     *
+     * @return static
+     */
+    public function withCurlOption($curl_opt, $curl_opt_val): self
+    {
+        $new = clone $this;
+
+        $new->additional_curl_opts[$curl_opt] = $curl_opt_val;
+
+        return $new;
+    }
+
+    /**
+     * Callback called to handle HTTP errors. When nothing is set, defaults
+     * to logging via `error_log`.
+     *
+     * @param callable|LoggerInterface|null $error_handler
+     *
+     * @return static
+     */
+    public function withErrorHandler($error_handler): self
+    {
+        $new = clone $this;
+
+        $new->error_handler = $error_handler;
+
+        return $new;
+    }
+
+    /**
+     * @param string|null $mime     use a constant from Mime::*
+     * @param string|null $fallback use a constant from Mime::*
+     *
+     * @return static
+     */
+    public function withExpectedType($mime, string $fallback = null): self
+    {
+        $new = clone $this;
+
+        return $new->_withExpectedType($mime, $fallback);
+    }
+
+    /**
+     * @param string[] $header
+     *
+     * @return static
+     */
+    public function withHeaders(array $header)
+    {
+        $new = clone $this;
+
+        foreach ($header as $name => $value) {
+            $new = $new->withHeader($name, $value);
+        }
+
+        return $new;
+    }
+
+    /**
+     * Helper function to set the Content type and Expected as same in one swoop.
+     *
+     * @param string|null $mime mime type to use for content type and expected return type
+     *
+     * @return static
+     */
+    private function _withMimeType($mime): self
+    {
+        if (empty($mime)) {
+            return $this;
+        }
+
+        $this->expected_type = Mime::getFullMime($mime);
+        $this->content_type = $this->expected_type;
+
+        if ($this->isUpload()) {
+            $this->neverSerializePayload();
+        }
+
+        return $this;
+    }
+
+    /**
+     * Helper function to set the Content type and Expected as same in one swoop.
+     *
+     * @param string|null $mime mime type to use for content type and expected return type
+     *
+     * @return static
+     */
+    public function withMimeType($mime): self
+    {
+        $new = clone $this;
+
+        return $new->_withMimeType($mime);
+    }
+
+    /**
+     * Add additional parameter to be appended to the query string.
+     *
+     * @param int|string|null $key
+     * @param int|string|null $value
+     *
+     * @return static
+     */
+    public function withParam($key, $value): self
+    {
+        $new = clone $this;
+
+        if (
+            isset($key, $value)
+            &&
+            $key !== ''
+        ) {
+            $new->params[$key] = $value;
+        }
+
+        return $new;
+    }
+
+    /**
+     * Add additional parameters to be appended to the query string.
+     *
+     * Takes an associative array of key/value pairs as an argument.
+     *
+     * @param array $params
+     *
+     * @return static this
+     */
+    public function withParams(array $params): self
+    {
+        $new = clone $this;
+
+        $new->params = \array_merge($new->params, $params);
+
+        return $new;
+    }
+
+    /**
+     * Use a custom function to parse the response.
+     *
+     * @param callable $callback Takes the raw body of
+     *                           the http response and returns a mixed
+     *
+     * @return static
+     */
+    public function withParseCallback(callable $callback): self
+    {
+        $new = clone $this;
+
+        $new->parse_callback = $callback;
+
+        return $new;
+    }
+
+    /**
+     * @param callable|null $send_callback
+     *
+     * @return static
+     */
+    public function withSendCallback($send_callback): self
+    {
+        $new = clone $this;
+
+        if (!empty($send_callback)) {
+            $new->send_callbacks[] = $send_callback;
+        }
+
+        return $new;
+    }
+
+    /**
+     * @param callable $callback
+     *
+     * @return static
+     */
+    public function withSerializePayload(callable $callback): self
+    {
+        $new = clone $this;
+
+        return $new->registerPayloadSerializer('*', $callback);
+    }
+
+    /**
+     * Determine how/if we use the built in serialization by
+     * setting the serialize_payload_method
+     * The default (SERIALIZE_PAYLOAD_SMART) is...
+     *  - if payload is not a scalar (object/array)
+     *    use the appropriate serialize method according to
+     *    the Content-Type of this request.
+     *  - if the payload IS a scalar (int, float, string, bool)
+     *    than just return it as is.
+     * When this option is set SERIALIZE_PAYLOAD_ALWAYS,
+     * it will always use the appropriate
+     * serialize option regardless of whether payload is scalar or not
+     * When this option is set SERIALIZE_PAYLOAD_NEVER,
+     * it will never use any of the serialization methods.
+     * Really the only use for this is if you want the serialize methods
+     * to handle strings or not (e.g. Blah is not valid JSON, but "Blah"
+     * is).  Forcing the serialization helps prevent that kind of error from
+     * happening.
+     *
+     * @param int $mode Request::SERIALIZE_PAYLOAD_*
+     *
+     * @return static
+     */
+    public function serializePayloadMode(int $mode): self
+    {
+        $this->serialize_payload_method = $mode;
+
+        return $this;
+    }
+
+    /**
+     * @param string $uri
+     * @param bool   $useClone
+     *
+     * @return static
+     */
+    public function withUriFromString(string $uri, bool $useClone = true): self
+    {
+        if ($useClone) {
+            $new = clone $this;
+
+            return $new->withUri(new Uri($uri));
+        }
+
+        return $this->_withUri(new Uri($uri));
+    }
+
+    /**
+     * Sets user agent.
+     *
      * @param string $userAgent
      *
      * @return static
      */
     public function withUserAgent($userAgent): self
     {
-        return $this->addHeader('User-Agent', $userAgent);
-    }
-
-    /**
-     * Set the method.  Shouldn't be called often as the preferred syntax
-     * for instantiation is the method specific factory methods.
-     *
-     * @param string|null $method
-     *
-     * @return static
-     */
-    private function _method($method): self
-    {
-        if (empty($method)) {
-            return $this;
-        }
-
-        if (!\in_array($method, Http::allMethods(), true)) {
-            throw new RequestException($this, 'Unknown HTTP method: \'' . \strip_tags($method) . '\'');
-        }
-
-        $this->method = $method;
-
-        return $this;
+        return $this->withHeader('User-Agent', $userAgent);
     }
 
     /**
@@ -2397,6 +2295,20 @@ class Request implements \IteratorAggregate, RequestInterface
             $this,
             $this->_info
         );
+    }
+
+    /**
+     * @param string|null $str payload
+     *
+     * @return int length of payload in bytes
+     */
+    private function _determineLength($str): int
+    {
+        if ($str === null) {
+            return 0;
+        }
+
+        return \strlen($str);
     }
 
     /**
@@ -2503,7 +2415,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     private function _setBody($payload, $key = null, string $mimeType = null): self
     {
-        $this->mime($mimeType);
+        $this->_withMimeType($mimeType);
 
         if (!empty($payload)) {
             if (\is_array($payload)) {
@@ -2512,6 +2424,10 @@ class Request implements \IteratorAggregate, RequestInterface
                 }
 
                 return $this;
+            }
+
+            if ($payload instanceof StreamInterface) {
+                $payload = (string) $payload;
             }
 
             if ($key === null) {
@@ -2543,6 +2459,29 @@ class Request implements \IteratorAggregate, RequestInterface
                 }
             }
         }
+
+        return $this;
+    }
+
+    /**
+     * Set the method.  Shouldn't be called often as the preferred syntax
+     * for instantiation is the method specific factory methods.
+     *
+     * @param string|null $method
+     *
+     * @return static
+     */
+    private function _setMethod($method): self
+    {
+        if (empty($method)) {
+            return $this;
+        }
+
+        if (!\in_array($method, Http::allMethods(), true)) {
+            throw new RequestException($this, 'Unknown HTTP method: \'' . \strip_tags($method) . '\'');
+        }
+
+        $this->method = $method;
 
         return $this;
     }
@@ -2584,101 +2523,70 @@ class Request implements \IteratorAggregate, RequestInterface
             $host .= ':' . $port;
         }
 
-        if (isset($this->headerNames['host'])) {
-            $header = $this->headerNames['host'];
+        if ($this->headers->offsetExists('host')) {
+            $header = $this->getHeaderLine('host');
         } else {
-            $this->headerNames['host'] = $header = 'Host';
+            $header = 'Host';
         }
+
         // Ensure Host is the first header.
         // See: http://tools.ietf.org/html/rfc7230#section-5.4
-        $this->headers = [$header => [$host]] + $this->headers;
+        $this->headers = new Headers([$header => [$host]] + $this->getHeaders());
 
         $URL_CACHE = $this->uri;
     }
 
     /**
-     * @param array $headers
+     * @param string|null $mime     use a constant from Mime::*
+     * @param string|null $fallback use a constant from Mime::*
+     *
+     * @return static
      */
-    private function _setHeaders(array $headers)
+    private function _withContentType($mime, string $fallback = null): self
     {
-        foreach ($headers as $header => $value) {
-            $value = $this->_validateAndTrimHeader($header, $value);
-            $normalized = \strtolower($header);
-
-            if (isset($this->headerNames[$normalized])) {
-                $header = $this->headerNames[$normalized];
-                $this->headers[$header] = \array_merge($this->headers[$header], $value);
-            } else {
-                $this->headerNames[$normalized] = $header;
-                $this->headers[$header] = $value;
-            }
+        if (empty($mime) && empty($fallback)) {
+            return $this;
         }
+
+        if (empty($mime)) {
+            $mime = $fallback;
+        }
+
+        if (empty($mime)) {
+            return $this;
+        }
+
+        $this->content_type = Mime::getFullMime($mime);
+
+        if ($this->isUpload()) {
+            $this->neverSerializePayload();
+        }
+
+        return $this;
     }
 
     /**
-     * Make sure the header complies with RFC 7230.
+     * @param string|null $mime     use a constant from Mime::*
+     * @param string|null $fallback use a constant from Mime::*
      *
-     * Header names must be a non-empty string consisting of token characters.
-     *
-     * Header values must be strings consisting of visible characters with all optional
-     * leading and trailing whitespace stripped. This method will always strip such
-     * optional whitespace. Note that the method does not allow folding whitespace within
-     * the values as this was deprecated for almost all instances by the RFC.
-     *
-     * header-field = field-name ":" OWS field-value OWS
-     * field-name   = 1*( "!" / "#" / "$" / "%" / "&" / "'" / "*" / "+" / "-" / "." / "^"
-     *              / "_" / "`" / "|" / "~" / %x30-39 / ( %x41-5A / %x61-7A ) )
-     * OWS          = *( SP / HTAB )
-     * field-value  = *( ( %x21-7E / %x80-FF ) [ 1*( SP / HTAB ) ( %x21-7E / %x80-FF ) ] )
-     *
-     * @see https://tools.ietf.org/html/rfc7230#section-3.2.4
-     *
-     * @param mixed $header
-     * @param mixed $values
-     *
-     * @return string[]
+     * @return static
      */
-    private function _validateAndTrimHeader($header, $values): array
+    private function _withExpectedType($mime, string $fallback = null): self
     {
-        if (
-            !\is_string($header)
-            ||
-            \preg_match("@^[!#$%&'*+.^_`|~0-9A-Za-z-]+$@", $header) !== 1
-        ) {
-            throw new \InvalidArgumentException('Header name must be an RFC 7230 compatible string.');
+        if (empty($mime) && empty($fallback)) {
+            return $this;
         }
 
-        if (!\is_array($values)) {
-            // This is simple, just one value.
-            if (
-                (!\is_numeric($values) && !\is_string($values))
-                ||
-                \preg_match("@^[ \t\x21-\x7E\x80-\xFF]*$@", (string) $values) !== 1
-            ) {
-                throw new \InvalidArgumentException('Header values must be RFC 7230 compatible strings.');
-            }
-
-            return [\trim((string) $values, " \t")];
+        if (empty($mime)) {
+            $mime = $fallback;
         }
 
-        if (empty($values)) {
-            throw new \InvalidArgumentException('Header values must be a string or an array of strings, empty array given.');
+        if (empty($mime)) {
+            return $this;
         }
 
-        // Assert Non empty array
-        $returnValues = [];
-        foreach ($values as $v) {
-            if (
-                (!\is_numeric($v) && !\is_string($v))
-                ||
-                \preg_match("@^[ \t\x21-\x7E\x80-\xFF]*$@", (string) $v) !== 1
-            ) {
-                throw new \InvalidArgumentException('Header values must be RFC 7230 compatible strings.');
-            }
+        $this->expected_type = Mime::getFullMime($mime);
 
-            $returnValues[] = \trim((string) $v, " \t");
-        }
-
-        return $returnValues;
+        return $this;
     }
 }

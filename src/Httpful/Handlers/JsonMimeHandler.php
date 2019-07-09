@@ -14,7 +14,7 @@ class JsonMimeHandler extends DefaultMimeHandler
     /**
      * @var bool
      */
-    private $decode_as_array = false;
+    private $decode_as_array = true;
 
     /**
      * @param array $args
@@ -24,7 +24,7 @@ class JsonMimeHandler extends DefaultMimeHandler
         if (\array_key_exists('decode_as_array', $args)) {
             $this->decode_as_array = (bool) ($args['decode_as_array']);
         } else {
-            $this->decode_as_array = false;
+            $this->decode_as_array = true;
         }
     }
 

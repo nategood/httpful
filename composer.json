@@ -31,7 +31,7 @@
     "ext-json": "*",
     "ext-simplexml": "*",
     "ext-xmlwriter": "*",
-    "php-curl-class/php-curl-class": "8.*",
+    "php-curl-class/php-curl-class": "~8.6",
     "psr/http-client": "~1.0",
     "psr/http-factory": "~1.0",
     "psr/http-message": "~1.0",

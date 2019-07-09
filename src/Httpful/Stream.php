@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Httpful;
 
 use Psr\Http\Message\StreamInterface;
+use voku\helper\UTF8;
 
 class Stream implements StreamInterface
 {
@@ -168,14 +169,19 @@ class Stream implements StreamInterface
 
         if ($body === null) {
             $body = '';
+            $serialized = false;
         } elseif (\is_numeric($body)) {
             $body = (string) $body;
+            $serialized = UTF8::is_serialized($body);
         } elseif (
             \is_array($body)
             ||
             $body instanceof \Serializable
         ) {
             $body = \serialize($body);
+            $serialized = true;
+        } else {
+            $serialized = false;
         }
 
         if (\is_string($body)) {
@@ -189,6 +195,7 @@ class Stream implements StreamInterface
         if (\is_resource($body)) {
             $new = new static($body);
             $meta = \stream_get_meta_data($new->stream);
+            $new->serialized = $serialized;
             $new->seekable = $meta['seekable'];
             $new->readable = isset(self::READ_WRITE_HASH['read'][$meta['mode']]);
             $new->writable = isset(self::READ_WRITE_HASH['write'][$meta['mode']]);

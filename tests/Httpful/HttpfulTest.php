@@ -85,7 +85,7 @@ Transfer-Encoding: chunked\r\n";
     public function testAccept()
     {
         $r = Request::get('http://example.com/')
-            ->expectsType(Mime::JSON);
+            ->withExpectedType(Mime::JSON);
 
         static::assertSame(Mime::JSON, $r->getExpectedType());
         $r->_curlPrep();
@@ -97,7 +97,7 @@ Transfer-Encoding: chunked\r\n";
         $req = new Request();
         $testsPath = \realpath(__DIR__ . \DIRECTORY_SEPARATOR . '..');
         $filename = $testsPath . \DIRECTORY_SEPARATOR . '/static/test_image.jpg';
-        $req->attach(['index' => $filename]);
+        $req = $req->withAttachment(['index' => $filename]);
         $payload = $req->getPayload()['index'];
 
         static::assertInstanceOf(\CURLFile::class, $payload);
@@ -111,7 +111,7 @@ Transfer-Encoding: chunked\r\n";
         $password = 'opensesame';
 
         $r = Request::get('http://example.com/')
-            ->basicAuth($username, $password);
+            ->withBasicAuth($username, $password);
 
         static::assertTrue($r->hasBasicAuth());
     }
@@ -125,16 +125,13 @@ Transfer-Encoding: chunked\r\n";
         try {
             Request::get('malformed://url')
                 ->beforeSend(
-                    static function ($request) use (&$invoked, $self) {
-
-                           /* @var Request $request */
-
+                    static function (Request $request) use (&$invoked, $self) {
                         $self::assertSame('malformed://url', $request->getUriString());
-                        $request->setUriFromString('malformed2://url');
+                        $request->withUriFromString('malformed2://url', false);
                         $invoked = true;
                     }
-                   )
-                ->setErrorHandler(
+                )
+                ->withErrorHandler(
                     static function ($error) { /* Be silent */
                     }
                    )
@@ -163,18 +160,18 @@ Transfer-Encoding: chunked\r\n";
     {
         $accept = 'application/api-1.0+json';
         $r = Request::get('http://example.com/')
-            ->addHeader('Accept', $accept);
+            ->withHeader('Accept', $accept);
 
         $r->_curlPrep();
         static::assertContains($accept, $r->getRawHeaders());
-        static::assertSame($accept, $r->getHeaders()['Accept']);
+        static::assertSame($accept, $r->getHeaders()['Accept'][0]);
     }
 
     public function testCustomHeaders()
     {
         $accept = 'application/api-1.0+json';
         $r = Request::get('http://example.com/')
-            ->addHeaders(
+            ->withHeaders(
                 [
                     'Accept' => $accept,
                     'Foo'    => 'Bar',
@@ -190,11 +187,11 @@ Transfer-Encoding: chunked\r\n";
     public function testCustomHeader()
     {
         $r = Request::get('http://example.com/')
-            ->addHeader('XTrivial', 'FooBar');
+            ->withHeader('XTrivial', 'FooBar');
 
         $r->_curlPrep();
         static::assertContains('', $r->getRawHeaders());
-        static::assertSame('FooBar', $r->getHeaders()['XTrivial']);
+        static::assertSame('FooBar', $r->getHeaders()['XTrivial'][0]);
     }
 
     public function testCustomMimeRegistering()
@@ -226,41 +223,31 @@ Transfer-Encoding: chunked\r\n";
         static::assertSame('application/json', $response->getHeaders()['Content-Type'][0]);
     }
 
-    public function testDetermineLength()
-    {
-        $r = new Request();
-        static::assertSame(1, $r->_determineLength('A'));
-        static::assertSame(2, $r->_determineLength('À'));
-        static::assertSame(2, $r->_determineLength('Ab'));
-        static::assertSame(3, $r->_determineLength('Àb'));
-        static::assertSame(6, $r->_determineLength('世界'));
-    }
-
     public function testDigestAuthSetup()
     {
         $username = 'nathan';
         $password = 'opensesame';
 
         $r = Request::get('http://example.com/')
-            ->digestAuth($username, $password);
+            ->withDigestAuth($username, $password);
 
         static::assertTrue($r->hasDigestAuth());
     }
 
     public function testEmptyResponseParse()
     {
-        $req = (new Request())->mime(Mime::JSON);
+        $req = (new Request())->withMimeType(Mime::JSON);
         $response = new Response('', self::SAMPLE_JSON_HEADER, $req);
         static::assertNull($response->getRawBody());
 
-        $reqXml = (new Request())->mime(Mime::XML);
+        $reqXml = (new Request())->withMimeType(Mime::XML);
         $responseXml = new Response('', self::SAMPLE_XML_HEADER, $reqXml);
         static::assertNull($responseXml->getRawBody());
     }
 
     public function testHTMLResponseParse()
     {
-        $req = (new Request())->mime(Mime::HTML);
+        $req = (new Request())->withMimeType(Mime::HTML);
         $response = new Response(self::SAMPLE_HTML_RESPONSE, self::SAMPLE_HTML_HEADER, $req);
         /** @var \voku\helper\HtmlDomParser $dom */
         $dom = $response->getRawBody();
@@ -308,7 +295,7 @@ Transfer-Encoding: chunked\r\n";
     public function testHasProxyWithProxy()
     {
         $r = Request::get('some_other_url');
-        $r->useProxy('proxy.com');
+        $r = $r->withProxy('proxy.com');
         static::assertTrue($r->hasProxy());
     }
 
@@ -321,7 +308,7 @@ Transfer-Encoding: chunked\r\n";
     public function testHtmlSerializing()
     {
         $body = self::SAMPLE_HTML_RESPONSE;
-        $request = Request::post(self::TEST_URL, $body)->mime(Mime::HTML)->_curlPrep();
+        $request = Request::post(self::TEST_URL, $body)->withMimeType(Mime::HTML)->_curlPrep();
         static::assertSame($body, $request->getSerializedPayload());
     }
 
@@ -333,8 +320,8 @@ Transfer-Encoding: chunked\r\n";
         $template = (new Request())
             ->withMethod(Http::GET)
             ->enableStrictSSL()
-            ->expectsType(Mime::PLAIN)
-            ->contentType(Mime::PLAIN);
+            ->withExpectedType(Mime::PLAIN)
+            ->withContentType(Mime::PLAIN);
 
         $r = new Request(null, null, $template);
 
@@ -356,22 +343,20 @@ Transfer-Encoding: chunked\r\n";
 
     public function testIsUpload()
     {
-        $req = new Request();
-
-        $req->contentType(Mime::UPLOAD);
+        $req = (new Request())->withContentType(Mime::UPLOAD);
 
         static::assertTrue($req->isUpload());
     }
 
     public function testJsonResponseParse()
     {
-        $req = (new Request())->mime(Mime::JSON);
+        $req = (new Request())->withMimeType(Mime::JSON);
         $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
 
-        static::assertSame('value', $response->getRawBody()->key);
-        static::assertSame('value', $response->getRawBody()->object->key);
-        static::assertInternalType('array', $response->getRawBody()->array);
-        static::assertSame(1, $response->getRawBody()->array[0]);
+        static::assertSame('value', $response->getRawBody()['key']);
+        static::assertSame('value', $response->getRawBody()['object']['key']);
+        static::assertInternalType('array', $response->getRawBody()['array']);
+        static::assertSame(1, $response->getRawBody()['array'][0]);
     }
 
     public function testMethods()
@@ -395,7 +380,7 @@ Transfer-Encoding: chunked\r\n";
     public function testMissingContentType()
     {
         // Parent type
-        $request = (new Request())->mime(Mime::XML);
+        $request = (new Request())->withMimeType(Mime::XML);
         $response = new Response(
             '<xml><name>Nathan</name></xml>',
             "HTTP/1.1 200 OK
@@ -409,12 +394,12 @@ Transfer-Encoding: chunked\r\n",
 
     public function testNoAutoParse()
     {
-        $req = (new Request())->mime(Mime::JSON)->disableAutoParsing();
+        $req = (new Request())->withMimeType(Mime::JSON)->disableAutoParsing();
         $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
         static::assertInternalType('string', (string) $response->getBody());
-        $req = (new Request())->mime(Mime::JSON)->enableAutoParsing();
+        $req = (new Request())->withMimeType(Mime::JSON)->enableAutoParsing();
         $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
-        static::assertInternalType('object', $response->getRawBody());
+        static::assertInternalType('array', $response->getRawBody());
     }
 
     public function testOverrideXmlHandler()
@@ -441,8 +426,7 @@ Transfer-Encoding: chunked\r\n",
         $r->_uriPrep();
         static::assertSame('http://google.com?q=query', $r->getUriString());
 
-        $r = Request::get('http://google.com');
-        $r->param('a', 'b');
+        $r = Request::get('http://google.com')->withParam('a', 'b');
         $r->_curlPrep();
         $r->_uriPrep();
         static::assertSame('http://google.com?a=b', $r->getUriString());
@@ -453,28 +437,34 @@ Transfer-Encoding: chunked\r\n",
         static::assertSame('http://google.com', $r->getUriString());
 
         $r = Request::get('http://google.com?a=b');
-        $r->param('c', 'd');
+        $r = $r->withParam('c', 'd');
         $r->_curlPrep();
         $r->_uriPrep();
         static::assertSame('http://google.com?a=b&c=d', $r->getUriString());
 
         $r = Request::get('http://google.com?a=b');
-        $r->param('', 'e');
+        $r = $r->withParam('', 'e');
         $r->_curlPrep();
         $r->_uriPrep();
         static::assertSame('http://google.com?a=b', $r->getUriString());
 
         $r = Request::get('http://google.com?a=b');
-        $r->param('e', '');
+        $r = $r->withParam('e', '');
         $r->_curlPrep();
         $r->_uriPrep();
-        static::assertSame('http://google.com?a=b', $r->getUriString());
+        static::assertSame('http://google.com?a=b&e=', $r->getUriString());
+
+        $r = Request::get('http://google.com?a=b');
+        $r = $r->withParam('0', '-');
+        $r->_curlPrep();
+        $r->_uriPrep();
+        static::assertSame('http://google.com?a=b&0=-', $r->getUriString());
     }
 
     public function testParentType()
     {
         // Parent type
-        $request = (new Request())->mime(Mime::XML);
+        $request = (new Request())->withMimeType(Mime::XML);
         $response = new Response('<xml><name>Nathan</name></xml>', self::SAMPLE_VENDOR_HEADER, $request);
 
         static::assertSame('application/xml', $response->getParentType());
@@ -487,7 +477,7 @@ Transfer-Encoding: chunked\r\n",
 
     public function testParseCode()
     {
-        $req = (new Request())->mime(Mime::JSON);
+        $req = (new Request())->withMimeType(Mime::JSON);
         $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
         $code = $response->_getResponseCodeFromHeaderString("HTTP/1.1 406 Not Acceptable\r\n");
         static::assertSame(406, $code);
@@ -495,7 +485,7 @@ Transfer-Encoding: chunked\r\n",
 
     public function testParseHeaders()
     {
-        $req = (new Request())->mime(Mime::JSON);
+        $req = (new Request())->withMimeType(Mime::JSON);
         $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
         static::assertSame('application/json', $response->getHeaders()['Content-Type'][0]);
     }
@@ -537,7 +527,7 @@ Transfer-Encoding: chunked\r\n",
 
     public function testParsingContentTypeCharset()
     {
-        $req = (new Request())->mime(Mime::JSON);
+        $req = (new Request())->withMimeType(Mime::JSON);
         $response = new Response(
             self::SAMPLE_JSON_RESPONSE,
             "HTTP/1.1 200 OK
@@ -551,15 +541,13 @@ Content-Type: text/plain; charset=utf-8\r\n",
 
     public function testParsingContentTypeUpload()
     {
-        $req = new Request();
-
-        $req->contentType(Mime::UPLOAD);
+        $req = (new Request())->withContentType(Mime::UPLOAD);
         static::assertSame($req->getContentType(), 'multipart/form-data');
     }
 
     public function testRawHeaders()
     {
-        $req = (new Request())->mime(Mime::JSON);
+        $req = (new Request())->withMimeType(Mime::JSON);
         $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
         static::assertContains('Content-Type: application/json', $response->getRawHeaders());
     }
@@ -567,27 +555,27 @@ Content-Type: text/plain; charset=utf-8\r\n",
     public function testmimeType()
     {
         $r = (new Request())
-            ->mimeType(Mime::JSON);
+            ->withMimeType(Mime::JSON);
         static::assertSame(Mime::JSON, $r->getExpectedType());
         static::assertSame(Mime::JSON, $r->getContentType());
 
         $r = (new Request())
-            ->mimeType('html');
+            ->withMimeType('html');
         static::assertSame(Mime::HTML, $r->getExpectedType());
         static::assertSame(Mime::HTML, $r->getContentType());
 
         $r = (new Request())
-            ->mimeType('form');
+            ->withMimeType('form');
         static::assertSame(Mime::FORM, $r->getExpectedType());
         static::assertSame(Mime::FORM, $r->getContentType());
 
         $r = (new Request())
-            ->mimeType('application/x-www-form-urlencoded');
+            ->withMimeType('application/x-www-form-urlencoded');
         static::assertSame(Mime::FORM, $r->getExpectedType());
         static::assertSame(Mime::FORM, $r->getContentType());
 
         $r = (new Request())
-            ->mimeType(Mime::CSV);
+            ->withMimeType(Mime::CSV);
         static::assertSame(Mime::CSV, $r->getExpectedType());
         static::assertSame(Mime::CSV, $r->getContentType());
     }
@@ -630,7 +618,7 @@ Content-Type: text/plain; charset=utf-8\r\n",
 
     public function testShorthandMimeDefinition()
     {
-        $r = (new Request())->expectsType('json');
+        $r = (new Request())->withExpectedType('json');
         static::assertSame(Mime::JSON, $r->getExpectedType());
 
         $r = (new Request())->expectsJson();
@@ -641,7 +629,7 @@ Content-Type: text/plain; charset=utf-8\r\n",
     {
         try {
             (new Request())
-                ->setUriFromString(self::TIMEOUT_URI)
+                ->withUriFromString(self::TIMEOUT_URI)
                 ->timeout(0.1)
                 ->send();
         } catch (NetworkErrorException $e) {
@@ -656,7 +644,7 @@ Content-Type: text/plain; charset=utf-8\r\n",
 
     public function testToString()
     {
-        $req = (new Request())->mime(Mime::JSON);
+        $req = (new Request())->withMimeType(Mime::JSON);
         $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
         static::assertSame(self::SAMPLE_JSON_RESPONSE, (string) $response);
     }
@@ -687,7 +675,7 @@ Content-Type: text/plain; charset=utf-8\r\n",
         try {
             /** @noinspection PhpUnusedParameterInspection */
             Request::get('malformed:url')
-                ->setErrorHandler(
+                ->withErrorHandler(
                     static function ($error) use (&$caught) {
                         $caught = true;
                     }
@@ -702,7 +690,7 @@ Content-Type: text/plain; charset=utf-8\r\n",
 
     public function testXMLResponseParse()
     {
-        $req = (new Request())->mime(Mime::XML);
+        $req = (new Request())->withMimeType(Mime::XML);
         $response = new Response(self::SAMPLE_XML_RESPONSE, self::SAMPLE_XML_HEADER, $req);
         $sxe = $response->getRawBody();
         static::assertSame('object', \gettype($sxe));

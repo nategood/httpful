@@ -69,7 +69,7 @@ class Setup
             Mime::FORM  => new FormMimeHandler(),
             Mime::HTML  => new HtmlMimeHandler(),
             Mime::JS    => new DefaultMimeHandler(),
-            Mime::JSON  => new JsonMimeHandler(),
+            Mime::JSON  => new JsonMimeHandler(['decode_as_array' => true]),
             Mime::PLAIN => new DefaultMimeHandler(),
             Mime::XHTML => new HtmlMimeHandler(),
             Mime::XML   => new XmlMimeHandler(),
