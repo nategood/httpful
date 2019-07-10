@@ -6,6 +6,7 @@ parameters:
     autoload_files:
         - %currentWorkingDirectory%/vendor/autoload.php
     ignoreErrors:
+        - '#Httpful\\Headers::__construct\(\) does not call parent constructor#'
         - '#function call_user_func expects callable#'
         - '#Httpful\\Response\\Headers::__construct\(\) does not call parent constructor from Curl\\CaseInsensitiveArray\.#'
         - '#Result of \&\& is always false\.#'
