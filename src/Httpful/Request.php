@@ -335,7 +335,7 @@ class Request implements \IteratorAggregate, RequestInterface
             &&
             !$this->isUpload()
         ) {
-            $this->headers->forceSet('Content-Length',0);
+            $this->headers->forceSet('Content-Length', 0);
         }
 
         foreach ($this->headers as $header => $value) {
