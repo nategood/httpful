@@ -326,31 +326,12 @@ class Request implements \IteratorAggregate, RequestInterface
             }
         }
 
+        // init
         $headers = [];
-        // except header removes any HTTP 1.1 Continue from response headers
-        $headers[] = 'Expect:';
-
-        if (!isset($this->headers['User-Agent'])) {
-            $headers[] = $this->buildUserAgent();
-        }
-
-        $headers[] = 'Content-Type: ' . $this->content_type;
-
-        // allow custom Accept header if set
-        if (!isset($this->headers['Accept'])) {
-            // http://pretty-rfc.herokuapp.com/RFC2616#header.accept
-            $accept = 'Accept: */*; q=0.5, text/plain; q=0.8, text/html;level=3;';
-
-            if (!empty($this->expected_type)) {
-                $accept .= 'q=0.9, ' . $this->expected_type;
-            }
-
-            $headers[] = $accept;
-        }
 
         // Solve a bug on squid proxy, NONE/411 when miss content length.
         if (
-            $this->headers->offsetExists('Content-Length')
+            !$this->headers->offsetExists('Content-Length')
             &&
             !$this->isUpload()
         ) {
@@ -367,6 +348,27 @@ class Request implements \IteratorAggregate, RequestInterface
             }
         }
 
+        // except header removes any HTTP 1.1 Continue from response headers
+        $headers[] = 'Expect:';
+
+        if (!$this->headers->offsetExists('User-Agent')) {
+            $headers[] = $this->buildUserAgent();
+        }
+
+        $headers[] = 'Content-Type: ' . $this->content_type;
+
+        // allow custom Accept header if set
+        if (!$this->headers->offsetExists('Accept')) {
+            // http://pretty-rfc.herokuapp.com/RFC2616#header.accept
+            $accept = 'Accept: */*; q=0.5, text/plain; q=0.8, text/html;level=3;';
+
+            if (!empty($this->expected_type)) {
+                $accept .= 'q=0.9, ' . $this->expected_type;
+            }
+
+            $headers[] = $accept;
+        }
+
         $url = \parse_url((string) $this->uri);
 
         if (\is_array($url) === false) {
@@ -375,10 +377,11 @@ class Request implements \IteratorAggregate, RequestInterface
 
         $path = ($url['path'] ?? '/') . (isset($url['query']) ? '?' . $url['query'] : '');
         $this->raw_headers = "{$this->method} ${path} HTTP/1.1\r\n";
-        $host = ($url['host'] ?? 'localhost') . (isset($url['port']) ? ':' . $url['port'] : '');
-        $this->raw_headers .= "Host: ${host}\r\n";
         $this->raw_headers .= \implode("\r\n", $headers);
         $this->raw_headers .= "\r\n";
+
+        // DEBUG
+        //var_dump($this->headers->toArray(), $this->raw_headers);
 
         $curl->setOpt(\CURLOPT_HTTPHEADER, $headers);
 
@@ -2027,7 +2030,7 @@ class Request implements \IteratorAggregate, RequestInterface
         $new = clone $this;
 
         foreach ($header as $name => $value) {
-            $new = $new->withHeader($name, $value);
+            $new = $new->withAddedHeader($name, $value);
         }
 
         return $new;
@@ -2523,15 +2526,9 @@ class Request implements \IteratorAggregate, RequestInterface
             $host .= ':' . $port;
         }
 
-        if ($this->headers->offsetExists('host')) {
-            $header = $this->getHeaderLine('host');
-        } else {
-            $header = 'Host';
-        }
-
         // Ensure Host is the first header.
         // See: http://tools.ietf.org/html/rfc7230#section-5.4
-        $this->headers = new Headers([$header => [$host]] + $this->getHeaders());
+        $this->headers = new Headers(['Host' => [$host]] + $this->withoutHeader('Host')->getHeaders());
 
         $URL_CACHE = $this->uri;
     }

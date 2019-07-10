@@ -30,7 +30,7 @@ final class RequestTest extends TestCase
     public function testAggregatesHeaders()
     {
         $r = (new Request('GET'))->withHeaders(['ZOO' => 'zoobar', 'zoo' => ['foobar', 'zoobar']]);
-        static::assertSame(['ZOO' => ['zoobar', 'foobar', 'zoobar']], $r->getHeaders());
+        static::assertSame(['zoo' => ['zoobar', 'foobar', 'zoobar']], $r->getHeaders());
         static::assertSame('zoobar, foobar, zoobar', $r->getHeaderLine('zoo'));
     }
 

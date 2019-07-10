@@ -29,7 +29,7 @@ final class Headers extends CaseInsensitiveArray
                     $value = [$value];
                 }
 
-                $this->_validateAndTrimHeader($key, $value);
+                $value = $this->_validateAndTrimHeader($key, $value);
 
                 parent::offsetSet($key, $value);
             }
@@ -175,7 +175,7 @@ final class Headers extends CaseInsensitiveArray
      */
     public function forceSet($offset, $value)
     {
-        $this->_validateAndTrimHeader($offset, $value);
+        $value = $this->_validateAndTrimHeader($offset, $value);
 
         parent::offsetSet($offset, $value);
     }

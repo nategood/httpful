@@ -8,6 +8,7 @@ use Httpful\Exception\NetworkErrorException;
 use Httpful\Handlers\DefaultMimeHandler;
 use Httpful\Handlers\JsonMimeHandler;
 use Httpful\Handlers\XmlMimeHandler;
+use Httpful\Headers;
 use Httpful\Http;
 use Httpful\Mime;
 use Httpful\Request;
@@ -492,7 +493,7 @@ Transfer-Encoding: chunked\r\n",
 
     public function testParseHeaders2()
     {
-        $parse_headers = Response\Headers::fromString(self::SAMPLE_JSON_HEADER);
+        $parse_headers = Headers::fromString(self::SAMPLE_JSON_HEADER);
         static::assertCount(3, $parse_headers);
         static::assertSame('application/json', $parse_headers['Content-Type'][0]);
         static::assertTrue(isset($parse_headers['Connection']));
