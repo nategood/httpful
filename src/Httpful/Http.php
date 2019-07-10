@@ -117,6 +117,16 @@ class Http
     }
 
     /**
+     * @param int $code
+     *
+     * @return bool
+     */
+    public static function responseCodeExists(int $code): bool
+    {
+        return \array_key_exists($code, self::responseCodes());
+    }
+
+    /**
      * @return array of HTTP method strings
      */
     public static function safeMethods(): array
@@ -141,7 +151,7 @@ class Http
      *
      * @throws \InvalidArgumentException if the $resource arg is not valid
      *
-     * @return \Psr\Http\Message\StreamInterface
+     * @return StreamInterface
      */
     public static function stream($resource = '', array $options = []): StreamInterface
     {
@@ -193,16 +203,6 @@ class Http
         }
 
         throw new \InvalidArgumentException('Invalid resource type: ' . \gettype($resource));
-    }
-
-    /**
-     * @param int $code
-     *
-     * @return bool
-     */
-    public static function responseCodeExists(int $code): bool
-    {
-        return \array_key_exists($code, self::responseCodes());
     }
 
     /**

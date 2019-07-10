@@ -19,23 +19,48 @@ class Stream implements StreamInterface
      */
     const READABLE_MODES = '/r|a\+|ab\+|w\+|wb\+|x\+|xb\+|c\+|cb\+/';
 
-    const WRITABLE_MODES = '/a|w|r\+|rb\+|rw|x|c/';
-
     /** @var array Hash of readable and writable stream types */
     const READ_WRITE_HASH = [
         'read' => [
-            'r'   => true, 'w+' => true, 'r+' => true, 'x+' => true, 'c+' => true,
-            'rb'  => true, 'w+b' => true, 'r+b' => true, 'x+b' => true,
-            'c+b' => true, 'rt' => true, 'w+t' => true, 'r+t' => true,
-            'x+t' => true, 'c+t' => true, 'a+' => true,
+            'r'   => true,
+            'w+'  => true,
+            'r+'  => true,
+            'x+'  => true,
+            'c+'  => true,
+            'rb'  => true,
+            'w+b' => true,
+            'r+b' => true,
+            'x+b' => true,
+            'c+b' => true,
+            'rt'  => true,
+            'w+t' => true,
+            'r+t' => true,
+            'x+t' => true,
+            'c+t' => true,
+            'a+'  => true,
         ],
         'write' => [
-            'w'   => true, 'w+' => true, 'rw' => true, 'r+' => true, 'x+' => true,
-            'c+'  => true, 'wb' => true, 'w+b' => true, 'r+b' => true,
-            'x+b' => true, 'c+b' => true, 'w+t' => true, 'r+t' => true,
-            'x+t' => true, 'c+t' => true, 'a' => true, 'a+' => true,
+            'w'   => true,
+            'w+'  => true,
+            'rw'  => true,
+            'r+'  => true,
+            'x+'  => true,
+            'c+'  => true,
+            'wb'  => true,
+            'w+b' => true,
+            'r+b' => true,
+            'x+b' => true,
+            'c+b' => true,
+            'w+t' => true,
+            'r+t' => true,
+            'x+t' => true,
+            'c+t' => true,
+            'a'   => true,
+            'a+'  => true,
         ],
     ];
+
+    const WRITABLE_MODES = '/a|w|r\+|rb\+|rw|x|c/';
 
     private $stream;
 
@@ -138,20 +163,215 @@ class Stream implements StreamInterface
     }
 
     /**
-     * @param mixed $body
-     *
-     * @return StreamInterface
+     * @return bool
      */
-    public static function createNotNull($body = ''): StreamInterface
+    public function eof(): bool
     {
-        $stream = static::create($body);
-        if ($stream === null) {
-            $stream = static::create();
+        if (!isset($this->stream)) {
+            throw new \RuntimeException('Stream is detached');
         }
 
-        \assert($stream instanceof self);
+        return \feof($this->stream);
+    }
 
-        return $stream;
+    /**
+     * @return mixed
+     */
+    public function getContents()
+    {
+        if (!isset($this->stream)) {
+            throw new \RuntimeException('Stream is detached');
+        }
+
+        $contents = \stream_get_contents($this->stream);
+
+        if ($contents === false) {
+            throw new \RuntimeException('Unable to read stream contents');
+        }
+
+        if ($this->serialized) {
+            /** @noinspection UnserializeExploitsInspection */
+            $contents = \unserialize($contents, []);
+        }
+
+        return $contents;
+    }
+
+    /**
+     * @param string|null $key
+     *
+     * @return array|mixed|null
+     */
+    public function getMetadata($key = null)
+    {
+        if (!isset($this->stream)) {
+            return $key ? null : [];
+        }
+
+        if (!$key) {
+            /** @noinspection AdditionOperationOnArraysInspection */
+            return $this->customMetadata + \stream_get_meta_data($this->stream);
+        }
+
+        if (isset($this->customMetadata[$key])) {
+            return $this->customMetadata[$key];
+        }
+
+        $meta = \stream_get_meta_data($this->stream);
+
+        return $meta[$key] ?? null;
+    }
+
+    /**
+     * @return int|mixed|null
+     */
+    public function getSize()
+    {
+        if ($this->size !== null) {
+            return $this->size;
+        }
+
+        if (!isset($this->stream)) {
+            return null;
+        }
+
+        // Clear the stat cache if the stream has a URI
+        if ($this->uri) {
+            \clearstatcache(true, $this->uri);
+        }
+
+        $stats = \fstat($this->stream);
+        if ($stats !== false && isset($stats['size'])) {
+            $this->size = $stats['size'];
+
+            return $this->size;
+        }
+
+        return null;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isReadable(): bool
+    {
+        return $this->readable;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isSeekable(): bool
+    {
+        return $this->seekable;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isWritable(): bool
+    {
+        return $this->writable;
+    }
+
+    /**
+     * @param int $length
+     *
+     * @return string
+     */
+    public function read($length): string
+    {
+        if (!isset($this->stream)) {
+            throw new \RuntimeException('Stream is detached');
+        }
+
+        if (!$this->readable) {
+            throw new \RuntimeException('Cannot read from non-readable stream');
+        }
+
+        if ($length < 0) {
+            throw new \RuntimeException('Length parameter cannot be negative');
+        }
+
+        if ($length === 0) {
+            return '';
+        }
+
+        $string = \fread($this->stream, $length);
+        if ($string === false) {
+            throw new \RuntimeException('Unable to read from stream');
+        }
+
+        return $string;
+    }
+
+    public function rewind()
+    {
+        $this->seek(0);
+    }
+
+    /**
+     * @param int $offset
+     * @param int $whence
+     */
+    public function seek($offset, $whence = \SEEK_SET)
+    {
+        $whence = (int) $whence;
+
+        if (!isset($this->stream)) {
+            throw new \RuntimeException('Stream is detached');
+        }
+        if (!$this->seekable) {
+            throw new \RuntimeException('Stream is not seekable');
+        }
+        if (\fseek($this->stream, $offset, $whence) === -1) {
+            throw new \RuntimeException(
+                'Unable to seek to stream position '
+                . $offset . ' with whence ' . \var_export($whence, true)
+            );
+        }
+    }
+
+    /**
+     * @return int
+     */
+    public function tell(): int
+    {
+        if (!isset($this->stream)) {
+            throw new \RuntimeException('Stream is detached');
+        }
+
+        $result = \ftell($this->stream);
+        if ($result === false) {
+            throw new \RuntimeException('Unable to determine stream position');
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param string $string
+     *
+     * @return int
+     */
+    public function write($string): int
+    {
+        if (!isset($this->stream)) {
+            throw new \RuntimeException('Stream is detached');
+        }
+        if (!$this->writable) {
+            throw new \RuntimeException('Cannot write to a non-writable stream');
+        }
+
+        // We can't know the size after writing anything
+        $this->size = null;
+        $result = \fwrite($this->stream, $string);
+
+        if ($result === false) {
+            throw new \RuntimeException('Unable to write to stream');
+        }
+
+        return $result;
     }
 
     /**
@@ -208,213 +428,19 @@ class Stream implements StreamInterface
     }
 
     /**
-     * @return bool
-     */
-    public function eof()
-    {
-        if (!isset($this->stream)) {
-            throw new \RuntimeException('Stream is detached');
-        }
-
-        return \feof($this->stream);
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getContents()
-    {
-        if (!isset($this->stream)) {
-            throw new \RuntimeException('Stream is detached');
-        }
-
-        $contents = \stream_get_contents($this->stream);
-
-        if ($contents === false) {
-            throw new \RuntimeException('Unable to read stream contents');
-        }
-
-        if ($this->serialized) {
-            /** @noinspection UnserializeExploitsInspection */
-            $contents = \unserialize($contents, []);
-        }
-
-        return $contents;
-    }
-
-    /**
-     * @param string|null $key
+     * @param mixed $body
      *
-     * @return array|mixed|null
+     * @return StreamInterface
      */
-    public function getMetadata($key = null)
+    public static function createNotNull($body = ''): StreamInterface
     {
-        if (!isset($this->stream)) {
-            return $key ? null : [];
+        $stream = static::create($body);
+        if ($stream === null) {
+            $stream = static::create();
         }
 
-        if (!$key) {
-            return $this->customMetadata + \stream_get_meta_data($this->stream);
-        }
+        \assert($stream instanceof self);
 
-        if (isset($this->customMetadata[$key])) {
-            return $this->customMetadata[$key];
-        }
-
-        $meta = \stream_get_meta_data($this->stream);
-
-        return $meta[$key] ?? null;
-    }
-
-    /**
-     * @return int|mixed|null
-     */
-    public function getSize()
-    {
-        if ($this->size !== null) {
-            return $this->size;
-        }
-
-        if (!isset($this->stream)) {
-            return null;
-        }
-
-        // Clear the stat cache if the stream has a URI
-        if ($this->uri) {
-            \clearstatcache(true, $this->uri);
-        }
-
-        $stats = \fstat($this->stream);
-        if ($stats !== false && isset($stats['size'])) {
-            $this->size = $stats['size'];
-
-            return $this->size;
-        }
-
-        return null;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isReadable()
-    {
-        return $this->readable;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isSeekable()
-    {
-        return $this->seekable;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isWritable()
-    {
-        return $this->writable;
-    }
-
-    /**
-     * @param int $length
-     *
-     * @return string
-     */
-    public function read($length)
-    {
-        if (!isset($this->stream)) {
-            throw new \RuntimeException('Stream is detached');
-        }
-
-        if (!$this->readable) {
-            throw new \RuntimeException('Cannot read from non-readable stream');
-        }
-
-        if ($length < 0) {
-            throw new \RuntimeException('Length parameter cannot be negative');
-        }
-
-        if ($length === 0) {
-            return '';
-        }
-
-        $string = \fread($this->stream, $length);
-        if ($string === false) {
-            throw new \RuntimeException('Unable to read from stream');
-        }
-
-        return $string;
-    }
-
-    public function rewind()
-    {
-        $this->seek(0);
-    }
-
-    /**
-     * @param int $offset
-     * @param int $whence
-     */
-    public function seek($offset, $whence = \SEEK_SET)
-    {
-        $whence = (int) $whence;
-
-        if (!isset($this->stream)) {
-            throw new \RuntimeException('Stream is detached');
-        }
-        if (!$this->seekable) {
-            throw new \RuntimeException('Stream is not seekable');
-        }
-        if (\fseek($this->stream, $offset, $whence) === -1) {
-            throw new \RuntimeException(
-                'Unable to seek to stream position '
-                . $offset . ' with whence ' . \var_export($whence, true)
-            );
-        }
-    }
-
-    /**
-     * @return int
-     */
-    public function tell()
-    {
-        if (!isset($this->stream)) {
-            throw new \RuntimeException('Stream is detached');
-        }
-
-        $result = \ftell($this->stream);
-        if ($result === false) {
-            throw new \RuntimeException('Unable to determine stream position');
-        }
-
-        return $result;
-    }
-
-    /**
-     * @param string $string
-     *
-     * @return int
-     */
-    public function write($string)
-    {
-        if (!isset($this->stream)) {
-            throw new \RuntimeException('Stream is detached');
-        }
-        if (!$this->writable) {
-            throw new \RuntimeException('Cannot write to a non-writable stream');
-        }
-
-        // We can't know the size after writing anything
-        $this->size = null;
-        $result = \fwrite($this->stream, $string);
-
-        if ($result === false) {
-            throw new \RuntimeException('Unable to write to stream');
-        }
-
-        return $result;
+        return $stream;
     }
 }

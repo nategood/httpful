@@ -36,7 +36,7 @@ class Setup
     private static $global_error_handler;
 
     /**
-     * @return callable|\Psr\Log\LoggerInterface|null
+     * @return callable|LoggerInterface|null
      */
     public static function getGlobalErrorHandler()
     {

@@ -14,7 +14,7 @@ class HtmlMimeHandler extends DefaultMimeHandler
     /**
      * @param string $body
      *
-     * @return \voku\helper\HtmlDomParser|null
+     * @return HtmlDomParser|null
      */
     public function parse($body)
     {

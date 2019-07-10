@@ -67,7 +67,7 @@ class Response implements ResponseInterface
     /**
      * @var array
      */
-    private $meta_data = [];
+    private $meta_data;
 
     /**
      * @var bool
@@ -126,6 +126,11 @@ class Response implements ResponseInterface
         $this->raw_body = $bodyParsed;
     }
 
+    public function __clone()
+    {
+        $this->headers = clone $this->headers;
+    }
+
     /**
      * @return string
      */
@@ -148,11 +153,6 @@ class Response implements ResponseInterface
         }
 
         return (string) \json_encode($this->raw_body);
-    }
-
-    public function __clone()
-    {
-        $this->headers = clone $this->headers;
     }
 
     /**
@@ -195,7 +195,7 @@ class Response implements ResponseInterface
     /**
      * @return StreamInterface
      */
-    public function getBody()
+    public function getBody(): StreamInterface
     {
         return $this->body;
     }
@@ -215,7 +215,7 @@ class Response implements ResponseInterface
      *                  header. If the header does not appear in the message, this method MUST
      *                  return an empty array.
      */
-    public function getHeader($name)
+    public function getHeader($name): array
     {
         if ($this->headers->offsetExists($name)) {
             $value = $this->headers->offsetGet($name);
@@ -274,10 +274,10 @@ class Response implements ResponseInterface
      *
      * @return string HTTP protocol version
      */
-    public function getProtocolVersion()
+    public function getProtocolVersion(): string
     {
         if (isset($this->meta_data['protocol_version'])) {
-            return $this->meta_data['protocol_version'];
+            return (string) $this->meta_data['protocol_version'];
         }
 
         return '1.1';
@@ -297,7 +297,7 @@ class Response implements ResponseInterface
      *
      * @return string reason phrase; must return an empty string if none present
      */
-    public function getReasonPhrase()
+    public function getReasonPhrase(): string
     {
         return $this->reason;
     }
@@ -310,7 +310,7 @@ class Response implements ResponseInterface
      *
      * @return int status code
      */
-    public function getStatusCode()
+    public function getStatusCode(): int
     {
         return $this->code;
     }
@@ -414,22 +414,6 @@ class Response implements ResponseInterface
         }
 
         $new->headers->forceSet($name, $value);
-
-        return $new;
-    }
-
-    /**
-     * @param string[] $header
-     *
-     * @return static
-     */
-    public function withHeaders(array $header)
-    {
-        $new = clone $this;
-
-        foreach ($header as  $name => $value) {
-            $new = $new->withHeader($name, $value);
-        }
 
         return $new;
     }
@@ -620,6 +604,65 @@ class Response implements ResponseInterface
     }
 
     /**
+     * @param string[] $header
+     *
+     * @return static
+     */
+    public function withHeaders(array $header)
+    {
+        $new = clone $this;
+
+        foreach ($header as $name => $value) {
+            $new = $new->withHeader($name, $value);
+        }
+
+        return $new;
+    }
+
+    /**
+     * After we've parse the headers, let's clean things
+     * up a bit and treat some headers specially
+     */
+    private function _interpretHeaders()
+    {
+        // Parse the Content-Type and charset
+        $content_type = $this->headers['Content-Type'] ?? [];
+        foreach ($content_type as $content_type_inner) {
+            $content_type = \array_merge(\explode(';', $content_type_inner));
+        }
+
+        $this->content_type = $content_type[0] ?? '';
+        if (
+            \count($content_type) === 2
+            &&
+            \strpos($content_type[1], '=') !== false
+        ) {
+            /** @noinspection PhpUnusedLocalVariableInspection */
+            list($nill, $this->charset) = \explode('=', $content_type[1]);
+        }
+
+        // fallback
+        if (!$this->charset) {
+            $this->charset = 'utf-8';
+        }
+
+        // check for vendor & personal type
+        if (\strpos($this->content_type, '/') !== false) {
+            /** @noinspection PhpUnusedLocalVariableInspection */
+            list($type, $sub_type) = \explode('/', $this->content_type);
+            $this->is_mime_vendor_specific = \strpos($sub_type, 'vnd.') === 0;
+            $this->is_mime_personal = \strpos($sub_type, 'prs.') === 0;
+        }
+
+        $this->parent_type = $this->content_type;
+        if (\strpos($this->content_type, '+') !== false) {
+            /** @noinspection PhpUnusedLocalVariableInspection */
+            list($vendor, $this->parent_type) = \explode('+', $this->content_type, 2);
+            $this->parent_type = Mime::getFullMime($this->parent_type);
+        }
+    }
+
+    /**
      * Parse the response into a clean data structure
      * (most often an associative array) based on the expected
      * Mime type.
@@ -667,48 +710,5 @@ class Response implements ResponseInterface
         }
 
         return Setup::setupGlobalMimeType($parse_with)->parse((string) $body);
-    }
-
-    /**
-     * After we've parse the headers, let's clean things
-     * up a bit and treat some headers specially
-     */
-    private function _interpretHeaders()
-    {
-        // Parse the Content-Type and charset
-        $content_type = $this->headers['Content-Type'] ?? [];
-        foreach ($content_type as $content_type_inner) {
-            $content_type = \array_merge(\explode(';', $content_type_inner));
-        }
-
-        $this->content_type = $content_type[0] ?? '';
-        if (
-            \count($content_type) === 2
-            &&
-            \strpos($content_type[1], '=') !== false
-        ) {
-            /** @noinspection PhpUnusedLocalVariableInspection */
-            list($nill, $this->charset) = \explode('=', $content_type[1]);
-        }
-
-        // fallback
-        if (!$this->charset) {
-            $this->charset = 'utf-8';
-        }
-
-        // check for vendor & personal type
-        if (\strpos($this->content_type, '/') !== false) {
-            /** @noinspection PhpUnusedLocalVariableInspection */
-            list($type, $sub_type) = \explode('/', $this->content_type);
-            $this->is_mime_vendor_specific = \strpos($sub_type, 'vnd.') === 0;
-            $this->is_mime_personal = \strpos($sub_type, 'prs.') === 0;
-        }
-
-        $this->parent_type = $this->content_type;
-        if (\strpos($this->content_type, '+') !== false) {
-            /** @noinspection PhpUnusedLocalVariableInspection */
-            list($vendor, $this->parent_type) = \explode('+', $this->content_type, 2);
-            $this->parent_type = Mime::getFullMime($this->parent_type);
-        }
     }
 }

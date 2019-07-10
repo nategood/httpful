@@ -39,11 +39,13 @@ class ServerRequest extends Request implements ServerRequestInterface
      */
     private $uploadedFiles = [];
 
+    /** @noinspection PhpDocSignatureInspection */
+
     /**
      * @param string|null $method       Http Method
      * @param string|null $mime         Mime Type to Use
      * @param static|null $template     "Request"-template object
-     * @param array       $serverParams Typically the $_SERVER superglobal
+     * @param array       $serverParams Typically the $_SERVER (superglobal)
      */
     public function __construct(
         string $method = null,

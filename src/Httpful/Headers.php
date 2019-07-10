@@ -29,11 +29,109 @@ final class Headers extends CaseInsensitiveArray
                     $value = [$value];
                 }
 
-                $value = $this->_validateAndTrimHeader($key, $value);
-
-                parent::offsetSet($key, $value);
+                $this->forceSet($key, $value);
             }
         }
+    }
+
+    /**
+     * @param string $offset the offset to store the data at (case-insensitive)
+     * @param mixed  $value  the data to store at the specified offset
+     */
+    public function forceSet($offset, $value)
+    {
+        $value = $this->_validateAndTrimHeader($offset, $value);
+
+        parent::offsetSet($offset, $value);
+    }
+
+    /**
+     * @param string $offset
+     */
+    public function forceUnset($offset)
+    {
+        parent::offsetUnset($offset);
+    }
+
+    /**
+     * @param string $string
+     *
+     * @return Headers
+     */
+    public static function fromString($string): self
+    {
+        // init
+        $parsed_headers = [];
+
+        $headers = \preg_split("/[\r\n]+/", $string, -1, \PREG_SPLIT_NO_EMPTY);
+        if ($headers === false) {
+            return new self($parsed_headers);
+        }
+
+        $headersCount = \count($headers);
+        for ($i = 1; $i < $headersCount; ++$i) {
+            $header = $headers[$i];
+
+            if (\strpos($header, ':') === false) {
+                continue;
+            }
+
+            list($key, $raw_value) = \explode(':', $header, 2);
+            $key = \trim($key);
+            $value = \trim($raw_value);
+
+            if (\array_key_exists($key, $parsed_headers)) {
+                $parsed_headers[$key][] = $value;
+            } else {
+                $parsed_headers[$key][] = $value;
+            }
+        }
+
+        return new self($parsed_headers);
+    }
+
+    /**
+     * @param string $offset
+     * @param string $value
+     *
+     * @throws ResponseHeaderException
+     */
+    public function offsetSet($offset, $value)
+    {
+        throw new ResponseHeaderException('Headers are read-only.');
+    }
+
+    /**
+     * @param string $offset
+     *
+     * @throws ResponseHeaderException
+     */
+    public function offsetUnset($offset)
+    {
+        throw new ResponseHeaderException('Headers are read-only.');
+    }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        // init
+        $return = [];
+
+        $that = clone $this;
+
+        foreach ($that as $key => $value) {
+            if (\is_array($value)) {
+                foreach ($value as $keyInner => $valueInner) {
+                    $value[$keyInner] = \trim($valueInner, " \t");
+                }
+            }
+
+            $return[$key] = $value;
+        }
+
+        return $return;
     }
 
     /**
@@ -101,105 +199,5 @@ final class Headers extends CaseInsensitiveArray
         }
 
         return $returnValues;
-    }
-
-    /**
-     * @param string $string
-     *
-     * @return Headers
-     */
-    public static function fromString($string): self
-    {
-        // init
-        $parsed_headers = [];
-
-        $headers = \preg_split("/[\r\n]+/", $string, -1, \PREG_SPLIT_NO_EMPTY);
-        if ($headers === false) {
-            return new self($parsed_headers);
-        }
-
-        $headersCount = \count($headers);
-        for ($i = 1; $i < $headersCount; ++$i) {
-            $header = $headers[$i];
-
-            if (\strpos($header, ':') === false) {
-                continue;
-            }
-
-            list($key, $raw_value) = \explode(':', $header, 2);
-            $key = \trim($key);
-            $value = \trim($raw_value);
-
-            if (\array_key_exists($key, $parsed_headers)) {
-                $parsed_headers[$key][] = $value;
-            } else {
-                $parsed_headers[$key][] = $value;
-            }
-        }
-
-        return new self($parsed_headers);
-    }
-
-    /**
-     * @param string $offset
-     * @param string $value
-     *
-     * @throws ResponseHeaderException
-     */
-    public function offsetSet($offset, $value)
-    {
-        throw new ResponseHeaderException('Headers are read-only.');
-    }
-
-    /**
-     * @param string $offset
-     *
-     * @throws ResponseHeaderException
-     */
-    public function offsetUnset($offset)
-    {
-        throw new ResponseHeaderException('Headers are read-only.');
-    }
-
-    /**
-     * @param string $offset
-     */
-    public function forceUnset($offset)
-    {
-        parent::offsetUnset($offset);
-    }
-
-    /**
-     * @param string $offset the offset to store the data at (case-insensitive)
-     * @param mixed  $value  the data to store at the specified offset
-     */
-    public function forceSet($offset, $value)
-    {
-        $value = $this->_validateAndTrimHeader($offset, $value);
-
-        parent::offsetSet($offset, $value);
-    }
-
-    /**
-     * @return array
-     */
-    public function toArray(): array
-    {
-        // init
-        $return = [];
-
-        $that = clone $this;
-
-        foreach ($that as $key => $value) {
-            if (\is_array($value)) {
-                foreach ($value as $keyInner => $valueInner) {
-                    $value[$keyInner] = \trim($valueInner, " \t");
-                }
-            }
-
-            $return[$key] = $value;
-        }
-
-        return $return;
     }
 }

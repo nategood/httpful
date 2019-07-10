@@ -138,7 +138,7 @@ class Uri implements UriInterface
     /**
      * @return string
      */
-    public function getFragment()
+    public function getFragment(): string
     {
         return $this->fragment;
     }

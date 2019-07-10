@@ -67,10 +67,11 @@ final class UriResolver
             return $target;
         }
 
+        $authority = $target->getAuthority();
         if (
-            $target->getAuthority() !== ''
+            $authority !== ''
             &&
-            $base->getAuthority() !== $target->getAuthority()
+            $base->getAuthority() !== $authority
         ) {
             return $target->withScheme('');
         }

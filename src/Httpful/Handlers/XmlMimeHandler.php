@@ -52,6 +52,8 @@ class XmlMimeHandler extends DefaultMimeHandler
         return $parsed;
     }
 
+    /** @noinspection PhpMissingParentCallCommonInspection */
+
     /**
      * @param mixed $payload
      *
@@ -66,6 +68,8 @@ class XmlMimeHandler extends DefaultMimeHandler
 
         return $dom->saveXML();
     }
+
+    /** @noinspection PhpMissingParentCallCommonInspection */
 
     /**
      * @param mixed $payload
@@ -99,8 +103,6 @@ class XmlMimeHandler extends DefaultMimeHandler
         }
     }
 
-    /** @noinspection PhpMissingParentCallCommonInspection */
-
     /**
      * @param mixed        $value
      * @param \DOMElement  $parent
@@ -123,8 +125,6 @@ class XmlMimeHandler extends DefaultMimeHandler
 
         return [$parent, $dom];
     }
-
-    /** @noinspection PhpMissingParentCallCommonInspection */
 
     /**
      * @param mixed             $value

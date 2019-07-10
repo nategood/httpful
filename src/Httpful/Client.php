@@ -56,6 +56,16 @@ class Client implements ClientInterface
     /**
      * @param string $uri
      *
+     * @return array
+     */
+    public static function get_form(string $uri): array
+    {
+        return self::get_request($uri, Mime::FORM)->send()->getRawBody();
+    }
+
+    /**
+     * @param string $uri
+     *
      * @return false|string
      */
     public static function get_json(string $uri)
@@ -82,16 +92,6 @@ class Client implements ClientInterface
     public static function get_xml(string $uri)
     {
         return self::get_request($uri, Mime::HTML)->send()->getRawBody();
-    }
-
-    /**
-     * @param string $uri
-     *
-     * @return array
-     */
-    public static function get_form(string $uri)
-    {
-        return self::get_request($uri, Mime::FORM)->send()->getRawBody();
     }
 
     /**
@@ -185,22 +185,22 @@ class Client implements ClientInterface
      * @param string     $uri
      * @param mixed|null $payload
      *
-     * @return false|string
+     * @return array
      */
-    public static function post_json(string $uri, $payload = null)
+    public static function post_form(string $uri, $payload = null): array
     {
-        return self::post_request($uri, $payload, Mime::JSON)->send()->getRawBody();
+        return self::post_request($uri, $payload, Mime::FORM)->send()->getRawBody();
     }
 
     /**
      * @param string     $uri
      * @param mixed|null $payload
      *
-     * @return array
+     * @return false|string
      */
-    public static function post_form(string $uri, $payload = null)
+    public static function post_json(string $uri, $payload = null)
     {
-        return self::post_request($uri, $payload, Mime::FORM)->send()->getRawBody();
+        return self::post_request($uri, $payload, Mime::JSON)->send()->getRawBody();
     }
 
     /**

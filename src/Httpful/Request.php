@@ -188,6 +188,8 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     private $_protocol_version;
 
+    /** @noinspection PhpDocSignatureInspection */
+
     /**
      * The Client::get, Client::post, ... syntax is preferred as it is more readable.
      *
@@ -243,6 +245,7 @@ class Request implements \IteratorAggregate, RequestInterface
 
         if ($this->send_callbacks !== []) {
             foreach ($this->send_callbacks as $callback) {
+                /** @noinspection VariableFunctionsUsageInspection */
                 \call_user_func($callback, $this);
             }
         }
@@ -335,7 +338,7 @@ class Request implements \IteratorAggregate, RequestInterface
             &&
             !$this->isUpload()
         ) {
-            $this->headers->forceSet('Content-Length',0);
+            $this->headers->forceSet('Content-Length', 0);
         }
 
         foreach ($this->headers as $header => $value) {
@@ -564,23 +567,6 @@ class Request implements \IteratorAggregate, RequestInterface
         return (new self(Http::DELETE))
             ->withUriFromString($uri)
             ->withMimeType($mime);
-    }
-
-    /**
-     * User Digest Auth.
-     *
-     * @param string $username
-     * @param string $password
-     *
-     * @return static
-     */
-    public function withDigestAuth($username, $password): self
-    {
-        $new = clone $this;
-
-        $new = $new->withCurlOption(\CURLOPT_HTTPAUTH, \CURLAUTH_DIGEST);
-
-        return $new->withBasicAuth($username, $password);
     }
 
     /**
@@ -1139,27 +1125,6 @@ class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
-     * @param UriInterface $uri
-     * @param bool         $preserveHost
-     *
-     * @return static
-     */
-    private function _withUri(UriInterface $uri, $preserveHost = false): self
-    {
-        if ($this->uri === $uri) {
-            return $this;
-        }
-
-        $this->uri = $uri;
-
-        if (!$preserveHost) {
-            $this->_updateHostFromUri();
-        }
-
-        return $this;
-    }
-
-    /**
      * Return an instance without the specified header.
      *
      * Header resolution MUST be done without case-sensitivity.
@@ -1422,21 +1387,6 @@ class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
-     * @param string $username
-     * @param string $password
-     *
-     * @return static
-     */
-    public function withNtlmAuth($username, $password): self
-    {
-        $new = clone $this;
-
-        $new->withCurlOption(\CURLOPT_HTTPAUTH, \CURLAUTH_NTLM);
-
-        return $new->withBasicAuth($username, $password);
-    }
-
-    /**
      * HTTP Method Options
      *
      * @param string|UriInterface $uri optional uri to use
@@ -1464,7 +1414,7 @@ class Request implements \IteratorAggregate, RequestInterface
     public static function patch($uri, $payload = null, string $mime = null): self
     {
         if ($uri instanceof UriInterface) {
-            $uri = $uri->__toString();
+            $uri = (string) $uri;
         }
 
         return (new self(Http::PATCH))
@@ -1647,6 +1597,36 @@ class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
+     * Determine how/if we use the built in serialization by
+     * setting the serialize_payload_method
+     * The default (SERIALIZE_PAYLOAD_SMART) is...
+     *  - if payload is not a scalar (object/array)
+     *    use the appropriate serialize method according to
+     *    the Content-Type of this request.
+     *  - if the payload IS a scalar (int, float, string, bool)
+     *    than just return it as is.
+     * When this option is set SERIALIZE_PAYLOAD_ALWAYS,
+     * it will always use the appropriate
+     * serialize option regardless of whether payload is scalar or not
+     * When this option is set SERIALIZE_PAYLOAD_NEVER,
+     * it will never use any of the serialization methods.
+     * Really the only use for this is if you want the serialize methods
+     * to handle strings or not (e.g. Blah is not valid JSON, but "Blah"
+     * is).  Forcing the serialization helps prevent that kind of error from
+     * happening.
+     *
+     * @param int $mode Request::SERIALIZE_PAYLOAD_*
+     *
+     * @return static
+     */
+    public function serializePayloadMode(int $mode): self
+    {
+        $this->serialize_payload_method = $mode;
+
+        return $this;
+    }
+
+    /**
      * This method is the default behavior
      *
      * @return static
@@ -1670,40 +1650,6 @@ class Request implements \IteratorAggregate, RequestInterface
         $this->timeout = $timeout;
 
         return $this;
-    }
-
-    /**
-     * Use proxy configuration
-     *
-     * @param string   $proxy_host    Hostname or address of the proxy
-     * @param int      $proxy_port    Port of the proxy. Default 80
-     * @param int|null $auth_type     Authentication type or null. Accepted values are CURLAUTH_BASIC, CURLAUTH_NTLM.
-     *                                Default null, no authentication
-     * @param string   $auth_username Authentication username. Default null
-     * @param string   $auth_password Authentication password. Default null
-     * @param int      $proxy_type    Proxy-Tye for Curl. Default is "Proxy::HTTP"
-     *
-     * @return static
-     */
-    public function withProxy(
-        $proxy_host,
-        $proxy_port = 80,
-        $auth_type = null,
-        $auth_username = null,
-        $auth_password = null,
-        $proxy_type = Proxy::HTTP
-    ): self {
-        $new = clone $this;
-
-        $new = $new->withCurlOption(\CURLOPT_PROXY, "{$proxy_host}:{$proxy_port}");
-        $new = $new->withCurlOption(\CURLOPT_PROXYTYPE, $proxy_type);
-
-        if (\in_array($auth_type, [\CURLAUTH_BASIC, \CURLAUTH_NTLM], true)) {
-            $new = $new->withCurlOption(\CURLOPT_PROXYAUTH, $auth_type);
-            $new = $new->withCurlOption(\CURLOPT_PROXYUSERPWD, "{$auth_username}:{$auth_password}");
-        }
-
-        return $new;
     }
 
     /**
@@ -1804,9 +1750,7 @@ class Request implements \IteratorAggregate, RequestInterface
 
         \finfo_close($fInfo);
 
-        $new = $new->_withContentType(Mime::UPLOAD);
-
-        return $new;
+        return $new->_withContentType(Mime::UPLOAD);
     }
 
     /**
@@ -1991,6 +1935,23 @@ class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
+     * User Digest Auth.
+     *
+     * @param string $username
+     * @param string $password
+     *
+     * @return static
+     */
+    public function withDigestAuth($username, $password): self
+    {
+        $new = clone $this;
+
+        $new = $new->withCurlOption(\CURLOPT_HTTPAUTH, \CURLAUTH_DIGEST);
+
+        return $new->withBasicAuth($username, $password);
+    }
+
+    /**
      * Callback called to handle HTTP errors. When nothing is set, defaults
      * to logging via `error_log`.
      *
@@ -2043,34 +2004,26 @@ class Request implements \IteratorAggregate, RequestInterface
      *
      * @return static
      */
-    private function _withMimeType($mime): self
-    {
-        if (empty($mime)) {
-            return $this;
-        }
-
-        $this->expected_type = Mime::getFullMime($mime);
-        $this->content_type = $this->expected_type;
-
-        if ($this->isUpload()) {
-            $this->neverSerializePayload();
-        }
-
-        return $this;
-    }
-
-    /**
-     * Helper function to set the Content type and Expected as same in one swoop.
-     *
-     * @param string|null $mime mime type to use for content type and expected return type
-     *
-     * @return static
-     */
     public function withMimeType($mime): self
     {
         $new = clone $this;
 
         return $new->_withMimeType($mime);
+    }
+
+    /**
+     * @param string $username
+     * @param string $password
+     *
+     * @return static
+     */
+    public function withNtlmAuth($username, $password): self
+    {
+        $new = clone $this;
+
+        $new->withCurlOption(\CURLOPT_HTTPAUTH, \CURLAUTH_NTLM);
+
+        return $new->withBasicAuth($username, $password);
     }
 
     /**
@@ -2132,6 +2085,40 @@ class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
+     * Use proxy configuration
+     *
+     * @param string   $proxy_host    Hostname or address of the proxy
+     * @param int      $proxy_port    Port of the proxy. Default 80
+     * @param int|null $auth_type     Authentication type or null. Accepted values are CURLAUTH_BASIC, CURLAUTH_NTLM.
+     *                                Default null, no authentication
+     * @param string   $auth_username Authentication username. Default null
+     * @param string   $auth_password Authentication password. Default null
+     * @param int      $proxy_type    Proxy-Tye for Curl. Default is "Proxy::HTTP"
+     *
+     * @return static
+     */
+    public function withProxy(
+        $proxy_host,
+        $proxy_port = 80,
+        $auth_type = null,
+        $auth_username = null,
+        $auth_password = null,
+        $proxy_type = Proxy::HTTP
+    ): self {
+        $new = clone $this;
+
+        $new = $new->withCurlOption(\CURLOPT_PROXY, "{$proxy_host}:{$proxy_port}");
+        $new = $new->withCurlOption(\CURLOPT_PROXYTYPE, $proxy_type);
+
+        if (\in_array($auth_type, [\CURLAUTH_BASIC, \CURLAUTH_NTLM], true)) {
+            $new = $new->withCurlOption(\CURLOPT_PROXYAUTH, $auth_type);
+            $new = $new->withCurlOption(\CURLOPT_PROXYUSERPWD, "{$auth_username}:{$auth_password}");
+        }
+
+        return $new;
+    }
+
+    /**
      * @param callable|null $send_callback
      *
      * @return static
@@ -2157,36 +2144,6 @@ class Request implements \IteratorAggregate, RequestInterface
         $new = clone $this;
 
         return $new->registerPayloadSerializer('*', $callback);
-    }
-
-    /**
-     * Determine how/if we use the built in serialization by
-     * setting the serialize_payload_method
-     * The default (SERIALIZE_PAYLOAD_SMART) is...
-     *  - if payload is not a scalar (object/array)
-     *    use the appropriate serialize method according to
-     *    the Content-Type of this request.
-     *  - if the payload IS a scalar (int, float, string, bool)
-     *    than just return it as is.
-     * When this option is set SERIALIZE_PAYLOAD_ALWAYS,
-     * it will always use the appropriate
-     * serialize option regardless of whether payload is scalar or not
-     * When this option is set SERIALIZE_PAYLOAD_NEVER,
-     * it will never use any of the serialization methods.
-     * Really the only use for this is if you want the serialize methods
-     * to handle strings or not (e.g. Blah is not valid JSON, but "Blah"
-     * is).  Forcing the serialization helps prevent that kind of error from
-     * happening.
-     *
-     * @param int $mode Request::SERIALIZE_PAYLOAD_*
-     *
-     * @return static
-     */
-    public function serializePayloadMode(int $mode): self
-    {
-        $this->serialize_payload_method = $mode;
-
-        return $this;
     }
 
     /**
@@ -2328,6 +2285,7 @@ class Request implements \IteratorAggregate, RequestInterface
                 $global_error_handler->error($error);
             } elseif (\is_callable($global_error_handler)) {
                 // error callback
+                /** @noinspection VariableFunctionsUsageInspection */
                 \call_user_func($global_error_handler, $error);
             }
         }
@@ -2390,11 +2348,11 @@ class Request implements \IteratorAggregate, RequestInterface
 
         // Use a custom serializer if one is registered for this mime type.
         if (
-            isset($this->payload_serializers['*'])
+            ($issetContentType = isset($this->payload_serializers[$this->content_type]))
             ||
-            isset($this->payload_serializers[$this->content_type])
+            isset($this->payload_serializers['*'])
         ) {
-            if (isset($this->payload_serializers[$this->content_type])) {
+            if ($issetContentType) {
                 $key = $this->content_type;
             } else {
                 $key = '*';
@@ -2583,6 +2541,50 @@ class Request implements \IteratorAggregate, RequestInterface
         }
 
         $this->expected_type = Mime::getFullMime($mime);
+
+        return $this;
+    }
+
+    /**
+     * Helper function to set the Content type and Expected as same in one swoop.
+     *
+     * @param string|null $mime mime type to use for content type and expected return type
+     *
+     * @return static
+     */
+    private function _withMimeType($mime): self
+    {
+        if (empty($mime)) {
+            return $this;
+        }
+
+        $this->expected_type = Mime::getFullMime($mime);
+        $this->content_type = $this->expected_type;
+
+        if ($this->isUpload()) {
+            $this->neverSerializePayload();
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param UriInterface $uri
+     * @param bool         $preserveHost
+     *
+     * @return static
+     */
+    private function _withUri(UriInterface $uri, $preserveHost = false): self
+    {
+        if ($this->uri === $uri) {
+            return $this;
+        }
+
+        $this->uri = $uri;
+
+        if (!$preserveHost) {
+            $this->_updateHostFromUri();
+        }
 
         return $this;
     }
