@@ -39,22 +39,22 @@ class Request implements \IteratorAggregate, RequestInterface
     /**
      * @var string
      */
-    private $client_key = '';
+    private $ssl_key = '';
 
     /**
      * @var string
      */
-    private $client_cert = '';
+    private $ssl_cert = '';
 
     /**
      * @var string
      */
-    private $client_encoding = '';
+    private $ssl_key_type = '';
 
     /**
      * @var string|null
      */
-    private $client_passphrase;
+    private $ssl_passphrase;
 
     /**
      * @var float|int|null
@@ -74,12 +74,12 @@ class Request implements \IteratorAggregate, RequestInterface
     /**
      * @var Headers
      */
-    private $headers;
+    private $_headers;
 
     /**
      * @var string
      */
-    private $raw_headers = '';
+    private $_raw_headers = '';
 
     /**
      * @var bool
@@ -90,6 +90,21 @@ class Request implements \IteratorAggregate, RequestInterface
      * @var string
      */
     private $content_type = '';
+
+    /**
+     * @var string
+     */
+    private $content_charset = '';
+
+    /**
+     * @var string
+     */
+    private $content_encoding = '';
+
+    /**
+     * @var int
+     */
+    private $keep_alive = 300;
 
     /**
      * @var string
@@ -122,9 +137,9 @@ class Request implements \IteratorAggregate, RequestInterface
     private $password = '';
 
     /**
-     * @var mixed|null
+     * @var string|null
      */
-    private $serialized_payload;
+    private $_serialized_payload;
 
     /**
      * @var array
@@ -179,14 +194,9 @@ class Request implements \IteratorAggregate, RequestInterface
     private $_debug = false;
 
     /**
-     * @var array|null
+     * @var string
      */
-    private $_info;
-
-    /**
-     * @var string|null
-     */
-    private $_protocol_version;
+    private $protocol_version = '1.1';
 
     /** @noinspection PhpDocSignatureInspection */
 
@@ -202,8 +212,10 @@ class Request implements \IteratorAggregate, RequestInterface
         string $mime = null,
         self $template = null
     ) {
+        $this->initialize();
+
         $this->_template = $template;
-        $this->headers = new Headers();
+        $this->_headers = new Headers();
 
         // fallback
         if (!isset($this->_template)) {
@@ -235,12 +247,31 @@ class Request implements \IteratorAggregate, RequestInterface
             throw new RequestException($this, 'Attempting to send a request before defining a URI endpoint.');
         }
 
+        // init
+        $this->initialize();
+        \assert($this->_curl instanceof Curl);
+
         if ($this->params === []) {
             $this->_uriPrep();
         }
 
-        if ($this->payload !== []) {
-            $this->serialized_payload = $this->_serializePayload($this->payload);
+        if ($this->payload === []) {
+            $this->_serialized_payload = null;
+        } else {
+            $this->_serialized_payload = $this->_serializePayload($this->payload);
+
+            if (
+                $this->_serialized_payload
+                &&
+                $this->content_charset
+                &&
+                !$this->isUpload()
+            ) {
+                $this->_serialized_payload = UTF8::encode(
+                    $this->content_charset,
+                    (string) $this->_serialized_payload
+                );
+            }
         }
 
         if ($this->send_callbacks !== []) {
@@ -250,82 +281,81 @@ class Request implements \IteratorAggregate, RequestInterface
             }
         }
 
-        $curl = new Curl();
-        $curl->setUrl($this->uri);
+        $this->_curl->setUrl((string) $this->uri);
 
-        $ch = $curl->getCurl();
+        $ch = $this->_curl->getCurl();
 
         if ($ch === false) {
             throw new NetworkErrorException('Unable to connect to "' . $this->uri . '". => "curl_init" === false');
         }
 
-        $curl->setOpt(\CURLOPT_IPRESOLVE, \CURL_IPRESOLVE_V4);
+        $this->_curl->setOpt(\CURLOPT_IPRESOLVE, \CURL_IPRESOLVE_WHATEVER);
 
-        $curl->setOpt(\CURLOPT_CUSTOMREQUEST, $this->method);
+        $this->_curl->setOpt(\CURLOPT_CUSTOMREQUEST, $this->method);
+
         if ($this->method === Http::HEAD) {
-            $curl->setOpt(\CURLOPT_NOBODY, true);
+            $this->_curl->setOpt(\CURLOPT_NOBODY, true);
         }
 
         if ($this->hasBasicAuth()) {
-            $curl->setOpt(\CURLOPT_USERPWD, $this->username . ':' . $this->password);
+            $this->_curl->setOpt(\CURLOPT_USERPWD, $this->username . ':' . $this->password);
         }
 
         if ($this->hasClientSideCert()) {
-            if (!\file_exists($this->client_key)) {
+            if (!\file_exists($this->ssl_key)) {
                 throw new RequestException($this, 'Could not read Client Key');
             }
 
-            if (!\file_exists($this->client_cert)) {
+            if (!\file_exists($this->ssl_cert)) {
                 throw new RequestException($this, 'Could not read Client Certificate');
             }
 
-            $curl->setOpt(\CURLOPT_SSLCERTTYPE, $this->client_encoding);
-            $curl->setOpt(\CURLOPT_SSLKEYTYPE, $this->client_encoding);
-            $curl->setOpt(\CURLOPT_SSLCERT, $this->client_cert);
-            $curl->setOpt(\CURLOPT_SSLKEY, $this->client_key);
-            if ($this->client_passphrase !== null) {
-                $curl->setOpt(\CURLOPT_SSLKEYPASSWD, $this->client_passphrase);
+            $this->_curl->setOpt(\CURLOPT_SSLCERTTYPE, $this->ssl_key_type);
+            $this->_curl->setOpt(\CURLOPT_SSLKEYTYPE, $this->ssl_key_type);
+            $this->_curl->setOpt(\CURLOPT_SSLCERT, $this->ssl_cert);
+            $this->_curl->setOpt(\CURLOPT_SSLKEY, $this->ssl_key);
+            if ($this->ssl_passphrase !== null) {
+                $this->_curl->setOpt(\CURLOPT_SSLKEYPASSWD, $this->ssl_passphrase);
             }
-            // $curl->setOpt(CURLOPT_SSLCERTPASSWD,  $this->client_cert_passphrase);
+            // $this->_curl->setOpt(CURLOPT_SSLCERTPASSWD,  $this->client_cert_passphrase);
         }
 
         if ($this->hasTimeout()) {
-            if (\defined('CURLOPT_TIMEOUT_MS')) {
-                $curl->setOpt(\CURLOPT_TIMEOUT_MS, $this->timeout * 1000);
-            } else {
-                $curl->setOpt(\CURLOPT_TIMEOUT, $this->timeout);
-            }
+            $this->_curl->setOpt(\CURLOPT_TIMEOUT_MS, \round($this->timeout * 1000));
         }
 
         if ($this->hasConnectionTimeout()) {
-            if (\defined('CURLOPT_CONNECTTIMEOUT_MS')) {
-                $curl->setOpt(\CURLOPT_CONNECTTIMEOUT_MS, $this->connection_timeout * 1000);
-            } else {
-                $curl->setOpt(\CURLOPT_CONNECTTIMEOUT, $this->connection_timeout);
-            }
+            $this->_curl->setOpt(\CURLOPT_CONNECTTIMEOUT_MS, \round($this->connection_timeout * 1000));
         }
 
         if ($this->follow_redirects === true) {
-            $curl->setOpt(\CURLOPT_FOLLOWLOCATION, true);
-            $curl->setOpt(\CURLOPT_MAXREDIRS, $this->max_redirects);
+            $this->_curl->setOpt(\CURLOPT_FOLLOWLOCATION, true);
+            $this->_curl->setOpt(\CURLOPT_MAXREDIRS, $this->max_redirects);
         }
 
-        $curl->setOpt(\CURLOPT_SSL_VERIFYPEER, $this->strict_ssl);
+        $this->_curl->setOpt(\CURLOPT_SSL_VERIFYPEER, $this->strict_ssl);
         // zero is safe for all curl versions
         $verifyValue = $this->strict_ssl + 0;
         // support for value 1 removed in cURL 7.28.1 value 2 valid in all versions
         if ($verifyValue > 0) {
             ++$verifyValue;
         }
-        $curl->setOpt(\CURLOPT_SSL_VERIFYHOST, $verifyValue);
-        $curl->setOpt(\CURLOPT_RETURNTRANSFER, true);
+        $this->_curl->setOpt(\CURLOPT_SSL_VERIFYHOST, $verifyValue);
+
+        $this->_curl->setOpt(\CURLOPT_RETURNTRANSFER, true);
+
+        $this->_curl->setOpt(\CURLOPT_ENCODING, $this->content_encoding);
+
+        $this->_curl->setOpt(\CURLOPT_PROTOCOLS, \CURLPROTO_HTTP | \CURLPROTO_HTTPS);
+
+        $this->_curl->setOpt(\CURLOPT_REDIR_PROTOCOLS, \CURLPROTO_HTTP | \CURLPROTO_HTTPS);
 
         // set Content-Length to the size of the payload if present
-        if ($this->payload !== []) {
-            $curl->setOpt(\CURLOPT_POSTFIELDS, $this->serialized_payload);
+        if ($this->_serialized_payload) {
+            $this->_curl->setOpt(\CURLOPT_POSTFIELDS, (string) $this->_serialized_payload);
 
             if (!$this->isUpload()) {
-                $this->headers->forceSet('Content-Length', $this->_determineLength($this->serialized_payload));
+                $this->_headers->forceSet('Content-Length', $this->_determineLength($this->_serialized_payload));
             }
         }
 
@@ -334,14 +364,14 @@ class Request implements \IteratorAggregate, RequestInterface
 
         // Solve a bug on squid proxy, NONE/411 when miss content length.
         if (
-            !$this->headers->offsetExists('Content-Length')
+            !$this->_headers->offsetExists('Content-Length')
             &&
             !$this->isUpload()
         ) {
-            $this->headers->forceSet('Content-Length', 0);
+            $this->_headers->forceSet('Content-Length', 0);
         }
 
-        foreach ($this->headers as $header => $value) {
+        foreach ($this->_headers as $header => $value) {
             if (\is_array($value)) {
                 foreach ($value as $valueInner) {
                     $headers[] = "${header}: ${valueInner}";
@@ -353,15 +383,28 @@ class Request implements \IteratorAggregate, RequestInterface
 
         // except header removes any HTTP 1.1 Continue from response headers
         $headers[] = 'Expect:';
+        $headers[] = 'Pragma:';
 
-        if (!$this->headers->offsetExists('User-Agent')) {
+        if ($this->keep_alive) {
+            $headers[] = 'Connection: Keep-Alive';
+            $headers[] = 'Keep-Alive: ' . $this->keep_alive;
+        } else {
+            $headers[] = 'Connection: close';
+        }
+
+        if (!$this->_headers->offsetExists('User-Agent')) {
             $headers[] = $this->buildUserAgent();
         }
 
-        $headers[] = 'Content-Type: ' . $this->content_type;
+        if ($this->content_charset) {
+            $contentType = $this->content_type . '; charset=' . $this->content_charset;
+        } else {
+            $contentType = $this->content_type;
+        }
+        $headers[] = 'Content-Type: ' . $contentType;
 
         // allow custom Accept header if set
-        if (!$this->headers->offsetExists('Accept')) {
+        if (!$this->_headers->offsetExists('Accept')) {
             // http://pretty-rfc.herokuapp.com/RFC2616#header.accept
             $accept = 'Accept: */*; q=0.5, text/plain; q=0.8, text/html;level=3;';
 
@@ -379,48 +422,44 @@ class Request implements \IteratorAggregate, RequestInterface
         }
 
         $path = ($url['path'] ?? '/') . (isset($url['query']) ? '?' . $url['query'] : '');
-        $this->raw_headers = "{$this->method} ${path} HTTP/1.1\r\n";
-        $this->raw_headers .= \implode("\r\n", $headers);
-        $this->raw_headers .= "\r\n";
+        $this->_raw_headers = "{$this->method} ${path} HTTP/{$this->protocol_version}\r\n";
+        $this->_raw_headers .= \implode("\r\n", $headers);
+        $this->_raw_headers .= "\r\n";
 
         // DEBUG
         //var_dump($this->headers->toArray(), $this->raw_headers);
 
-        $curl->setOpt(\CURLOPT_HTTPHEADER, $headers);
+        $this->_curl->setOpt(\CURLOPT_HTTPHEADER, $headers);
 
         if ($this->_debug) {
-            $curl->setOpt(\CURLOPT_VERBOSE, true);
+            $this->_curl->setOpt(\CURLOPT_VERBOSE, true);
         }
 
-        $curl->setOpt(\CURLOPT_HEADER, 1);
+        $this->_curl->setOpt(\CURLOPT_HEADER, 1);
 
         // If there are some additional curl opts that the user wants to set, we can tack them in here.
         foreach ($this->additional_curl_opts as $curlOpt => $curlVal) {
-            $curl->setOpt($curlOpt, $curlVal);
+            $this->_curl->setOpt($curlOpt, $curlVal);
         }
 
-        if ($this->_protocol_version !== null) {
-            switch ($this->_protocol_version) {
-                case '0.0':
-                    $curl->setOpt(\CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_NONE);
+        switch ($this->protocol_version) {
+            case '0.0':
+                $this->_curl->setOpt(\CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_NONE);
 
-                    break;
-                case '1.0':
-                    $curl->setOpt(\CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_1_0);
+                break;
+            case '1.0':
+                $this->_curl->setOpt(\CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_1_0);
 
-                    break;
-                case '1.1':
-                    $curl->setOpt(\CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_1_1);
+                break;
+            case '1.1':
+                $this->_curl->setOpt(\CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_1_1);
 
-                    break;
-                case '2.0':
-                    $curl->setOpt(\CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_2_0);
+                break;
+            case '2.0':
+                $this->_curl->setOpt(\CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_2_0);
 
-                    break;
-            }
+                break;
         }
-
-        $this->_curl = $curl;
 
         return $this;
     }
@@ -533,21 +572,41 @@ class Request implements \IteratorAggregate, RequestInterface
     /**
      * Use Client Side Cert Authentication
      *
-     * @param string      $key        file path to client key
-     * @param string      $cert       file path to client cert
-     * @param string|null $passphrase for client key
-     * @param string      $encoding   default PEM
+     * @param string      $key          file path to client key
+     * @param string      $cert         file path to client cert
+     * @param string|null $passphrase   for client key
+     * @param string      $ssl_key_type default PEM
      *
      * @return static
      */
-    public function clientSideCertAuth($cert, $key, $passphrase = null, $encoding = 'PEM'): self
+    public function clientSideCertAuth($cert, $key, $passphrase = null, $ssl_key_type = 'PEM'): self
     {
-        $this->client_cert = $cert;
-        $this->client_key = $key;
-        $this->client_passphrase = $passphrase;
-        $this->client_encoding = $encoding;
+        $this->ssl_cert = $cert;
+        $this->ssl_key = $key;
+        $this->ssl_key_type = $ssl_key_type;
+        $this->ssl_passphrase = $passphrase;
 
         return $this;
+    }
+
+    /**
+     * @see Request::initialize()
+     */
+    public function close()
+    {
+        if ($this->_curl && $this->hasBeenInitialized()) {
+            $this->_curl->close();
+        }
+    }
+
+    /**
+     * @see Request::close()
+     */
+    public function initialize()
+    {
+        if (!$this->_curl || !$this->hasBeenInitialized()) {
+            $this->_curl = new Curl();
+        }
     }
 
     /**
@@ -572,7 +631,7 @@ class Request implements \IteratorAggregate, RequestInterface
     /**
      * @return static
      *
-     * @see Request::_autoParse()
+     * @see Request::enableAutoParsing()
      */
     public function disableAutoParsing(): self
     {
@@ -581,6 +640,20 @@ class Request implements \IteratorAggregate, RequestInterface
 
     /**
      * @return static
+     *
+     * @see Request::enableKeepAlive()
+     */
+    public function disableKeepAlive(): self
+    {
+        $this->keep_alive = 0;
+
+        return $this;
+    }
+
+    /**
+     * @return static
+     *
+     * @see Request::enableStrictSSL()
      */
     public function disableStrictSSL(): self
     {
@@ -600,7 +673,7 @@ class Request implements \IteratorAggregate, RequestInterface
     /**
      * @return static
      *
-     * @see Request::_autoParse()
+     * @see Request::disableAutoParsing()
      */
     public function enableAutoParsing(): self
     {
@@ -608,7 +681,29 @@ class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
+     * @param int $seconds
+     *
      * @return static
+     *
+     * @see Request::disableKeepAlive()
+     */
+    public function enableKeepAlive(int $seconds = 300): self
+    {
+        if ($seconds <= 0) {
+            throw new \InvalidArgumentException(
+                'Invalid keep-alive input: ' . \var_export($seconds, true)
+            );
+        }
+
+        $this->keep_alive = $seconds;
+
+        return $this;
+    }
+
+    /**
+     * @return static
+     *
+     * @see Request::disableStrictSSL()
      */
     public function enableStrictSSL(): self
     {
@@ -780,8 +875,8 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function getHeader($name): array
     {
-        if ($this->headers->offsetExists($name)) {
-            $value = $this->headers->offsetGet($name);
+        if ($this->_headers->offsetExists($name)) {
+            $value = $this->_headers->offsetGet($name);
 
             if (!\is_array($value)) {
                 return [\trim($value, " \t")];
@@ -827,7 +922,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function getHeaders(): array
     {
-        return $this->headers->toArray();
+        return $this->_headers->toArray();
     }
 
     /**
@@ -849,7 +944,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function getProtocolVersion(): string
     {
-        return $this->_protocol_version ?? '';
+        return $this->protocol_version;
     }
 
     /**
@@ -906,7 +1001,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function hasHeader($name): bool
     {
-        return $this->headers->offsetExists($name);
+        return $this->_headers->offsetExists($name);
     }
 
     /**
@@ -939,10 +1034,10 @@ class Request implements \IteratorAggregate, RequestInterface
             $value = [$value];
         }
 
-        if ($new->headers->offsetExists($name)) {
-            $new->headers->forceSet($name, \array_merge_recursive($new->headers->offsetGet($name), $value));
+        if ($new->_headers->offsetExists($name)) {
+            $new->_headers->forceSet($name, \array_merge_recursive($new->_headers->offsetGet($name), $value));
         } else {
-            $new->headers->forceSet($name, $value);
+            $new->_headers->forceSet($name, $value);
         }
 
         return $new;
@@ -997,7 +1092,7 @@ class Request implements \IteratorAggregate, RequestInterface
             $value = [$value];
         }
 
-        $new->headers->forceSet($name, $value);
+        $new->_headers->forceSet($name, $value);
 
         return $new;
     }
@@ -1046,7 +1141,7 @@ class Request implements \IteratorAggregate, RequestInterface
     {
         $new = clone $this;
 
-        $new->_protocol_version = $version;
+        $new->protocol_version = $version;
 
         return $new;
     }
@@ -1141,7 +1236,7 @@ class Request implements \IteratorAggregate, RequestInterface
     {
         $new = clone $this;
 
-        $new->headers->forceUnset($name);
+        $new->_headers->forceUnset($name);
 
         return $new;
     }
@@ -1214,7 +1309,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function getRawHeaders(): string
     {
-        return $this->raw_headers;
+        return $this->_raw_headers;
     }
 
     /**
@@ -1238,7 +1333,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function getSerializedPayload()
     {
-        return $this->serialized_payload;
+        return $this->_serialized_payload;
     }
 
     /**
@@ -1272,7 +1367,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function hasClientSideCert(): bool
     {
-        return $this->client_cert && $this->client_key;
+        return $this->ssl_cert && $this->ssl_key;
     }
 
     /**
@@ -1358,6 +1453,14 @@ class Request implements \IteratorAggregate, RequestInterface
     public function isAutoParse(): bool
     {
         return $this->auto_parse;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isJson(): bool
+    {
+        return $this->content_type === Mime::JSON;
     }
 
     /**
@@ -1482,6 +1585,14 @@ class Request implements \IteratorAggregate, RequestInterface
         return $this;
     }
 
+    public function reset()
+    {
+        $this->_headers = new Headers();
+
+        $this->close();
+        $this->initialize();
+    }
+
     /**
      * Actually send off the request, and parse the response
      *
@@ -1491,21 +1602,45 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function send(): Response
     {
-        if (!$this->hasBeenInitialized()) {
-            $this->_curlPrep();
-        }
-
-        if ($this->_curl === null) {
-            throw new NetworkErrorException('Unable to connect to "' . $this->uri . '". => "curl" === null');
-        }
+        $this->_curlPrep();
+        \assert($this->_curl instanceof Curl);
 
         $result = $this->_curl->exec();
-        $response = $this->_buildResponse($result);
 
-        $this->_curl->close();
-        $this->_curl = null;
+        if ($result === false) {
 
-        return $response;
+            // Possibly a gzip issue makes curl unhappy.
+            if (
+                $this->_curl->errorCode === \CURLE_WRITE_ERROR
+                ||
+                $this->_curl->errorCode === \CURLE_BAD_CONTENT_ENCODING
+            ) {
+
+                // Docs say 'identity,' but 'none' seems to work (sometimes?).
+                $this->_curl->setOpt(\CURLOPT_ENCODING, 'none');
+
+                $result = $this->_curl->exec();
+
+                if ($result === false) {
+                    /** @noinspection NotOptimalIfConditionsInspection */
+                    if (
+                        $this->_curl->errorCode === \CURLE_WRITE_ERROR
+                        ||
+                        $this->_curl->errorCode === \CURLE_BAD_CONTENT_ENCODING
+                    ) {
+                        $this->_curl->setOpt(\CURLOPT_ENCODING, 'identity');
+
+                        $result = $this->_curl->exec();
+                    }
+                }
+            }
+        }
+
+        if (!$this->keep_alive) {
+            $this->close();
+        }
+
+        return $this->_buildResponse($result);
     }
 
     /**
@@ -1819,6 +1954,39 @@ class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
+     * @param string $charset
+     *                        <p>e.g. "UTF-8"</p>
+     *
+     * @return static
+     */
+    public function withContentCharset(string $charset): self
+    {
+        $new = clone $this;
+
+        if (empty($charset)) {
+            return $new;
+        }
+
+        $new->content_charset = UTF8::normalize_encoding($charset);
+
+        return $new;
+    }
+
+    /**
+     * @param string $encoding
+     *
+     * @return static
+     */
+    public function withContentEncoding(string $encoding): self
+    {
+        $new = clone $this;
+
+        $new->content_encoding = $encoding;
+
+        return $new;
+    }
+
+    /**
      * @param string|null $mime     use a constant from Mime::*
      * @param string|null $fallback use a constant from Mime::*
      *
@@ -1986,7 +2154,7 @@ class Request implements \IteratorAggregate, RequestInterface
      *
      * @return static
      */
-    public function withHeaders(array $header)
+    public function withHeaders(array $header): self
     {
         $new = clone $this;
 
@@ -2230,7 +2398,7 @@ class Request implements \IteratorAggregate, RequestInterface
             throw new NetworkErrorException('Unable to connect to "' . $this->uri . '".');
         }
 
-        $this->_info = $this->_curl->getInfo();
+        $curl_info = $this->_curl->getInfo();
 
         $headers = $this->_curl->getRawResponseHeaders();
 
@@ -2247,13 +2415,16 @@ class Request implements \IteratorAggregate, RequestInterface
         if (isset($protocol_version_matches['version'])) {
             $protocol_version = $protocol_version_matches['version'];
         }
-        $this->_info['protocol_version'] = $protocol_version;
+        $curl_info['protocol_version'] = $protocol_version;
+
+        // DEBUG
+        //var_dump($headers);
 
         return new Response(
             $body,
             $headers,
             $this,
-            $this->_info
+            $curl_info
         );
     }
 
@@ -2414,6 +2585,12 @@ class Request implements \IteratorAggregate, RequestInterface
     private function _setDefaultsFromTemplate(): self
     {
         if ($this->_template !== null) {
+            if (\function_exists('gzdecode')) {
+                $this->_template->content_encoding = 'gzip';
+            } elseif (\function_exists('gzinflate')) {
+                $this->_template->content_encoding = 'deflate';
+            }
+
             foreach ($this->_template as $k => $v) {
                 if ($k[0] !== '_') {
                     $this->{$k} = $v;
@@ -2486,7 +2663,7 @@ class Request implements \IteratorAggregate, RequestInterface
 
         // Ensure Host is the first header.
         // See: http://tools.ietf.org/html/rfc7230#section-5.4
-        $this->headers = new Headers(['Host' => [$host]] + $this->withoutHeader('Host')->getHeaders());
+        $this->_headers = new Headers(['Host' => [$host]] + $this->withoutHeader('Host')->getHeaders());
 
         $URL_CACHE = $this->uri;
     }
