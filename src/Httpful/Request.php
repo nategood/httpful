@@ -198,6 +198,11 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     private $protocol_version = '1.1';
 
+    /**
+     * @var bool
+     */
+    private $retry_by_possible_encoding_error = false;
+
     /** @noinspection PhpDocSignatureInspection */
 
     /**
@@ -600,16 +605,6 @@ class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
-     * @see Request::close()
-     */
-    public function initialize()
-    {
-        if (!$this->_curl || !$this->hasBeenInitialized()) {
-            $this->_curl = new Curl();
-        }
-    }
-
-    /**
      * HTTP Method Delete
      *
      * @param string|UriInterface $uri  optional uri to use
@@ -646,6 +641,16 @@ class Request implements \IteratorAggregate, RequestInterface
     public function disableKeepAlive(): self
     {
         $this->keep_alive = 0;
+
+        return $this;
+    }
+
+    /**
+     * @return static
+     */
+    public function disableRetryByPossibleEncodingError(): self
+    {
+        $this->retry_by_possible_encoding_error = false;
 
         return $this;
     }
@@ -696,6 +701,16 @@ class Request implements \IteratorAggregate, RequestInterface
         }
 
         $this->keep_alive = $seconds;
+
+        return $this;
+    }
+
+    /**
+     * @return static
+     */
+    public function enableRetryByPossibleEncodingError(): self
+    {
+        $this->retry_by_possible_encoding_error = true;
 
         return $this;
     }
@@ -1448,6 +1463,16 @@ class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
+     * @see Request::close()
+     */
+    public function initialize()
+    {
+        if (!$this->_curl || !$this->hasBeenInitialized()) {
+            $this->_curl = new Curl();
+        }
+    }
+
+    /**
      * @return bool
      */
     public function isAutoParse(): bool
@@ -1607,8 +1632,11 @@ class Request implements \IteratorAggregate, RequestInterface
 
         $result = $this->_curl->exec();
 
-        if ($result === false) {
-
+        if (
+            $result === false
+            &&
+            $this->retry_by_possible_encoding_error
+        ) {
             // Possibly a gzip issue makes curl unhappy.
             if (
                 $this->_curl->errorCode === \CURLE_WRITE_ERROR
