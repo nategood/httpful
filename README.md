@@ -41,11 +41,13 @@ echo $response->getBody()->name . ' joined GitHub on ' . date('M jS Y', strtotim
 // Make a request to the GitHub API with a custom
 // header of "X-Foo-Header: Just as a demo".
 $uri = 'https://api.github.com/users/voku';
-$response = \Httpful\Client::get_request($uri)->addHeader('X-Foo-Header', 'Just as a demo')
+$response = \Httpful\Client::get_request($uri)->withAddedHeader('X-Foo-Header', 'Just as a demo')
                                               ->expectsJson()
                                               ->send();
 
-echo $response->getRawBody()->name . ' joined GitHub on ' . date('M jS Y', strtotime($response->getRawBody()->created_at)) . "\n";
+$result = $response->getRawBody();
+
+echo $result['name'] . ' joined GitHub on ' . \date('M jS Y', \strtotime($result['created_at'])) . "\n";
 ```
 
 # Installation

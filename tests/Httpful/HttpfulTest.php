@@ -631,7 +631,7 @@ Content-Type: text/plain; charset=utf-8\r\n",
         try {
             (new Request())
                 ->withUriFromString(self::TIMEOUT_URI)
-                ->timeout(0.1)
+                ->withTimeout(0.1)
                 ->send();
         } catch (NetworkErrorException $e) {
             static::assertInternalType('resource', $e->getCurlObject()->curl);
@@ -681,7 +681,7 @@ Content-Type: text/plain; charset=utf-8\r\n",
                         $caught = true;
                     }
                 )
-                ->timeout(0.1)
+                ->withTimeout(0.1)
                 ->send();
         } catch (NetworkErrorException $e) {
         }

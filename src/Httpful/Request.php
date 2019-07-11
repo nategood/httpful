@@ -225,7 +225,7 @@ class Request implements \IteratorAggregate, RequestInterface
         // fallback
         if (!isset($this->_template)) {
             $this->_template = new static(Http::GET, null, $this);
-            $this->_template->disableStrictSSL();
+            $this->_template = $this->_template->disableStrictSSL();
         }
 
         $this->_setDefaultsFromTemplate()
@@ -831,17 +831,19 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function followRedirects(bool $follow = true): self
     {
+        $new = clone $this;
+
         if ($follow === true) {
-            $this->max_redirects = static::MAX_REDIRECTS_DEFAULT;
+            $new->max_redirects = static::MAX_REDIRECTS_DEFAULT;
         } elseif ($follow === false) {
-            $this->max_redirects = 0;
+            $new->max_redirects = 0;
         } else {
-            $this->max_redirects = \max(0, $follow);
+            $new->max_redirects = \max(0, $follow);
         }
 
-        $this->follow_redirects = $follow;
+        $new->follow_redirects = $follow;
 
-        return $this;
+        return $new;
     }
 
     /**
@@ -1605,9 +1607,11 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function registerPayloadSerializer($mime, callable $callback): self
     {
-        $this->payload_serializers[Mime::getFullMime($mime)] = $callback;
+        $new = clone $this;
 
-        return $this;
+        $new->payload_serializers[Mime::getFullMime($mime)] = $callback;
+
+        return $new;
     }
 
     public function reset()
@@ -1808,11 +1812,13 @@ class Request implements \IteratorAggregate, RequestInterface
      *
      * @return static
      */
-    public function timeout($timeout): self
+    public function withTimeout($timeout): self
     {
-        $this->timeout = $timeout;
+        $new = clone $this;
 
-        return $this;
+        $new->timeout = $timeout;
+
+        return $new;
     }
 
     /**
@@ -2337,9 +2343,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function withSerializePayload(callable $callback): self
     {
-        $new = clone $this;
-
-        return $new->registerPayloadSerializer('*', $callback);
+        return $this->registerPayloadSerializer('*', $callback);
     }
 
     /**
@@ -2381,9 +2385,11 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     private function _autoParse(bool $auto_parse = true): self
     {
-        $this->auto_parse = $auto_parse;
+        $new = clone $this;
 
-        return $this;
+        $new->auto_parse = $auto_parse;
+
+        return $new;
     }
 
     /**
@@ -2661,9 +2667,11 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     private function _strictSSL($strict): self
     {
-        $this->strict_ssl = $strict;
+        $new = clone $this;
 
-        return $this;
+        $new->strict_ssl = $strict;
+
+        return $new;
     }
 
     private function _updateHostFromUri()
