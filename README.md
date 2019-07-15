@@ -17,6 +17,7 @@ Features
  - Automatic Payload Serialization
  - Basic Auth
  - Client Side Certificate Auth (SSL)
+ - Request "Download"
  - Request "Templates"
  - PSR-3: Logger Interface
  - PSR-7: HTTP Message Interface
@@ -58,14 +59,16 @@ composer require voku/httpful
 
 ## Handlers
 
-```
-// We can override the default parser configuration options be registering
-// a parser with different configuration options for a particular mime type
+We can override the default parser configuration options be registering
+a parser with different configuration options for a particular mime type
 
-// Example setting a namespace for the XMLHandler parser
+Example: setting a namespace for the XMLHandler parser
+```php
 $conf = ['namespace' => 'http://example.com'];
 \Httpful\Setup::registerMimeHandler(\Httpful\Mime::XML, new \Httpful\Handlers\XmlMimeHandler($conf));
 ```
+
+---
 
 Handlers are simple classes that are used to parse response bodies and serialize request payloads.  All Handlers must implement the `MimeHandlerInterface` interface and implement two methods: `serialize($payload)` and `parse($response)`.  Let's build a very basic Handler to register for the `text/csv` mime type.
 
