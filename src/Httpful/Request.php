@@ -358,12 +358,6 @@ class Request implements \IteratorAggregate, RequestInterface
         }
         $this->_curl->setOpt(\CURLOPT_SSL_VERIFYHOST, $verifyValue);
 
-        if (!\ZEND_THREAD_SAFE) {
-            $this->_curl->setOpt(\CURLOPT_DNS_USE_GLOBAL_CACHE, false);
-        } else {
-            $this->_curl->setOpt(\CURLOPT_DNS_USE_GLOBAL_CACHE, true);
-        }
-
         $this->_curl->setOpt(\CURLOPT_RETURNTRANSFER, true);
 
         $this->_curl->setOpt(\CURLOPT_ENCODING, $this->content_encoding);
