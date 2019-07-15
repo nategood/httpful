@@ -649,7 +649,7 @@ class Request implements \IteratorAggregate, RequestInterface
      * HTTP Method Get
      *
      * @param string|UriInterface $uri
-     * @param callable|string     $file_path
+     * @param string              $file_path
      *
      * @return static
      */
