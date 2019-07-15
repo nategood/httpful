@@ -29,7 +29,7 @@ class Http
 
     const HTTP_1_1 = '1.1';
 
-    const HTTP_2_0 = '2.0';
+    const HTTP_2_0 = '2';
 
     /**
      * @return array

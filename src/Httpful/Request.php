@@ -1166,13 +1166,14 @@ class Request implements \IteratorAggregate, RequestInterface
      * Return an instance with the specified HTTP protocol version.
      *
      * The version string MUST contain only the HTTP version number (e.g.,
-     * "1.1", "1.0").
+     * "2, 1.1", "1.0").
      *
      * This method MUST be implemented in such a way as to retain the
      * immutability of the message, and MUST return an instance that has the
      * new protocol version.
      *
-     * @param string $version HTTP protocol version
+     * @param string $version
+     *                        <p>Http::HTTP_*</p>
      *
      * @return static
      */

@@ -39,13 +39,24 @@ final class ClientTest extends TestCase
         static::assertInstanceOf(HtmlDomParser::class, $get->getRawBody());
 
         $head = Client::head('http://www.google.com?a=b');
-        static::assertSame('http://www.google.com/?a=b', $head->getMetaData()['url']);
+
+        $expectedForDifferentCurlVersions = [
+            'http://www.google.com?a=b',
+            'http://www.google.com/?a=b',
+        ];
+        static::assertContains($head->getMetaData()['url'], $expectedForDifferentCurlVersions);
+
         /** @noinspection PhpUnitTestsInspection */
         static::assertInternalType('string', (string) $head->getBody());
         static::assertSame('1.1', $head->getProtocolVersion());
 
         $post = Client::post('http://www.google.com?a=b');
-        static::assertSame('http://www.google.com/?a=b', $post->getMetaData()['url']);
+
+        $expectedForDifferentCurlVersions = [
+            'http://www.google.com?a=b',
+            'http://www.google.com/?a=b',
+        ];
+        static::assertContains($head->getMetaData()['url'], $expectedForDifferentCurlVersions);
         static::assertSame(405, $post->getStatusCode());
     }
 
@@ -222,6 +233,16 @@ final class ClientTest extends TestCase
 
     public function testHttp2()
     {
+        curl_version()['features'];
+
+        if (\PHP_VERSION_ID >= 70300 && \PHP_VERSION_ID < 70304) {
+            static::markTestSkipped('PHP 7.3.0 to 7.3.3 don\'t support HTTP/2 PUSH');
+        }
+
+        if (!\defined('CURLMOPT_PUSHFUNCTION') || 0x073d00 > ($v = curl_version())['version_number'] || !(CURL_VERSION_HTTP2 & $v['features'])) {
+            static::markTestSkipped('curl <7.61 is used or it is not compiled with support for HTTP/2 PUSH');
+        }
+
         $http = new Factory();
 
         $response = (new Client())->sendRequest(
@@ -231,7 +252,7 @@ final class ClientTest extends TestCase
             )->withProtocolVersion(Http::HTTP_2_0)
         );
 
-        static::assertSame('2.0', $response->getProtocolVersion());
+        static::assertSame('2', $response->getProtocolVersion());
         static::assertSame(200, $response->getStatusCode());
 
         static::assertSame(
