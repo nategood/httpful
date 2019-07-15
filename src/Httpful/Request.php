@@ -89,6 +89,11 @@ class Request implements \IteratorAggregate, RequestInterface
     /**
      * @var string
      */
+    private $cache_control = '';
+
+    /**
+     * @var string
+     */
     private $content_type = '';
 
     /**
@@ -424,6 +429,10 @@ class Request implements \IteratorAggregate, RequestInterface
         }
         $headers[] = 'Content-Type: ' . $contentType;
 
+        if ($this->cache_control) {
+            $headers[] = 'Cache-Control: ' . $this->cache_control;
+        }
+
         // allow custom Accept header if set
         if (!$this->_headers->offsetExists('Accept')) {
             // http://pretty-rfc.herokuapp.com/RFC2616#header.accept
@@ -653,6 +662,7 @@ class Request implements \IteratorAggregate, RequestInterface
         return (new self(Http::GET))
             ->withUriFromString($uri)
             ->withDownload($file_path)
+            ->withCacheControl('no-cache')
             ->withContentEncoding('');
     }
 
@@ -2036,6 +2046,25 @@ class Request implements \IteratorAggregate, RequestInterface
         $new = clone $this;
 
         $new->connection_timeout = $connection_timeout;
+
+        return $new;
+    }
+
+    /**
+     * @param string $cache_control
+     *                              <p>e.g. 'no-cache', 'public', ...</p>
+     *
+     * @return static
+     */
+    public function withCacheControl(string $cache_control): self
+    {
+        $new = clone $this;
+
+        if (empty($cache_control)) {
+            return $new;
+        }
+
+        $new->cache_control = $cache_control;
 
         return $new;
     }
