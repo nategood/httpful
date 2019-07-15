@@ -150,14 +150,16 @@ final class ClientTest extends TestCase
         static::assertContains('"content-type":"application\/json"', (string) $response);
     }
 
-    public function testPutCall() {
-        $response = Client::put("https://postman-echo.com/put", 'lall');
+    public function testPutCall()
+    {
+        $response = Client::put('https://postman-echo.com/put', 'lall');
 
         static::assertContains('"data":"lall"', (string) $response);
     }
 
-    public function testPatchCall() {
-        $response = Client::patch("https://postman-echo.com/patch", 'lall');
+    public function testPatchCall()
+    {
+        $response = Client::patch('https://postman-echo.com/patch', 'lall');
 
         static::assertContains('"data":"lall"', (string) $response);
     }
@@ -173,6 +175,19 @@ final class ClientTest extends TestCase
         $response = Client::get_json("https://postman-echo.com/get?{$query}");
 
         static::assertSame($expected_params, $response['args']);
+    }
+
+    public function testDownloadSimple()
+    {
+        $testFileUrl = 'http://speedtest.ftp.otenet.gr/files/test100k.db';
+        $tmpFile = \tempnam('/tmp', 'FOO');
+        $expectedFileContent = \file_get_contents($testFileUrl);
+
+        $response = Client::download($testFileUrl, $tmpFile);
+
+        static::assertTrue(\count($response->getHeaders()) > 0);
+        static::assertSame($expectedFileContent, $response->getRawBody());
+        static::assertSame($expectedFileContent, \file_get_contents($tmpFile));
     }
 
     public function testReceiveHeader()
@@ -233,13 +248,13 @@ final class ClientTest extends TestCase
 
     public function testHttp2()
     {
-        curl_version()['features'];
+        \curl_version()['features'];
 
         if (\PHP_VERSION_ID >= 70300 && \PHP_VERSION_ID < 70304) {
             static::markTestSkipped('PHP 7.3.0 to 7.3.3 don\'t support HTTP/2 PUSH');
         }
 
-        if (!\defined('CURLMOPT_PUSHFUNCTION') || 0x073d00 > ($v = curl_version())['version_number'] || !(CURL_VERSION_HTTP2 & $v['features'])) {
+        if (!\defined('CURLMOPT_PUSHFUNCTION') || ($v = \curl_version())['version_number'] < 0x073d00 || !(\CURL_VERSION_HTTP2 & $v['features'])) {
             static::markTestSkipped('curl <7.61 is used or it is not compiled with support for HTTP/2 PUSH');
         }
 

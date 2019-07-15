@@ -33,6 +33,17 @@ class Client implements ClientInterface
     }
 
     /**
+     * @param string $uri
+     * @param string $file_path
+     *
+     * @return Response
+     */
+    public static function download(string $uri, $file_path): Response
+    {
+        return Request::download($uri, $file_path)->send();
+    }
+
+    /**
      * @param string      $uri
      * @param string|null $mime
      *

@@ -204,6 +204,11 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     private $retry_by_possible_encoding_error = false;
 
+    /**
+     * @var callable|string|null
+     */
+    private $file_path_for_download;
+
     /** @noinspection PhpDocSignatureInspection */
 
     /**
@@ -340,7 +345,7 @@ class Request implements \IteratorAggregate, RequestInterface
             $this->_curl->setOpt(\CURLOPT_CONNECTTIMEOUT_MS, \round($this->connection_timeout * 1000));
 
             if (\DIRECTORY_SEPARATOR !== '\\' && $this->connection_timeout < 1) {
-                $this->_curl->setOpt(CURLOPT_NOSIGNAL, true);
+                $this->_curl->setOpt(\CURLOPT_NOSIGNAL, true);
             }
         }
 
@@ -456,13 +461,11 @@ class Request implements \IteratorAggregate, RequestInterface
                 $header = \substr_replace($header, ';', -2);
             }
         }
-        $this->_curl->setOpt(\CURLOPT_HTTPHEADER,$headers);
+        $this->_curl->setOpt(\CURLOPT_HTTPHEADER, $headers);
 
         if ($this->_debug) {
             $this->_curl->setOpt(\CURLOPT_VERBOSE, true);
         }
-
-        $this->_curl->setOpt(\CURLOPT_HEADER, true);
 
         // If there are some additional curl opts that the user wants to set, we can tack them in here.
         foreach ($this->additional_curl_opts as $curlOpt => $curlVal) {
@@ -486,6 +489,13 @@ class Request implements \IteratorAggregate, RequestInterface
                 $this->_curl->setOpt(\CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_NONE);
 
                 break;
+        }
+
+        if ($this->file_path_for_download) {
+            $this->_curl->download(
+                (string) $this->uri,
+                $this->file_path_for_download
+            );
         }
 
         return $this;
@@ -627,9 +637,29 @@ class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
+     * HTTP Method Get
+     *
+     * @param string|UriInterface $uri
+     * @param callable|string     $file_path
+     *
+     * @return static
+     */
+    public static function download($uri, $file_path): self
+    {
+        if ($uri instanceof UriInterface) {
+            $uri = (string) $uri;
+        }
+
+        return (new self(Http::GET))
+            ->withUriFromString($uri)
+            ->withDownload($file_path)
+            ->withContentEncoding('');
+    }
+
+    /**
      * HTTP Method Delete
      *
-     * @param string|UriInterface $uri  optional uri to use
+     * @param string|UriInterface $uri
      * @param string|null         $mime
      *
      * @return static
@@ -871,8 +901,8 @@ class Request implements \IteratorAggregate, RequestInterface
     /**
      * HTTP Method Get
      *
-     * @param string|UriInterface $uri  optional uri to use
-     * @param string              $mime expected
+     * @param string|UriInterface $uri
+     * @param string              $mime
      *
      * @return static
      */
@@ -1472,7 +1502,7 @@ class Request implements \IteratorAggregate, RequestInterface
     /**
      * HTTP Method Head
      *
-     * @param string|UriInterface $uri optional uri to use
+     * @param string|UriInterface $uri
      *
      * @return static
      */
@@ -1542,7 +1572,7 @@ class Request implements \IteratorAggregate, RequestInterface
     /**
      * HTTP Method Options
      *
-     * @param string|UriInterface $uri optional uri to use
+     * @param string|UriInterface $uri
      *
      * @return static
      */
@@ -1558,7 +1588,7 @@ class Request implements \IteratorAggregate, RequestInterface
     /**
      * HTTP Method Patch
      *
-     * @param string|UriInterface $uri     optional uri to use
+     * @param string|UriInterface $uri
      * @param mixed               $payload data to send in body of request
      * @param string              $mime    MIME to use for Content-Type
      *
@@ -1578,7 +1608,7 @@ class Request implements \IteratorAggregate, RequestInterface
     /**
      * HTTP Method Post
      *
-     * @param string|UriInterface $uri     optional uri to use
+     * @param string|UriInterface $uri
      * @param mixed               $payload data to send in body of request
      * @param string              $mime    MIME to use for Content-Type
      *
@@ -1598,7 +1628,7 @@ class Request implements \IteratorAggregate, RequestInterface
     /**
      * HTTP Method Put
      *
-     * @param string|UriInterface $uri     optional uri to use
+     * @param string|UriInterface $uri
      * @param mixed               $payload data to send in body of request
      * @param string              $mime    MIME to use for Content-Type
      *
@@ -2367,6 +2397,20 @@ class Request implements \IteratorAggregate, RequestInterface
     public function withSerializePayload(callable $callback): self
     {
         return $this->registerPayloadSerializer('*', $callback);
+    }
+
+    /**
+     * @param string $file_path
+     *
+     * @return Request
+     */
+    public function withDownload($file_path): self
+    {
+        $new = clone $this;
+
+        $new->file_path_for_download = $file_path;
+
+        return $new;
     }
 
     /**
