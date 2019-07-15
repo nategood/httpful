@@ -197,7 +197,7 @@ class Request implements \IteratorAggregate, RequestInterface
     /**
      * @var string
      */
-    private $protocol_version = '1.1';
+    private $protocol_version = Http::HTTP_1_1;
 
     /**
      * @var bool
@@ -304,7 +304,6 @@ class Request implements \IteratorAggregate, RequestInterface
             $this->_curl->setOpt(\CURLOPT_CUSTOMREQUEST, $this->method);
         }
 
-
         if ($this->method === Http::HEAD) {
             $this->_curl->setOpt(\CURLOPT_NOBODY, true);
         }
@@ -361,9 +360,9 @@ class Request implements \IteratorAggregate, RequestInterface
 
         if (!\ZEND_THREAD_SAFE) {
             $this->_curl->setOpt(\CURLOPT_DNS_USE_GLOBAL_CACHE, false);
+        } else {
+            $this->_curl->setOpt(\CURLOPT_DNS_USE_GLOBAL_CACHE, true);
         }
-
-        $this->_curl->setOpt(\CURLOPT_HEADEROPT, \CURLHEADER_SEPARATE);
 
         $this->_curl->setOpt(\CURLOPT_RETURNTRANSFER, true);
 
@@ -469,7 +468,7 @@ class Request implements \IteratorAggregate, RequestInterface
             $this->_curl->setOpt(\CURLOPT_VERBOSE, true);
         }
 
-        $this->_curl->setOpt(\CURLOPT_HEADER, 1);
+        $this->_curl->setOpt(\CURLOPT_HEADER, true);
 
         // If there are some additional curl opts that the user wants to set, we can tack them in here.
         foreach ($this->additional_curl_opts as $curlOpt => $curlVal) {
