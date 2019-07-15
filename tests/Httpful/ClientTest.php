@@ -91,6 +91,28 @@ final class ClientTest extends TestCase
         static::assertSame($expected_data, $response['form'], 'server received x-www-form POST data');
     }
 
+    public function testBasicAuthRequest()
+    {
+        $response = (new Client())->sendRequest(
+            (new Request(Http::GET))
+                ->withUriFromString('https://postman-echo.com/basic-auth')
+                ->withBasicAuth('postman', 'password')
+        );
+
+        static::assertSame('{"authenticated":true}', (string) $response);
+    }
+
+    public function testDigestAuthRequest()
+    {
+        $response = (new Client())->sendRequest(
+            (new Request(Http::GET))
+                ->withUriFromString('https://postman-echo.com/digest-auth')
+                ->withDigestAuth('postman', 'password')
+        );
+
+        static::assertSame('{"authenticated":true}', (string) $response);
+    }
+
     public function testSendJsonRequest()
     {
         $expected_data = [
@@ -115,6 +137,18 @@ final class ClientTest extends TestCase
         static::assertSame('1.1', $response->getProtocolVersion());
         static::assertSame(200, $response->getStatusCode());
         static::assertContains('"content-type":"application\/json"', (string) $response);
+    }
+
+    public function testPutCall() {
+        $response = Client::put("https://postman-echo.com/put", 'lall');
+
+        static::assertContains('"data":"lall"', (string) $response);
+    }
+
+    public function testPatchCall() {
+        $response = Client::patch("https://postman-echo.com/patch", 'lall');
+
+        static::assertContains('"data":"lall"', (string) $response);
     }
 
     public function testJsonHelper()
@@ -183,6 +217,26 @@ final class ClientTest extends TestCase
             ['one', 'two'],
             $response->getHeader('X-Hello'),
             'Can parse multi-line header'
+        );
+    }
+
+    public function testHttp2()
+    {
+        $http = new Factory();
+
+        $response = (new Client())->sendRequest(
+            $http->createRequest(
+                Http::GET,
+                'https://http2.akamai.com/demo/tile-0.png'
+            )->withProtocolVersion(Http::HTTP_2_0)
+        );
+
+        static::assertSame('2.0', $response->getProtocolVersion());
+        static::assertSame(200, $response->getStatusCode());
+
+        static::assertSame(
+            'image/png',
+            $response->getHeaderLine('Content-Type')
         );
     }
 

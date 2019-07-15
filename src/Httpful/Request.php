@@ -98,6 +98,7 @@ class Request implements \IteratorAggregate, RequestInterface
 
     /**
      * @var string
+     *             <p>e.g.: "gzip" or "deflate"</p>
      */
     private $content_encoding = '';
 
@@ -296,7 +297,13 @@ class Request implements \IteratorAggregate, RequestInterface
 
         $this->_curl->setOpt(\CURLOPT_IPRESOLVE, \CURL_IPRESOLVE_WHATEVER);
 
-        $this->_curl->setOpt(\CURLOPT_CUSTOMREQUEST, $this->method);
+        if ($this->method === Http::POST) {
+            // Use CURLOPT_POST to have browser-like POST-to-GET redirects for 301, 302 and 303
+            $this->_curl->setOpt(\CURLOPT_POST, true);
+        } else {
+            $this->_curl->setOpt(\CURLOPT_CUSTOMREQUEST, $this->method);
+        }
+
 
         if ($this->method === Http::HEAD) {
             $this->_curl->setOpt(\CURLOPT_NOBODY, true);
@@ -322,8 +329,9 @@ class Request implements \IteratorAggregate, RequestInterface
             if ($this->ssl_passphrase !== null) {
                 $this->_curl->setOpt(\CURLOPT_SSLKEYPASSWD, $this->ssl_passphrase);
             }
-            // $this->_curl->setOpt(CURLOPT_SSLCERTPASSWD,  $this->client_cert_passphrase);
         }
+
+        $this->_curl->setOpt(\CURLOPT_TCP_NODELAY, true);
 
         if ($this->hasTimeout()) {
             $this->_curl->setOpt(\CURLOPT_TIMEOUT_MS, \round($this->timeout * 1000));
@@ -331,6 +339,10 @@ class Request implements \IteratorAggregate, RequestInterface
 
         if ($this->hasConnectionTimeout()) {
             $this->_curl->setOpt(\CURLOPT_CONNECTTIMEOUT_MS, \round($this->connection_timeout * 1000));
+
+            if (\DIRECTORY_SEPARATOR !== '\\' && $this->connection_timeout < 1) {
+                $this->_curl->setOpt(CURLOPT_NOSIGNAL, true);
+            }
         }
 
         if ($this->follow_redirects === true) {
@@ -346,6 +358,12 @@ class Request implements \IteratorAggregate, RequestInterface
             ++$verifyValue;
         }
         $this->_curl->setOpt(\CURLOPT_SSL_VERIFYHOST, $verifyValue);
+
+        if (!\ZEND_THREAD_SAFE) {
+            $this->_curl->setOpt(\CURLOPT_DNS_USE_GLOBAL_CACHE, false);
+        }
+
+        $this->_curl->setOpt(\CURLOPT_HEADEROPT, \CURLHEADER_SEPARATE);
 
         $this->_curl->setOpt(\CURLOPT_RETURNTRANSFER, true);
 
@@ -432,9 +450,20 @@ class Request implements \IteratorAggregate, RequestInterface
         $this->_raw_headers .= "\r\n";
 
         // DEBUG
-        //var_dump($this->headers->toArray(), $this->raw_headers);
+        //var_dump($this->_headers->toArray(), $this->_raw_headers);
 
-        $this->_curl->setOpt(\CURLOPT_HTTPHEADER, $headers);
+        /** @noinspection AlterInForeachInspection */
+        foreach ($headers as &$header) {
+            if (
+                $header[-2] === ':'
+                &&
+                \strlen($header) - 2 === \strpos($header, ': ')
+            ) {
+                // curl requires a special syntax to send empty headers
+                $header = \substr_replace($header, ';', -2);
+            }
+        }
+        $this->_curl->setOpt(\CURLOPT_HTTPHEADER,$headers);
 
         if ($this->_debug) {
             $this->_curl->setOpt(\CURLOPT_VERBOSE, true);
@@ -448,20 +477,20 @@ class Request implements \IteratorAggregate, RequestInterface
         }
 
         switch ($this->protocol_version) {
-            case '0.0':
-                $this->_curl->setOpt(\CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_NONE);
-
-                break;
-            case '1.0':
+            case Http::HTTP_1_0:
                 $this->_curl->setOpt(\CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_1_0);
 
                 break;
-            case '1.1':
+            case Http::HTTP_1_1:
                 $this->_curl->setOpt(\CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_1_1);
 
                 break;
-            case '2.0':
+            case Http::HTTP_2_0:
                 $this->_curl->setOpt(\CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_2_0);
+
+                break;
+            default:
+                $this->_curl->setOpt(\CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_NONE);
 
                 break;
         }

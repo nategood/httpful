@@ -16,7 +16,7 @@ Features
  - Automatic "Smart" Parsing
  - Automatic Payload Serialization
  - Basic Auth
- - Client Side Certificate Auth
+ - Client Side Certificate Auth (SSL)
  - Request "Templates"
  - PSR-3: Logger Interface
  - PSR-7: HTTP Message Interface
@@ -58,51 +58,65 @@ composer require voku/httpful
 
 ## Handlers
 
-Handlers are simple classes that are used to parse response bodies and serialize request payloads.  All Handlers must extend the `MimeHandlerAdapter` class and implement two methods: `serialize($payload)` and `parse($response)`.  Let's build a very basic Handler to register for the `text/csv` mime type.
+```
+// We can override the default parser configuration options be registering
+// a parser with different configuration options for a particular mime type
+
+// Example setting a namespace for the XMLHandler parser
+$conf = ['namespace' => 'http://example.com'];
+\Httpful\Setup::registerMimeHandler(\Httpful\Mime::XML, new \Httpful\Handlers\XmlMimeHandler($conf));
+```
+
+Handlers are simple classes that are used to parse response bodies and serialize request payloads.  All Handlers must implement the `MimeHandlerInterface` interface and implement two methods: `serialize($payload)` and `parse($response)`.  Let's build a very basic Handler to register for the `text/csv` mime type.
 
 ```php
 <?php
 
-class SimpleCsvHandler implements \Httpful\Handlers\MimeHandlerInterface
+class SimpleCsvMimeHandler extends \Httpful\Handlers\DefaultMimeHandler
 {
     /**
-     * Takes a response body, and turns it into 
+     * Takes a response body, and turns it into
      * a two dimensional array.
      *
      * @param string $body
-     * @return mixed
+     *
+     * @return array
      */
     public function parse($body)
     {
-        return str_getcsv($body);
+        return \str_getcsv($body);
     }
 
     /**
      * Takes a two dimensional array and turns it
-     * into a serialized string to include as the 
+     * into a serialized string to include as the
      * body of a request
      *
      * @param mixed $payload
+     *
      * @return string
      */
     public function serialize($payload)
     {
         // init
         $serialized = '';
-        
+
         foreach ($payload as $line) {
-            $serialized .= '"' . implode('","', $line) . '"' . "\n";
+            $serialized .= '"' . \implode('","', $line) . '"' . "\n";
         }
-        
+
         return $serialized;
     }
 }
+
+\Httpful\Setup::registerMimeHandler(\Httpful\Mime::CSV, new SimpleCsvMimeHandler());
+
 ```
 
 Finally, you must register this handler for a particular mime type.
 
 ```
-HttpSetup::register(Mime::CSV, new SimpleCsvHandler());
+\Httpful\Setup::register(Mime::CSV, new SimpleCsvHandler());
 ```
 
 After this registering the handler in your source code, by default, any responses with a mime type of text/csv should be parsed by this handler.

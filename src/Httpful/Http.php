@@ -25,6 +25,12 @@ class Http
 
     const TRACE = 'TRACE';
 
+    const HTTP_1_0 = '1.0';
+
+    const HTTP_1_1 = '1.1';
+
+    const HTTP_2_0 = '2.0';
+
     /**
      * @return array
      */

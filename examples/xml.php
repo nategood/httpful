@@ -10,9 +10,21 @@ $uri = 'https://www.w3schools.com/xml/note.xml';
 
 // -------------------------------------------------------
 
-$responseComplex = \Httpful\Client::get_request($uri)
+$responseComplex = (new \Httpful\Client())
+    ->sendRequest(
+        (
+            new \Httpful\Request(
+                \Httpful\Http::GET,
+                Mime::PLAIN
+            )
+        )->followRedirects()
+    );
+
+// -------------------------------------------------------
+
+$responseMedium = \Httpful\Client::get_request($uri)
     ->withExpectedType(Mime::PLAIN)
-    ->followRedirects(true)
+    ->followRedirects()
     ->send();
 
 // -------------------------------------------------------
@@ -21,6 +33,10 @@ $responseSimple = \Httpful\Client::get($uri);
 
 // -------------------------------------------------------
 
-if ($responseComplex->getRawBody() === $responseSimple->getRawBody()) {
+if (
+    $responseComplex->getRawBody() === $responseSimple->getRawBody()
+    &&
+    $responseComplex->getRawBody() === $responseMedium->getRawBody()
+) {
     echo ' - same output - ';
 }

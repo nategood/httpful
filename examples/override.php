@@ -55,4 +55,4 @@ class SimpleCsvMimeHandler extends DefaultMimeHandler
     }
 }
 
-Setup::registerMimeHandler('text/csv', new SimpleCsvMimeHandler());
+Setup::registerMimeHandler(Mime::CSV, new SimpleCsvMimeHandler());
