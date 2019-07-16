@@ -407,10 +407,6 @@ class Request implements \IteratorAggregate, RequestInterface
             }
         }
 
-        // except header removes any HTTP 1.1 Continue from response headers
-        $headers[] = 'Expect:';
-        $headers[] = 'Pragma:';
-
         if ($this->keep_alive) {
             $headers[] = 'Connection: Keep-Alive';
             $headers[] = 'Keep-Alive: ' . $this->keep_alive;
@@ -461,10 +457,11 @@ class Request implements \IteratorAggregate, RequestInterface
 
         /** @noinspection AlterInForeachInspection */
         foreach ($headers as &$header) {
+            $pos_tmp = \strpos($header, ': ');
             if (
-                $header[-2] === ':'
+                $pos_tmp !== false
                 &&
-                \strlen($header) - 2 === \strpos($header, ': ')
+                \strlen($header) - 2 === $pos_tmp
             ) {
                 // curl requires a special syntax to send empty headers
                 $header = \substr_replace($header, ';', -2);
