@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.0
+
+ - add new header functions + many tests
+
 ## 0.8.0
 
  - fix implementation of PSR standards + many tests
