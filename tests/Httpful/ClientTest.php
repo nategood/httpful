@@ -347,7 +347,7 @@ final class ClientTest extends TestCase
             ->withUriFromString('https://moelleken.org/');
         $response = $client->sendRequest($request);
         static::assertEquals(200, $response->getStatusCode());
-        static::assertStringContainsString('Lars Moelleken', (string) $response->getBody());
+        static::assertContains('Lars Moelleken', (string) $response->getBody());
         static::assertContains($response->getProtocolVersion(), ['1.1', '2']);
         static::assertEquals(['text/html; charset=utf-8'], $response->getHeader('content-type'));
     }
