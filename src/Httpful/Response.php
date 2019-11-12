@@ -186,7 +186,7 @@ class Response implements ResponseInterface
             ||
             !\is_numeric($parts[1])
         ) {
-            throw new ResponseException('Unable to parse response code from HTTP response due to malformed response');
+            throw new ResponseException('Unable to parse response code from HTTP response due to malformed response: ' . \print_r($parts, true));
         }
 
         return (int) $parts[1];

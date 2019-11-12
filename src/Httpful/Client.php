@@ -102,7 +102,7 @@ class Client implements ClientInterface
      */
     public static function get_xml(string $uri)
     {
-        return self::get_request($uri, Mime::HTML)->send()->getRawBody();
+        return self::get_request($uri, Mime::XML)->send()->getRawBody();
     }
 
     /**
@@ -234,7 +234,7 @@ class Client implements ClientInterface
      */
     public static function post_xml(string $uri, $payload = null)
     {
-        return self::post_request($uri, $payload, Mime::HTML)->send()->getRawBody();
+        return self::post_request($uri, $payload, Mime::XML)->send()->getRawBody();
     }
 
     /**
@@ -268,10 +268,10 @@ class Client implements ClientInterface
      */
     public function sendRequest(RequestInterface $request): ResponseInterface
     {
-        if ($request instanceof Request) {
-            return $request->send();
+        if (!$request instanceof Request) {
+            $request = Request::{$request->getMethod()}($request->getUri());
         }
 
-        return Request::{$request->getMethod()}($request->getUri())->send();
+        return $request->send();
     }
 }

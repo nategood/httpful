@@ -135,7 +135,7 @@ Transfer-Encoding: chunked\r\n";
                 ->withErrorHandler(
                     static function ($error) { /* Be silent */
                     }
-                   )
+                )
                 ->send();
         } catch (NetworkErrorException $e) {
             static::assertNotSame(\strpos($e->getMessage(), 'malformed2'), false, \print_r($e->getMessage(), true));

@@ -30,6 +30,7 @@ Features
 <?php
 
 // Make a request to the GitHub API.
+
 $uri = 'https://api.github.com/users/voku';
 $response = \Httpful\Client::get($uri, \Httpful\Mime::JSON);
 
@@ -41,6 +42,7 @@ echo $response->getBody()->name . ' joined GitHub on ' . date('M jS Y', strtotim
 
 // Make a request to the GitHub API with a custom
 // header of "X-Foo-Header: Just as a demo".
+
 $uri = 'https://api.github.com/users/voku';
 $response = \Httpful\Client::get_request($uri)->withAddedHeader('X-Foo-Header', 'Just as a demo')
                                               ->expectsJson()
@@ -49,6 +51,32 @@ $response = \Httpful\Client::get_request($uri)->withAddedHeader('X-Foo-Header', 
 $result = $response->getRawBody();
 
 echo $result['name'] . ' joined GitHub on ' . \date('M jS Y', \strtotime($result['created_at'])) . "\n";
+```
+
+```php
+<?php
+
+// BasicAuth example with MultiCurl for async requests.
+
+/** @var \Httpful\Response[] $results */
+$results = [];
+$multi = new \Httpful\ClientMulti(
+    static function (\Httpful\Response $response, \Httpful\Request $request) use (&$results) {
+        $results[] = $response;
+    }
+);
+
+$request = (new \Httpful\Request(\Httpful\Http::GET))
+    ->withUriFromString('https://postman-echo.com/basic-auth')
+    ->withBasicAuth('postman', 'password');
+
+$multi->add_request($request);
+// $multi->add_request(...); // add more calls here
+
+$multi->start();
+
+// DEBUG
+//print_r($results);
 ```
 
 # Installation

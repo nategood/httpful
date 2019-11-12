@@ -342,12 +342,12 @@ final class ClientTest extends TestCase
     public function testGet()
     {
         $client = new Client();
-        $request = (new Request('GET'))->withUriFromString('https://ideato.it/robots.txt');
+        $request = (new Request('GET'))->withUriFromString('https://moelleken.org/');
         $response = $client->sendRequest($request);
         static::assertEquals(200, $response->getStatusCode());
-        static::assertStringStartsWith('User-agent:', (string) $response->getBody());
+        static::assertStringContainsString('Lars Moelleken', (string) $response->getBody());
         static::assertContains($response->getProtocolVersion(), ['1.1', '2']);
-        static::assertEquals(['text/plain; charset=utf-8'], $response->getHeader('content-type'));
+        static::assertEquals(['text/html; charset=utf-8'], $response->getHeader('content-type'));
     }
 
     public function testCookie()

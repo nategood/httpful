@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Httpful;
 
 use Curl\Curl;
+use Curl\MultiCurl;
 use Httpful\Exception\ClientErrorException;
 use Httpful\Exception\NetworkErrorException;
 use Httpful\Exception\RequestException;
@@ -195,6 +196,13 @@ class Request implements \IteratorAggregate, RequestInterface
     private $_curl;
 
     /**
+     * MultiCurl Object
+     *
+     * @var MultiCurl|null
+     */
+    private $_curlMulti;
+
+    /**
      * @var bool
      */
     private $_debug = false;
@@ -213,8 +221,6 @@ class Request implements \IteratorAggregate, RequestInterface
      * @var callable|string|null
      */
     private $file_path_for_download;
-
-    /** @noinspection PhpDocSignatureInspection */
 
     /**
      * The Client::get, Client::post, ... syntax is preferred as it is more readable.
@@ -243,6 +249,233 @@ class Request implements \IteratorAggregate, RequestInterface
             ->_setMethod($method)
             ->_withContentType($mime, Mime::PLAIN)
             ->_withExpectedType($mime, Mime::PLAIN);
+    }
+
+    /**
+     * Does the heavy lifting.  Uses de facto HTTP
+     * library cURL to set up the HTTP request.
+     * Note: It does NOT actually send the request
+     *
+     * @throws \Exception
+     *
+     * @return static
+     *
+     * @internal
+     */
+    public function _curlMultiPrep(): self
+    {
+        // init
+        $this->initialize();
+        \assert($this->_curlMulti instanceof MultiCurl);
+
+        $this->_curlMulti->setUrl((string) $this->uri);
+
+        $ch = $this->_curlMulti->multiCurl;
+        if ($ch === false) {
+            throw new NetworkErrorException('Unable to connect to "' . $this->uri . '". => "curl_multi_init" === false');
+        }
+
+        $this->_curlMulti->setOpt(\CURLOPT_IPRESOLVE, \CURL_IPRESOLVE_WHATEVER);
+
+        if ($this->method === Http::POST) {
+            // Use CURLOPT_POST to have browser-like POST-to-GET redirects for 301, 302 and 303
+            $this->_curlMulti->setOpt(\CURLOPT_POST, true);
+        } else {
+            $this->_curlMulti->setOpt(\CURLOPT_CUSTOMREQUEST, $this->method);
+        }
+
+        if ($this->method === Http::HEAD) {
+            $this->_curlMulti->setOpt(\CURLOPT_NOBODY, true);
+        }
+
+        if ($this->hasBasicAuth()) {
+            $this->_curlMulti->setOpt(\CURLOPT_USERPWD, $this->username . ':' . $this->password);
+        }
+
+        if ($this->hasClientSideCert()) {
+            if (!\file_exists($this->ssl_key)) {
+                throw new RequestException($this, 'Could not read Client Key');
+            }
+
+            if (!\file_exists($this->ssl_cert)) {
+                throw new RequestException($this, 'Could not read Client Certificate');
+            }
+
+            $this->_curlMulti->setOpt(\CURLOPT_SSLCERTTYPE, $this->ssl_key_type);
+            $this->_curlMulti->setOpt(\CURLOPT_SSLKEYTYPE, $this->ssl_key_type);
+            $this->_curlMulti->setOpt(\CURLOPT_SSLCERT, $this->ssl_cert);
+            $this->_curlMulti->setOpt(\CURLOPT_SSLKEY, $this->ssl_key);
+            if ($this->ssl_passphrase !== null) {
+                $this->_curlMulti->setOpt(\CURLOPT_SSLKEYPASSWD, $this->ssl_passphrase);
+            }
+        }
+
+        $this->_curlMulti->setOpt(\CURLOPT_TCP_NODELAY, true);
+
+        if ($this->hasTimeout()) {
+            $this->_curlMulti->setOpt(\CURLOPT_TIMEOUT_MS, \round($this->timeout * 1000));
+        }
+
+        if ($this->hasConnectionTimeout()) {
+            $this->_curlMulti->setOpt(\CURLOPT_CONNECTTIMEOUT_MS, \round($this->connection_timeout * 1000));
+
+            if (\DIRECTORY_SEPARATOR !== '\\' && $this->connection_timeout < 1) {
+                $this->_curlMulti->setOpt(\CURLOPT_NOSIGNAL, true);
+            }
+        }
+
+        if ($this->follow_redirects === true) {
+            $this->_curlMulti->setOpt(\CURLOPT_FOLLOWLOCATION, true);
+            $this->_curlMulti->setOpt(\CURLOPT_MAXREDIRS, $this->max_redirects);
+        }
+
+        $this->_curlMulti->setOpt(\CURLOPT_SSL_VERIFYPEER, $this->strict_ssl);
+        // zero is safe for all curl versions
+        $verifyValue = $this->strict_ssl + 0;
+        // support for value 1 removed in cURL 7.28.1 value 2 valid in all versions
+        if ($verifyValue > 0) {
+            ++$verifyValue;
+        }
+        $this->_curlMulti->setOpt(\CURLOPT_SSL_VERIFYHOST, $verifyValue);
+
+        $this->_curlMulti->setOpt(\CURLOPT_RETURNTRANSFER, true);
+
+        $this->_curlMulti->setOpt(\CURLOPT_ENCODING, $this->content_encoding);
+
+        $this->_curlMulti->setOpt(\CURLOPT_PROTOCOLS, \CURLPROTO_HTTP | \CURLPROTO_HTTPS);
+
+        $this->_curlMulti->setOpt(\CURLOPT_REDIR_PROTOCOLS, \CURLPROTO_HTTP | \CURLPROTO_HTTPS);
+
+        // set Content-Length to the size of the payload if present
+        if ($this->_serialized_payload) {
+            $this->_curlMulti->setOpt(\CURLOPT_POSTFIELDS, (string) $this->_serialized_payload);
+
+            if (!$this->isUpload()) {
+                $this->_headers->forceSet('Content-Length', $this->_determineLength($this->_serialized_payload));
+            }
+        }
+
+        // init
+        $headers = [];
+
+        // Solve a bug on squid proxy, NONE/411 when miss content length.
+        if (
+            !$this->_headers->offsetExists('Content-Length')
+            &&
+            !$this->isUpload()
+        ) {
+            $this->_headers->forceSet('Content-Length', 0);
+        }
+
+        foreach ($this->_headers as $header => $value) {
+            if (\is_array($value)) {
+                foreach ($value as $valueInner) {
+                    $headers[] = "${header}: ${valueInner}";
+                }
+            } else {
+                $headers[] = "${header}: ${value}";
+            }
+        }
+
+        if ($this->keep_alive) {
+            $headers[] = 'Connection: Keep-Alive';
+            $headers[] = 'Keep-Alive: ' . $this->keep_alive;
+        } else {
+            $headers[] = 'Connection: close';
+        }
+
+        if (!$this->_headers->offsetExists('User-Agent')) {
+            $headers[] = $this->buildUserAgent();
+        }
+
+        if ($this->content_charset) {
+            $contentType = $this->content_type . '; charset=' . $this->content_charset;
+        } else {
+            $contentType = $this->content_type;
+        }
+        $headers[] = 'Content-Type: ' . $contentType;
+
+        if ($this->cache_control) {
+            $headers[] = 'Cache-Control: ' . $this->cache_control;
+        }
+
+        // allow custom Accept header if set
+        if (!$this->_headers->offsetExists('Accept')) {
+            // http://pretty-rfc.herokuapp.com/RFC2616#header.accept
+            $accept = 'Accept: */*; q=0.5, text/plain; q=0.8, text/html;level=3;';
+
+            if (!empty($this->expected_type)) {
+                $accept .= 'q=0.9, ' . $this->expected_type;
+            }
+
+            $headers[] = $accept;
+        }
+
+        $url = \parse_url((string) $this->uri);
+
+        if (\is_array($url) === false) {
+            throw new ClientErrorException('Unable to connect to "' . $this->uri . '". => "parse_url" === false');
+        }
+
+        $path = ($url['path'] ?? '/') . (isset($url['query']) ? '?' . $url['query'] : '');
+        $this->_raw_headers = "{$this->method} ${path} HTTP/{$this->protocol_version}\r\n";
+        $this->_raw_headers .= \implode("\r\n", $headers);
+        $this->_raw_headers .= "\r\n";
+
+        // DEBUG
+        //var_dump($this->_headers->toArray(), $this->_raw_headers);
+
+        /** @noinspection AlterInForeachInspection */
+        foreach ($headers as &$header) {
+            $pos_tmp = \strpos($header, ': ');
+            if (
+                $pos_tmp !== false
+                &&
+                \strlen($header) - 2 === $pos_tmp
+            ) {
+                // curl requires a special syntax to send empty headers
+                $header = \substr_replace($header, ';', -2);
+            }
+        }
+        $this->_curlMulti->setOpt(\CURLOPT_HTTPHEADER, $headers);
+
+        if ($this->_debug) {
+            $this->_curlMulti->setOpt(\CURLOPT_VERBOSE, true);
+        }
+
+        // If there are some additional curl opts that the user wants to set, we can tack them in here.
+        foreach ($this->additional_curl_opts as $curlOpt => $curlVal) {
+            $this->_curlMulti->setOpt($curlOpt, $curlVal);
+        }
+
+        switch ($this->protocol_version) {
+            case Http::HTTP_1_0:
+                $this->_curlMulti->setOpt(\CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_1_0);
+
+                break;
+            case Http::HTTP_1_1:
+                $this->_curlMulti->setOpt(\CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_1_1);
+
+                break;
+            case Http::HTTP_2_0:
+                $this->_curlMulti->setOpt(\CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_2_0);
+
+                break;
+            default:
+                $this->_curlMulti->setOpt(\CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_NONE);
+
+                break;
+        }
+
+        if ($this->file_path_for_download) {
+            /** @noinspection UnusedFunctionResultInspection */
+            $this->_curlMulti->addDownload(
+                (string) $this->uri,
+                $this->file_path_for_download
+            );
+        }
+
+        return $this;
     }
 
     /**
@@ -300,7 +533,6 @@ class Request implements \IteratorAggregate, RequestInterface
         $this->_curl->setUrl((string) $this->uri);
 
         $ch = $this->_curl->getCurl();
-
         if ($ch === false) {
             throw new NetworkErrorException('Unable to connect to "' . $this->uri . '". => "curl_init" === false');
         }
@@ -508,6 +740,22 @@ class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
+     * @return Curl|null
+     */
+    public function _curl()
+    {
+        return $this->_curl;
+    }
+
+    /**
+     * @return MultiCurl|null
+     */
+    public function _curlMulti()
+    {
+        return $this->_curlMulti;
+    }
+
+    /**
      * Takes care of building the query string to be used in the request URI.
      *
      * Any existing query string parameters, either passed as part of the URI
@@ -639,6 +887,10 @@ class Request implements \IteratorAggregate, RequestInterface
     {
         if ($this->_curl && $this->hasBeenInitialized()) {
             $this->_curl->close();
+        }
+
+        if ($this->_curlMulti && $this->hasBeenInitializedMulti()) {
+            $this->_curlMulti->close();
         }
     }
 
@@ -1432,11 +1684,19 @@ class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
-     * @return bool has the internal curl request been initialized?
+     * @return bool has the internal curl (non multi) request been initialized?
      */
     public function hasBeenInitialized(): bool
     {
         return isset($this->_curl->curl);
+    }
+
+    /**
+     * @return bool has the internal curl (multi) request been initialized?
+     */
+    public function hasBeenInitializedMulti(): bool
+    {
+        return isset($this->_curlMulti->multiCurl);
     }
 
     /**
@@ -1531,6 +1791,10 @@ class Request implements \IteratorAggregate, RequestInterface
     {
         if (!$this->_curl || !$this->hasBeenInitialized()) {
             $this->_curl = new Curl();
+        }
+
+        if (!$this->_curlMulti || $this->hasBeenInitializedMulti()) {
+            $this->_curlMulti = new MultiCurl();
         }
     }
 
@@ -1685,9 +1949,60 @@ class Request implements \IteratorAggregate, RequestInterface
     /**
      * Actually send off the request, and parse the response
      *
+     *
+     * @param callable|null $onSuccessCallback
+     * @param callable|null $onCompleteCallback
+     *
      * @throws NetworkErrorException when unable to parse or communicate w server
      *
-     * @return Response with parsed results
+     * @return MultiCurl
+     */
+    public function initMulti($onSuccessCallback = null, $onCompleteCallback = null)
+    {
+        $this->_curlMultiPrep();
+        \assert($this->_curlMulti instanceof MultiCurl);
+
+        if ($onSuccessCallback !== null) {
+            $this->_curlMulti->success(
+                function (Curl $instance) use ($onSuccessCallback) {
+                    $response = $this->_buildResponse($instance->response, $instance);
+
+                    $onSuccessCallback(
+                        $response,
+                        $this,
+                        $instance
+                    );
+                }
+            );
+        }
+
+        if ($onCompleteCallback !== null) {
+            $this->_curlMulti->complete(
+                function (Curl $instance) use ($onCompleteCallback) {
+                    $response = $this->_buildResponse($instance->response, $instance);
+
+                    $onCompleteCallback(
+                        $response,
+                        $this,
+                        $instance
+                    );
+                }
+            );
+        }
+
+        $this->_curlMulti->error(static function (Curl $instance) {
+            throw new NetworkErrorException('Call to "' . $instance->url . '" was unsuccessful. | error code: ' . $instance->errorCode . ' | error message: ' . $instance->errorMessage);
+        });
+
+        return $this->_curlMulti;
+    }
+
+    /**
+     * Actually send off the request, and parse the response
+     *
+     * @throws NetworkErrorException when unable to parse or communicate w server
+     *
+     * @return Response
      */
     public function send(): Response
     {
@@ -2489,21 +2804,27 @@ class Request implements \IteratorAggregate, RequestInterface
      * Takes a curl result and generates a Response from it.
      *
      * @param false|mixed $result
+     * @param Curl|null   $curl
      *
      * @throws NetworkErrorException
      *
      * @return Response
      */
-    private function _buildResponse($result): Response
+    private function _buildResponse($result, Curl $curl = null): Response
     {
-        if ($this->_curl === null) {
+        // fallback
+        if ($curl === null) {
+            $curl = $this->_curl;
+        }
+
+        if ($curl === null) {
             throw new NetworkErrorException('Unable to build the response for "' . $this->uri . '". => "curl" === null');
         }
 
         if ($result === false) {
-            $curlErrorNumber = $this->_curl->getErrorCode();
+            $curlErrorNumber = $curl->getErrorCode();
             if ($curlErrorNumber) {
-                $curlErrorString = $this->_curl->getErrorMessage();
+                $curlErrorString = $curl->getErrorMessage();
 
                 $this->_error($curlErrorString);
 
@@ -2511,7 +2832,7 @@ class Request implements \IteratorAggregate, RequestInterface
                     'Unable to connect to "' . $this->uri . '": ' . $curlErrorNumber . ' ' . $curlErrorString,
                     $curlErrorNumber,
                     null,
-                    $this->_curl,
+                    $curl,
                     $this
                 );
 
@@ -2525,12 +2846,12 @@ class Request implements \IteratorAggregate, RequestInterface
             throw new NetworkErrorException('Unable to connect to "' . $this->uri . '".');
         }
 
-        $curl_info = $this->_curl->getInfo();
+        $curl_info = $curl->getInfo();
 
-        $headers = $this->_curl->getRawResponseHeaders();
+        $headers = $curl->getRawResponseHeaders();
 
         $body = UTF8::remove_left(
-            (string) $this->_curl->getRawResponse(),
+            (string) $curl->getRawResponse(),
             $headers
         );
 
