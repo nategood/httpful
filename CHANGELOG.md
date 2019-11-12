@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.0
+
+ - add support for async requests via CurlMulti
+
 ## 0.9.0
 
  - add new header functions + many tests
