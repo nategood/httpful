@@ -342,7 +342,9 @@ final class ClientTest extends TestCase
     public function testGet()
     {
         $client = new Client();
-        $request = (new Request('GET'))->withUriFromString('https://moelleken.org/');
+        $request = (new Request('GET'))
+            ->disableStrictSSL()
+            ->withUriFromString('https://moelleken.org/');
         $response = $client->sendRequest($request);
         static::assertEquals(200, $response->getStatusCode());
         static::assertStringContainsString('Lars Moelleken', (string) $response->getBody());
