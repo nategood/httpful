@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.0
+
+ - fix all bugs reported by phpstan
+ - clean-up dependencies
+ - fix async support for POST data
+
 ## 0.10.0
 
  - add support for async requests via CurlMulti
