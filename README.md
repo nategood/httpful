@@ -9,7 +9,7 @@
 
 # 📯 Httpful
 
-A Chainable, REST Friendly Wrapper for cURL with many "PSR-HTTP" implemented inferfaces. In the background it will use [PHP Curl Class](https://github.com/php-curl-class/php-curl-class/), so that we use a well tested and stable wrapper around cURL. 
+A Chainable, REST Friendly Wrapper for cURL with many "PSR-HTTP" implemented inferfaces. 
 
 Features
 

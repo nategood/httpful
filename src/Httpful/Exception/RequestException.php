@@ -7,7 +7,7 @@ namespace Httpful\Exception;
 use Psr\Http\Message\RequestInterface;
 use Throwable;
 
-final class RequestException extends \Exception implements \Psr\Http\Client\RequestExceptionInterface
+class RequestException extends \Exception implements \Psr\Http\Client\RequestExceptionInterface
 {
     /**
      * @var RequestInterface

@@ -7,10 +7,10 @@ namespace Httpful\Exception;
 use Httpful\Request;
 use Psr\Http\Message\RequestInterface;
 
-final class NetworkErrorException extends \Exception implements \Psr\Http\Client\NetworkExceptionInterface
+class NetworkErrorException extends \Exception implements \Psr\Http\Client\NetworkExceptionInterface
 {
     /**
-     * @var \Curl\Curl|null
+     * @var \Httpful\Curl\Curl|null
      */
     private $curl_object;
 
@@ -32,17 +32,17 @@ final class NetworkErrorException extends \Exception implements \Psr\Http\Client
     /**
      * ConnectionErrorException constructor.
      *
-     * @param string                $message
-     * @param int                   $code
-     * @param \Exception|null       $previous
-     * @param \Curl\Curl|null       $curl_object
-     * @param RequestInterface|null $request
+     * @param string                  $message
+     * @param int                     $code
+     * @param \Exception|null         $previous
+     * @param \Httpful\Curl\Curl|null $curl_object
+     * @param RequestInterface|null   $request
      */
     public function __construct(
         $message,
         $code = 0,
         \Exception $previous = null,
-        \Curl\Curl $curl_object = null,
+        \Httpful\Curl\Curl $curl_object = null,
         RequestInterface $request = null
     ) {
         $this->curl_object = $curl_object;
@@ -68,7 +68,7 @@ final class NetworkErrorException extends \Exception implements \Psr\Http\Client
     }
 
     /**
-     * @return \Curl\Curl|null
+     * @return \Httpful\Curl\Curl|null
      */
     public function getCurlObject()
     {

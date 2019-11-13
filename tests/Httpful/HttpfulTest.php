@@ -634,7 +634,7 @@ Content-Type: text/plain; charset=utf-8\r\n",
                 ->withTimeout(0.1)
                 ->send();
         } catch (NetworkErrorException $e) {
-            static::assertInternalType('resource', $e->getCurlObject()->curl);
+            static::assertInternalType('resource', $e->getCurlObject()->getCurl());
             static::assertTrue($e->wasTimeout());
 
             return;

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Httpful;
 
-use Curl\MultiCurl;
+use Httpful\Curl\MultiCurl;
 use Psr\Http\Message\RequestInterface;
 
-final class ClientMulti
+class ClientMulti
 {
     /**
      * @var MultiCurl
@@ -39,6 +39,7 @@ final class ClientMulti
         $curl = $request->_curlPrep()->_curl();
 
         if ($curl) {
+            $curl->request = $request;
             /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
@@ -54,6 +55,7 @@ final class ClientMulti
         $curl = $request->_curlPrep()->_curl();
 
         if ($curl) {
+            $curl->request = $request;
             /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
@@ -69,6 +71,7 @@ final class ClientMulti
         $curl = $request->_curlPrep()->_curl();
 
         if ($curl) {
+            $curl->request = $request;
             /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
@@ -83,6 +86,7 @@ final class ClientMulti
         $curl = $request->_curlPrep()->_curl();
 
         if ($curl) {
+            $curl->request = $request;
             /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
@@ -97,6 +101,7 @@ final class ClientMulti
         $curl = $request->_curlPrep()->_curl();
 
         if ($curl) {
+            $curl->request = $request;
             /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
@@ -111,6 +116,7 @@ final class ClientMulti
         $curl = $request->_curlPrep()->_curl();
 
         if ($curl) {
+            $curl->request = $request;
             /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
@@ -125,6 +131,7 @@ final class ClientMulti
         $curl = $request->_curlPrep()->_curl();
 
         if ($curl) {
+            $curl->request = $request;
             /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
@@ -139,6 +146,7 @@ final class ClientMulti
         $curl = $request->_curlPrep()->_curl();
 
         if ($curl) {
+            $curl->request = $request;
             /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
@@ -153,6 +161,7 @@ final class ClientMulti
         $curl = $request->_curlPrep()->_curl();
 
         if ($curl) {
+            $curl->request = $request;
             /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
@@ -169,6 +178,7 @@ final class ClientMulti
         $curl = $request->_curlPrep()->_curl();
 
         if ($curl) {
+            $curl->request = $request;
             /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
@@ -185,6 +195,7 @@ final class ClientMulti
         $curl = $request->_curlPrep()->_curl();
 
         if ($curl) {
+            $curl->request = $request;
             /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
@@ -200,6 +211,7 @@ final class ClientMulti
         $curl = $request->_curlPrep()->_curl();
 
         if ($curl) {
+            $curl->request = $request;
             /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
@@ -215,6 +227,7 @@ final class ClientMulti
         $curl = $request->_curlPrep()->_curl();
 
         if ($curl) {
+            $curl->request = $request;
             /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
@@ -230,6 +243,7 @@ final class ClientMulti
         $curl = $request->_curlPrep()->_curl();
 
         if ($curl) {
+            $curl->request = $request;
             /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
@@ -245,6 +259,7 @@ final class ClientMulti
         $curl = $request->_curlPrep()->_curl();
 
         if ($curl) {
+            $curl->request = $request;
             /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
@@ -261,6 +276,7 @@ final class ClientMulti
         $curl = $request->_curlPrep()->_curl();
 
         if ($curl) {
+            $curl->request = $request;
             /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
@@ -278,6 +294,7 @@ final class ClientMulti
         $curl = $request->_curlPrep()->_curl();
 
         if ($curl) {
+            $curl->request = $request;
             /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }

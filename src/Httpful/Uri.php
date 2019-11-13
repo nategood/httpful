@@ -103,6 +103,9 @@ class Uri implements UriInterface
         }
     }
 
+    /**
+     * @return string
+     */
     public function __toString()
     {
         return self::composeComponents(

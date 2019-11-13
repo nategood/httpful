@@ -125,6 +125,9 @@ class Stream implements StreamInterface
         $this->close();
     }
 
+    /**
+     * @return string
+     */
     public function __toString()
     {
         try {
@@ -148,6 +151,9 @@ class Stream implements StreamInterface
         }
     }
 
+    /**
+     * @return resource|null
+     */
     public function detach()
     {
         if (!isset($this->stream)) {
@@ -184,7 +190,6 @@ class Stream implements StreamInterface
         }
 
         $contents = \stream_get_contents($this->stream);
-
         if ($contents === false) {
             throw new \RuntimeException('Unable to read stream contents');
         }

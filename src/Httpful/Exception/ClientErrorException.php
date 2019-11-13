@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Httpful\Exception;
 
-final class ClientErrorException extends \Exception implements \Psr\Http\Client\ClientExceptionInterface
+class ClientErrorException extends \Exception implements \Psr\Http\Client\ClientExceptionInterface
 {
     /**
-     * @var \Curl\Curl|null
+     * @var \Httpful\Curl\Curl|null
      */
     private $curl_object;
 
@@ -24,10 +24,10 @@ final class ClientErrorException extends \Exception implements \Psr\Http\Client\
     /**
      * ConnectionErrorException constructor.
      *
-     * @param string          $message
-     * @param int             $code
-     * @param \Exception|null $previous
-     * @param \Curl\Curl|null $curl_object
+     * @param string                  $message
+     * @param int                     $code
+     * @param \Exception|null         $previous
+     * @param \Httpful\Curl\Curl|null $curl_object
      */
     public function __construct($message, $code = 0, \Exception $previous = null, $curl_object = null)
     {
@@ -53,7 +53,7 @@ final class ClientErrorException extends \Exception implements \Psr\Http\Client\
     }
 
     /**
-     * @return \Curl\Curl|null
+     * @return \Httpful\Curl\Curl|null
      */
     public function getCurlObject()
     {

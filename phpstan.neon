@@ -12,3 +12,5 @@ parameters:
         - '#Result of \&\& is always false\.#'
         - '#Strict comparison using !== between null and null#'
         - '#Strict comparison using === between true and false#'
+        - '#callback of method Httpful#'
+        - '#parameters of function call_user_func_array#'

@@ -6,6 +6,8 @@ namespace Httpful;
 
 class Encoding
 {
+    const NONE = '';
+
     const GZIP = 'gzip';
 
     const DEFLATE = 'deflate';

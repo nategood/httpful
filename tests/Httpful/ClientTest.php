@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Httpful\tests;
 
 use Httpful\Client;
+use Httpful\Encoding;
 use Httpful\Factory;
 use Httpful\Http;
 use Httpful\Mime;
@@ -100,6 +101,45 @@ final class ClientTest extends TestCase
         $response = Client::post_form('https://postman-echo.com/post', $expected_data);
 
         static::assertSame($expected_data, $response['form'], 'server received x-www-form POST data');
+    }
+
+    public function testPostAuthJson()
+    {
+        $request = Client::post_request(
+            'https://postman-echo.com/post',
+            [
+                'foo1' => 'bar1',
+                'foo2' => 'bar2',
+            ],
+            Mime::JSON
+        )->withBasicAuth(
+            'postman',
+            'password'
+        )->withContentEncoding(Encoding::DEFLATE);
+
+        $response = $request->send();
+
+        $data = $response->getRawBody();
+
+        static::assertSame(
+            [
+                'foo1' => 'bar1',
+                'foo2' => 'bar2',
+            ],
+            $data['data']
+        );
+
+        static::assertContains('https://postman-echo.com/post', $data['url']);
+
+        static::assertSame('https', $data['headers']['x-forwarded-proto']);
+
+        static::assertSame('deflate', $data['headers']['accept-encoding']);
+
+        static::assertContains('Basic ', $data['headers']['authorization']);
+
+        static::assertSame('application/json', $data['headers']['content-type']);
+
+        static::assertContains('Http/PhpClient', $data['headers']['user-agent']);
     }
 
     public function testBasicAuthRequest()
@@ -254,6 +294,7 @@ final class ClientTest extends TestCase
             static::markTestSkipped('PHP 7.3.0 to 7.3.3 don\'t support HTTP/2 PUSH');
         }
 
+        /** @noinspection SuspiciousBinaryOperationInspection */
         if (!\defined('CURLMOPT_PUSHFUNCTION') || ($v = \curl_version())['version_number'] < 0x073d00 || !(\CURL_VERSION_HTTP2 & $v['features'])) {
             static::markTestSkipped('curl <7.61 is used or it is not compiled with support for HTTP/2 PUSH');
         }

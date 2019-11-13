@@ -7,14 +7,34 @@ declare(strict_types=1);
 
 namespace Httpful;
 
-use Curl\CaseInsensitiveArray;
 use Httpful\Exception\ResponseHeaderException;
 
-final class Headers extends CaseInsensitiveArray
+class Headers implements \ArrayAccess, \Countable, \Iterator
 {
     /**
-     * Construct
+     * @var mixed[] data storage with lowercase keys
      *
+     * @see offsetSet()
+     * @see offsetExists()
+     * @see offsetUnset()
+     * @see offsetGet()
+     * @see count()
+     * @see current()
+     * @see next()
+     * @see key()
+     */
+    private $data = [];
+
+    /**
+     * @var string[] case-sensitive keys
+     *
+     * @see offsetSet()
+     * @see offsetUnset()
+     * @see key()
+     */
+    private $keys = [];
+
+    /**
      * Allow creating either an empty Array, or convert an existing Array to a
      * Case-Insensitive Array.  (Caution: Data may be lost when converting Case-
      * Sensitive Arrays to Case-Insensitive Arrays)
@@ -35,6 +55,64 @@ final class Headers extends CaseInsensitiveArray
     }
 
     /**
+     * @see https://secure.php.net/manual/en/countable.count.php
+     *
+     * @return int the number of elements stored in the array
+     */
+    public function count()
+    {
+        return (int) \count($this->data);
+    }
+
+    /**
+     * @see https://secure.php.net/manual/en/iterator.current.php
+     *
+     * @return mixed data at the current position
+     */
+    public function current()
+    {
+        return \current($this->data);
+    }
+
+    /**
+     * @see https://secure.php.net/manual/en/iterator.key.php
+     *
+     * @return mixed case-sensitive key at current position
+     */
+    public function key()
+    {
+        $key = \key($this->data);
+
+        return $this->keys[$key] ?? $key;
+    }
+
+    /**
+     * @see https://secure.php.net/manual/en/iterator.next.php
+     */
+    public function next()
+    {
+        \next($this->data);
+    }
+
+    /**
+     * @see https://secure.php.net/manual/en/iterator.rewind.php
+     */
+    public function rewind()
+    {
+        \reset($this->data);
+    }
+
+    /**
+     * @see https://secure.php.net/manual/en/iterator.valid.php
+     *
+     * @return bool if the current position is valid
+     */
+    public function valid()
+    {
+        return \key($this->data) !== null;
+    }
+
+    /**
      * @param string $offset the offset to store the data at (case-insensitive)
      * @param mixed  $value  the data to store at the specified offset
      */
@@ -42,7 +120,7 @@ final class Headers extends CaseInsensitiveArray
     {
         $value = $this->_validateAndTrimHeader($offset, $value);
 
-        parent::offsetSet($offset, $value);
+        $this->offsetSetForce($offset, $value);
     }
 
     /**
@@ -50,7 +128,7 @@ final class Headers extends CaseInsensitiveArray
      */
     public function forceUnset($offset)
     {
-        parent::offsetUnset($offset);
+        $this->offsetUnsetForce($offset);
     }
 
     /**
@@ -88,6 +166,38 @@ final class Headers extends CaseInsensitiveArray
         }
 
         return new self($parsed_headers);
+    }
+
+    /**
+     * Checks if the offset exists in data storage. The index is looked up with
+     * the lowercase version of the provided offset.
+     *
+     * @see https://secure.php.net/manual/en/arrayaccess.offsetexists.php
+     *
+     * @param string $offset Offset to check
+     *
+     * @return bool if the offset exists
+     */
+    public function offsetExists($offset)
+    {
+        return (bool) \array_key_exists(\strtolower($offset), $this->data);
+    }
+
+    /**
+     * Return the stored data at the provided offset. The offset is converted to
+     * lowercase and the lookup is done on the data store directly.
+     *
+     * @see https://secure.php.net/manual/en/arrayaccess.offsetget.php
+     *
+     * @param string $offset offset to lookup
+     *
+     * @return mixed the data stored at the offset
+     */
+    public function offsetGet($offset)
+    {
+        $offsetLower = \strtolower($offset);
+
+        return $this->data[$offsetLower] ?? null;
     }
 
     /**
@@ -199,5 +309,41 @@ final class Headers extends CaseInsensitiveArray
         }
 
         return $returnValues;
+    }
+
+    /**
+     * Set data at a specified offset. Converts the offset to lowercase, and
+     * stores the case-sensitive offset and the data at the lowercase indexes in
+     * $this->keys and @this->data.
+     *
+     * @see https://secure.php.net/manual/en/arrayaccess.offsetset.php
+     *
+     * @param string|null $offset the offset to store the data at (case-insensitive)
+     * @param mixed       $value  the data to store at the specified offset
+     */
+    private function offsetSetForce($offset, $value)
+    {
+        if ($offset === null) {
+            $this->data[] = $value;
+        } else {
+            $offsetlower = \strtolower($offset);
+            $this->data[$offsetlower] = $value;
+            $this->keys[$offsetlower] = $offset;
+        }
+    }
+
+    /**
+     * Unsets the specified offset. Converts the provided offset to lowercase,
+     * and unsets the case-sensitive key, as well as the stored data.
+     *
+     * @see https://secure.php.net/manual/en/arrayaccess.offsetunset.php
+     *
+     * @param string $offset the offset to unset
+     */
+    private function offsetUnsetForce($offset)
+    {
+        $offsetLower = \strtolower($offset);
+
+        unset($this->data[$offsetLower], $this->keys[$offsetLower]);
     }
 }

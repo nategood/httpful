@@ -135,16 +135,25 @@ class UploadedFile implements UploadedFileInterface
         return $this->clientMediaType;
     }
 
+    /**
+     * @return int
+     */
     public function getError(): int
     {
         return $this->error;
     }
 
+    /**
+     * @return int
+     */
     public function getSize(): int
     {
         return $this->size;
     }
 
+    /**
+     * @return StreamInterface
+     */
     public function getStream(): StreamInterface
     {
         $this->_validateActive();
