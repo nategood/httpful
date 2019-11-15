@@ -30,12 +30,13 @@ class ClientMulti
     }
 
     /**
-     * @param string $uri
-     * @param string $mime
+     * @param string     $uri
+     * @param array|null $params
+     * @param string     $mime
      */
-    public function add_delete(string $uri, string $mime = Mime::JSON)
+    public function add_delete(string $uri, array $params = null, string $mime = Mime::JSON)
     {
-        $request = Request::delete($uri, $mime);
+        $request = Request::delete($uri, $params, $mime);
         $curl = $request->_curlPrep()->_curl();
 
         if ($curl) {
@@ -63,11 +64,12 @@ class ClientMulti
 
     /**
      * @param string      $uri
+     * @param array|null  $params
      * @param string|null $mime
      */
-    public function add_get(string $uri, $mime = Mime::PLAIN)
+    public function add_get(string $uri, array $params = null, $mime = Mime::PLAIN)
     {
-        $request = Request::get($uri, $mime)->followRedirects();
+        $request = Request::get($uri, $params, $mime)->followRedirects();
         $curl = $request->_curlPrep()->_curl();
 
         if ($curl) {
@@ -78,11 +80,12 @@ class ClientMulti
     }
 
     /**
-     * @param string $uri
+     * @param string     $uri
+     * @param array|null $params
      */
-    public function add_get_dom(string $uri)
+    public function add_get_dom(string $uri, array $params = null)
     {
-        $request = Request::get($uri, Mime::HTML)->followRedirects();
+        $request = Request::get($uri, $params, Mime::HTML)->followRedirects();
         $curl = $request->_curlPrep()->_curl();
 
         if ($curl) {
@@ -93,11 +96,12 @@ class ClientMulti
     }
 
     /**
-     * @param string $uri
+     * @param string     $uri
+     * @param array|null $params
      */
-    public function add_get_form(string $uri)
+    public function add_get_form(string $uri, array $params = null)
     {
-        $request = Request::get($uri, Mime::FORM)->followRedirects();
+        $request = Request::get($uri, $params, Mime::FORM)->followRedirects();
         $curl = $request->_curlPrep()->_curl();
 
         if ($curl) {
@@ -108,11 +112,12 @@ class ClientMulti
     }
 
     /**
-     * @param string $uri
+     * @param string     $uri
+     * @param array|null $params
      */
-    public function add_get_json(string $uri)
+    public function add_get_json(string $uri, array $params = null)
     {
-        $request = Request::get($uri, Mime::JSON)->followRedirects();
+        $request = Request::get($uri, $params, Mime::JSON)->followRedirects();
         $curl = $request->_curlPrep()->_curl();
 
         if ($curl) {
@@ -123,11 +128,12 @@ class ClientMulti
     }
 
     /**
-     * @param string $uri
+     * @param string     $uri
+     * @param array|null $params
      */
-    public function get_xml(string $uri)
+    public function get_xml(string $uri, array $params = null)
     {
-        $request = Request::get($uri, Mime::XML)->followRedirects();
+        $request = Request::get($uri, $params, Mime::XML)->followRedirects();
         $curl = $request->_curlPrep()->_curl();
 
         if ($curl) {

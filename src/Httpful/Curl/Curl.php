@@ -2,6 +2,7 @@
 
 namespace Httpful\Curl;
 
+use Httpful\Request;
 use Httpful\Uri;
 use Httpful\UriResolver;
 use Psr\Http\Message\RequestInterface;
@@ -366,6 +367,12 @@ final class Curl
         if (\is_resource($this->fileHandle)) {
             $this->downloadComplete($this->fileHandle);
         }
+
+        // Free some memory + help the GC to free some more memory.
+        if ($this->request instanceof Request) {
+            $this->request->clearHelperData();
+        }
+        $this->request = null;
     }
 
     /**

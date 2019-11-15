@@ -66,6 +66,18 @@ final class ClientMultiTest extends TestCase
         $multi = new ClientMulti(
             static function (Response $response, Request $request) use (&$results) {
                 $results[] = $response;
+
+                static::assertSame(
+                    ['Host' => ['postman-echo.com'], 'Foo' => ['bar'], 'Content-Length' => ['29']],
+                    $request->getHeaders()
+                );
+
+                static::assertSame(
+                    'bar',
+                    $request->getHeader('Foo')[0]
+                );
+
+                static::assertInstanceOf(\stdClass::class, $request->getHelperData('Foo'));
             }
         );
 
@@ -79,7 +91,9 @@ final class ClientMultiTest extends TestCase
         )->withBasicAuth(
             'postman',
             'password'
-        )->withContentEncoding(Encoding::GZIP);
+        )->withContentEncoding(Encoding::GZIP)
+            ->withAddedHeader('Foo', 'bar')
+            ->addHelperData('Foo', new \stdClass());
 
         $multi->add_request($request);
 
@@ -93,7 +107,9 @@ final class ClientMultiTest extends TestCase
         )->withBasicAuth(
             'postman',
             'password'
-        )->withContentEncoding(Encoding::GZIP);
+        )->withContentEncoding(Encoding::GZIP)
+            ->withAddedHeader('Foo', 'bar')
+            ->addHelperData('Foo', new \stdClass());
 
         $multi->add_request($request);
 

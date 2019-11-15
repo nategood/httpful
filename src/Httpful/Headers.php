@@ -274,7 +274,7 @@ class Headers implements \ArrayAccess, \Countable, \Iterator
             ||
             \preg_match("@^[!#$%&'*+.^_`|~0-9A-Za-z-]+$@", $header) !== 1
         ) {
-            throw new \InvalidArgumentException('Header name must be an RFC 7230 compatible string.');
+            throw new \InvalidArgumentException('Header name must be an RFC 7230 compatible string: ' . \print_r($header, true));
         }
 
         if (!\is_array($values)) {
@@ -284,7 +284,7 @@ class Headers implements \ArrayAccess, \Countable, \Iterator
                 ||
                 \preg_match("@^[ \t\x21-\x7E\x80-\xFF]*$@", (string) $values) !== 1
             ) {
-                throw new \InvalidArgumentException('Header values must be RFC 7230 compatible strings.');
+                throw new \InvalidArgumentException('Header values must be RFC 7230 compatible strings: ' . \print_r($header, true));
             }
 
             return [\trim((string) $values, " \t")];
@@ -302,7 +302,7 @@ class Headers implements \ArrayAccess, \Countable, \Iterator
                 ||
                 \preg_match("@^[ \t\x21-\x7E\x80-\xFF]*$@", (string) $v) !== 1
             ) {
-                throw new \InvalidArgumentException('Header values must be RFC 7230 compatible strings.');
+                throw new \InvalidArgumentException('Header values must be RFC 7230 compatible strings: ' . \print_r($v, true));
             }
 
             $returnValues[] = \trim((string) $v, " \t");

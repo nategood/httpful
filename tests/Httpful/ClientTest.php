@@ -207,13 +207,14 @@ final class ClientTest extends TestCase
     public function testJsonHelper()
     {
         $expected_params = [
-            'foo1' => 'bar1',
-            'foo2' => 'bar2',
+            'foo1' => 'b%20a%20r%201',
+            'foo2' => 'b a r 2',
         ];
-        $query = \http_build_query($expected_params);
 
-        $response = Client::get_json("https://postman-echo.com/get?{$query}");
+        $response = Client::get_json('https://postman-echo.com/get', $expected_params);
+        static::assertSame($expected_params, $response['args']);
 
+        $response = Client::get_json('https://postman-echo.com/get?', $expected_params);
         static::assertSame($expected_params, $response['args']);
     }
 
