@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.0
+
+- add $params for "GET" / "DELETE" requests
+- free some more memory
+- more helpfully exception messages
+- fixes callbacks for "ClientMulti"
+
 ## 1.0.0
 
  - fix all bugs reported by phpstan
