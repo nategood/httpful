@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.0
+
+- return $this for many methods from "Curl" & "MultiCurl"
+- optimize the speed of "MultiCurl"
+- use phpstan (0.12) + add more phpdocs
+
 ## 2.0.0
 
 - add $params for "GET" / "DELETE" requests
