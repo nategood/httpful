@@ -308,6 +308,8 @@ class Request implements \IteratorAggregate, RequestInterface
             }
         }
 
+        \assert($this->curl instanceof Curl);
+
         $this->curl->setUrl((string) $this->uri);
 
         $ch = $this->curl->getCurl();
@@ -541,6 +543,8 @@ class Request implements \IteratorAggregate, RequestInterface
      * with additional parameters (added via params() or param()) appended.
      *
      * @internal
+     *
+     * @return void
      */
     public function _uriPrep()
     {
@@ -660,6 +664,8 @@ class Request implements \IteratorAggregate, RequestInterface
 
     /**
      * @see Request::initialize()
+     *
+     * @return void
      */
     public function close()
     {
@@ -1601,6 +1607,8 @@ class Request implements \IteratorAggregate, RequestInterface
 
     /**
      * @see Request::close()
+     *
+     * @return void
      */
     public function initializeMulti()
     {
@@ -1611,6 +1619,8 @@ class Request implements \IteratorAggregate, RequestInterface
 
     /**
      * @see Request::close()
+     *
+     * @return void
      */
     public function initialize()
     {
@@ -1759,6 +1769,9 @@ class Request implements \IteratorAggregate, RequestInterface
         return $new;
     }
 
+    /**
+     * @return void
+     */
     public function reset()
     {
         $this->headers = new Headers();
@@ -2596,6 +2609,9 @@ class Request implements \IteratorAggregate, RequestInterface
         return $this->helperData;
     }
 
+    /**
+     * @return void
+     */
     public function clearHelperData()
     {
         $this->helperData = [];
@@ -2802,6 +2818,8 @@ class Request implements \IteratorAggregate, RequestInterface
 
     /**
      * @param string $error
+     *
+     * @return void
      */
     private function _error($error)
     {
@@ -2998,6 +3016,9 @@ class Request implements \IteratorAggregate, RequestInterface
         return $new;
     }
 
+    /**
+     * @return void
+     */
     private function _updateHostFromUri()
     {
         if ($this->uri === null) {

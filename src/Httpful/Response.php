@@ -126,6 +126,9 @@ class Response implements ResponseInterface
         $this->raw_body = $bodyParsed;
     }
 
+    /**
+     * @return void
+     */
     public function __clone()
     {
         $this->headers = clone $this->headers;
@@ -622,6 +625,8 @@ class Response implements ResponseInterface
     /**
      * After we've parse the headers, let's clean things
      * up a bit and treat some headers specially
+     *
+     * @return void
      */
     private function _interpretHeaders()
     {

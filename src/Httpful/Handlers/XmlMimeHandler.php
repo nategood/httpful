@@ -69,8 +69,6 @@ class XmlMimeHandler extends DefaultMimeHandler
         return $dom->saveXML();
     }
 
-    /** @noinspection PhpMissingParentCallCommonInspection */
-
     /**
      * @param mixed $payload
      *
@@ -89,6 +87,8 @@ class XmlMimeHandler extends DefaultMimeHandler
     /**
      * @param \XMLWriter $xmlw
      * @param mixed      $node to serialize
+     *
+     * @return void
      */
     public function serialize_node(&$xmlw, $node)
     {

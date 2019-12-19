@@ -173,6 +173,8 @@ class UploadedFile implements UploadedFileInterface
 
     /**
      * @param string $targetPath
+     *
+     * @return void
      */
     public function moveTo($targetPath)
     {
@@ -212,6 +214,8 @@ class UploadedFile implements UploadedFileInterface
 
     /**
      * @throws \RuntimeException if is moved or not ok
+     *
+     * @return void
      */
     private function _validateActive()
     {

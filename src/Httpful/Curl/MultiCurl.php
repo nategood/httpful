@@ -87,23 +87,30 @@ final class MultiCurl
      *
      * @param Curl $curl
      *
-     * @return Curl
+     * @return $this
      */
     public function addCurl(Curl $curl)
     {
         $this->queueHandle($curl);
 
-        return $curl;
+        return $this;
     }
 
     /**
      * @param callable $callback
+     *
+     * @return $this
      */
     public function beforeSend($callback)
     {
         $this->beforeSendCallback = $callback;
+
+        return $this;
     }
 
+    /**
+     * @return void
+     */
     public function close()
     {
         foreach ($this->curls as $curl) {
@@ -117,18 +124,26 @@ final class MultiCurl
 
     /**
      * @param callable $callback
+     *
+     * @return $this;
      */
     public function complete($callback)
     {
         $this->completeCallback = $callback;
+
+        return $this;
     }
 
     /**
      * @param callable $callback
+     *
+     * @return $this
      */
     public function error($callback)
     {
         $this->errorCallback = $callback;
+
+        return $this;
     }
 
     /**
@@ -163,29 +178,41 @@ final class MultiCurl
 
     /**
      * @param int $concurrency
+     *
+     * @return $this
      */
     public function setConcurrency($concurrency)
     {
         $this->concurrency = $concurrency;
+
+        return $this;
     }
 
     /**
      * @param string $key
      * @param mixed  $value
+     *
+     * @return $this
      */
     public function setCookie($key, $value)
     {
         $this->cookies[$key] = $value;
+
+        return $this;
     }
 
     /**
      * @param array $cookies
+     *
+     * @return $this
      */
     public function setCookies($cookies)
     {
         foreach ($cookies as $key => $value) {
             $this->cookies[$key] = $value;
         }
+
+        return $this;
     }
 
     /**
@@ -198,16 +225,23 @@ final class MultiCurl
      * function returns a value which evaluates to false.
      *
      * @param callable|int $mixed
+     *
+     * @return $this
      */
     public function setRetry($mixed)
     {
         $this->retry = $mixed;
+
+        return $this;
     }
 
+    /**
+     * @return $this|null
+     */
     public function start()
     {
         if ($this->isStarted) {
-            return;
+            return null;
         }
 
         $this->isStarted = true;
@@ -290,14 +324,20 @@ final class MultiCurl
         } while ($active > 0);
 
         $this->isStarted = false;
+
+        return $this;
     }
 
     /**
      * @param callable $callback
+     *
+     * @return $this
      */
     public function success($callback)
     {
         $this->successCallback = $callback;
+
+        return $this;
     }
 
     /**
@@ -312,6 +352,8 @@ final class MultiCurl
      * @param Curl $curl
      *
      * @throws \ErrorException
+     *
+     * @return void
      */
     private function initHandle($curl)
     {
@@ -352,6 +394,8 @@ final class MultiCurl
 
     /**
      * @param Curl $curl
+     *
+     * @return void
      */
     private function queueHandle($curl)
     {

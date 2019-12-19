@@ -205,23 +205,41 @@ final class Curl
 
     /**
      * @param callable $callback
+     *
+     * @return $this
      */
     public function beforeSend($callback)
     {
         $this->beforeSendCallback = $callback;
+
+        return $this;
     }
 
-    public function call()
-    {
-        $args = \func_get_args();
-        $function = \array_shift($args);
+    /**
+     * @param mixed $function
+     *
+     * @return void
+     */
 
+    /**
+     * @param callable|null $function
+     * @param mixed         ...$args
+     *
+     * @return $this
+     */
+    public function call($function, ...$args)
+    {
         if (\is_callable($function)) {
             \array_unshift($args, $this);
             \call_user_func_array($function, $args);
         }
+
+        return $this;
     }
 
+    /**
+     * @return void
+     */
     public function close()
     {
         if (\is_resource($this->curl)) {
@@ -231,16 +249,20 @@ final class Curl
 
     /**
      * @param callable $callback
+     *
+     * @return $this
      */
     public function complete($callback)
     {
         $this->completeCallback = $callback;
+
+        return $this;
     }
 
     /**
      * @param callable|string $filename_or_callable
      *
-     * @return static
+     * @return $this
      */
     public function download($filename_or_callable)
     {
@@ -286,10 +308,14 @@ final class Curl
 
     /**
      * @param callable $callback
+     *
+     * @return $this
      */
     public function error($callback)
     {
         $this->errorCallback = $callback;
+
+        return $this;
     }
 
     /**
@@ -353,6 +379,9 @@ final class Curl
         return $this->rawResponse;
     }
 
+    /**
+     * @return void
+     */
     public function execDone()
     {
         if ($this->error) {
@@ -372,6 +401,7 @@ final class Curl
         if ($this->request instanceof Request) {
             $this->request->clearHelperData();
         }
+
         $this->request = null;
     }
 
@@ -591,7 +621,7 @@ final class Curl
     /**
      * @return bool
      */
-    public function isChildOfMultiCurl()
+    public function isChildOfMultiCurl(): bool
     {
         return $this->childOfMultiCurl;
     }
@@ -599,7 +629,7 @@ final class Curl
     /**
      * @return bool
      */
-    public function isCurlError()
+    public function isCurlError(): bool
     {
         return $this->curlError;
     }
@@ -607,7 +637,7 @@ final class Curl
     /**
      * @return bool
      */
-    public function isError()
+    public function isError(): bool
     {
         return $this->error;
     }
@@ -615,20 +645,27 @@ final class Curl
     /**
      * @return bool
      */
-    public function isHttpError()
+    public function isHttpError(): bool
     {
         return $this->httpError;
     }
 
     /**
      * @param callable $callback
+     *
+     * @return $this
      */
     public function progress($callback)
     {
         $this->setOpt(\CURLOPT_PROGRESSFUNCTION, $callback);
         $this->setOpt(\CURLOPT_NOPROGRESS, false);
+
+        return $this;
     }
 
+    /**
+     * @return void
+     */
     public function reset()
     {
         if (\function_exists('curl_reset') && \is_resource($this->curl)) {
@@ -644,7 +681,7 @@ final class Curl
      * @param string $username
      * @param string $password
      *
-     * @return static
+     * @return $this
      */
     public function setBasicAuthentication($username, $password = '')
     {
@@ -656,16 +693,20 @@ final class Curl
 
     /**
      * @param bool $bool
+     *
+     * @return $this
      */
     public function setChildOfMultiCurl(bool $bool)
     {
         $this->childOfMultiCurl = $bool;
+
+        return $this;
     }
 
     /**
      * @param int $seconds
      *
-     * @return static
+     * @return $this
      */
     public function setConnectTimeout($seconds)
     {
@@ -678,7 +719,7 @@ final class Curl
      * @param string $key
      * @param mixed  $value
      *
-     * @return static
+     * @return $this
      */
     public function setCookie($key, $value)
     {
@@ -691,7 +732,7 @@ final class Curl
     /**
      * @param string $cookie_file
      *
-     * @return static
+     * @return $this
      */
     public function setCookieFile($cookie_file)
     {
@@ -703,7 +744,7 @@ final class Curl
     /**
      * @param string $cookie_jar
      *
-     * @return static
+     * @return $this
      */
     public function setCookieJar($cookie_jar)
     {
@@ -715,7 +756,7 @@ final class Curl
     /**
      * @param string $string
      *
-     * @return static
+     * @return $this
      */
     public function setCookieString($string)
     {
@@ -727,7 +768,7 @@ final class Curl
     /**
      * @param array $cookies
      *
-     * @return static
+     * @return $this
      */
     public function setCookies($cookies)
     {
@@ -740,7 +781,7 @@ final class Curl
     }
 
     /**
-     * @return static
+     * @return $this
      */
     public function setDefaultTimeout()
     {
@@ -753,7 +794,7 @@ final class Curl
      * @param string $username
      * @param string $password
      *
-     * @return static
+     * @return $this
      */
     public function setDigestAuthentication($username, $password = '')
     {
@@ -766,7 +807,7 @@ final class Curl
     /**
      * @param int|string $id
      *
-     * @return static
+     * @return $this
      */
     public function setId($id)
     {
@@ -778,7 +819,7 @@ final class Curl
     /**
      * @param int $bytes
      *
-     * @return static
+     * @return $this
      */
     public function setMaxFilesize($bytes)
     {
@@ -825,7 +866,7 @@ final class Curl
     /**
      * @param int $port
      *
-     * @return static
+     * @return $this
      */
     public function setPort($port)
     {
@@ -841,6 +882,8 @@ final class Curl
      * @param int    $port     - The port number of the proxy to connect to. This port number can also be set in $proxy.
      * @param string $username - The username to use for the connection to the proxy
      * @param string $password - The password to use for the connection to the proxy
+     *
+     * @return $this
      */
     public function setProxy($proxy, $port = null, $username = null, $password = null)
     {
@@ -853,26 +896,36 @@ final class Curl
         if ($username !== null && $password !== null) {
             $this->setOpt(\CURLOPT_PROXYUSERPWD, $username . ':' . $password);
         }
+
+        return $this;
     }
 
     /**
      * Set the HTTP authentication method(s) to use for the proxy connection.
      *
      * @param int $auth
+     *
+     * @return $this
      */
     public function setProxyAuth($auth)
     {
         $this->setOpt(\CURLOPT_PROXYAUTH, $auth);
+
+        return $this;
     }
 
     /**
      * Set the proxy to tunnel through HTTP proxy.
      *
      * @param bool $tunnel
+     *
+     * @return $this
      */
     public function setProxyTunnel($tunnel = true)
     {
         $this->setOpt(\CURLOPT_HTTPPROXYTUNNEL, $tunnel);
+
+        return $this;
     }
 
     /**
@@ -880,26 +933,38 @@ final class Curl
      *
      * @param int $type
      *                  <p>CURLPROXY_*</p>
+     *
+     * @return $this
      */
     public function setProxyType($type)
     {
         $this->setOpt(\CURLOPT_PROXYTYPE, $type);
+
+        return $this;
     }
 
     /**
      * @param string $referer
+     *
+     * @return $this
      */
     public function setReferer($referer)
     {
         $this->setReferrer($referer);
+
+        return $this;
     }
 
     /**
      * @param string $referrer
+     *
+     * @return $this
      */
     public function setReferrer($referrer)
     {
         $this->setOpt(\CURLOPT_REFERER, $referrer);
+
+        return $this;
     }
 
     /**
@@ -912,6 +977,8 @@ final class Curl
      * function returns a value which evaluates to false.
      *
      * @param callable|int $retry
+     *
+     * @return $this
      */
     public function setRetry($retry)
     {
@@ -921,12 +988,14 @@ final class Curl
             $maximum_number_of_retries = $retry;
             $this->remainingRetries = $maximum_number_of_retries;
         }
+
+        return $this;
     }
 
     /**
      * @param int $seconds
      *
-     * @return static
+     * @return $this
      */
     public function setTimeout($seconds)
     {
@@ -939,7 +1008,7 @@ final class Curl
      * @param string $url
      * @param mixed  $mixed_data
      *
-     * @return static
+     * @return $this
      */
     public function setUrl($url, $mixed_data = '')
     {
@@ -958,31 +1027,45 @@ final class Curl
 
     /**
      * @param string $user_agent
+     *
+     * @return $this
      */
     public function setUserAgent($user_agent)
     {
         $this->setOpt(\CURLOPT_USERAGENT, $user_agent);
+
+        return $this;
     }
 
     /**
      * @param callable $callback
+     *
+     * @return $this
      */
     public function success($callback)
     {
         $this->successCallback = $callback;
+
+        return $this;
     }
 
     /**
      * Disable use of the proxy.
+     *
+     * @return $this
      */
     public function unsetProxy()
     {
         $this->setOpt(\CURLOPT_PROXY, null);
+
+        return $this;
     }
 
     /**
      * @param bool          $on
      * @param resource|null $output
+     *
+     * @return $this
      */
     public function verbose($on = true, $output = null)
     {
@@ -993,10 +1076,14 @@ final class Curl
 
         $this->setOpt(\CURLOPT_VERBOSE, $on);
         $this->setOpt(\CURLOPT_STDERR, $output);
+
+        return $this;
     }
 
     /**
      * Build Cookies
+     *
+     * @return void
      */
     private function buildCookies()
     {
@@ -1065,6 +1152,8 @@ final class Curl
 
     /**
      * @param resource $fh
+     *
+     * @return void
      */
     private function downloadComplete($fh)
     {
@@ -1111,6 +1200,8 @@ final class Curl
 
     /**
      * @param string $base_url
+     *
+     * @return void
      */
     private function initialize($base_url)
     {
@@ -1132,6 +1223,8 @@ final class Curl
     /**
      * @param string $key
      * @param mixed  $value
+     *
+     * @return $this
      */
     private function setEncodedCookie($key, $value)
     {
@@ -1146,5 +1239,7 @@ final class Curl
         }
 
         $this->cookies[\implode('', $name_chars)] = \implode('', $value_chars);
+
+        return $this;
     }
 }

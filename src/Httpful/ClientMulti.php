@@ -24,6 +24,9 @@ class ClientMulti
             ->initMulti($onSuccessCallback, $onCompleteCallback);
     }
 
+    /**
+     * @return void
+     */
     public function start()
     {
         $this->curlMulti->start();
@@ -33,6 +36,8 @@ class ClientMulti
      * @param string     $uri
      * @param array|null $params
      * @param string     $mime
+     *
+     * @return $this
      */
     public function add_delete(string $uri, array $params = null, string $mime = Mime::JSON)
     {
@@ -41,14 +46,17 @@ class ClientMulti
 
         if ($curl) {
             $curl->request = $request;
-            /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
+
+        return $this;
     }
 
     /**
      * @param string $uri
      * @param string $file_path
+     *
+     * @return $this
      */
     public function add_download(string $uri, $file_path)
     {
@@ -57,15 +65,18 @@ class ClientMulti
 
         if ($curl) {
             $curl->request = $request;
-            /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
+
+        return $this;
     }
 
     /**
      * @param string      $uri
      * @param array|null  $params
      * @param string|null $mime
+     *
+     * @return $this
      */
     public function add_get(string $uri, array $params = null, $mime = Mime::PLAIN)
     {
@@ -74,14 +85,17 @@ class ClientMulti
 
         if ($curl) {
             $curl->request = $request;
-            /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
+
+        return $this;
     }
 
     /**
      * @param string     $uri
      * @param array|null $params
+     *
+     * @return $this
      */
     public function add_get_dom(string $uri, array $params = null)
     {
@@ -90,14 +104,17 @@ class ClientMulti
 
         if ($curl) {
             $curl->request = $request;
-            /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
+
+        return $this;
     }
 
     /**
      * @param string     $uri
      * @param array|null $params
+     *
+     * @return $this
      */
     public function add_get_form(string $uri, array $params = null)
     {
@@ -106,14 +123,17 @@ class ClientMulti
 
         if ($curl) {
             $curl->request = $request;
-            /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
+
+        return $this;
     }
 
     /**
      * @param string     $uri
      * @param array|null $params
+     *
+     * @return $this
      */
     public function add_get_json(string $uri, array $params = null)
     {
@@ -122,14 +142,17 @@ class ClientMulti
 
         if ($curl) {
             $curl->request = $request;
-            /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
+
+        return $this;
     }
 
     /**
      * @param string     $uri
      * @param array|null $params
+     *
+     * @return $this
      */
     public function get_xml(string $uri, array $params = null)
     {
@@ -138,13 +161,16 @@ class ClientMulti
 
         if ($curl) {
             $curl->request = $request;
-            /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
+
+        return $this;
     }
 
     /**
      * @param string $uri
+     *
+     * @return $this
      */
     public function add_head(string $uri)
     {
@@ -153,13 +179,16 @@ class ClientMulti
 
         if ($curl) {
             $curl->request = $request;
-            /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
+
+        return $this;
     }
 
     /**
      * @param string $uri
+     *
+     * @return $this
      */
     public function add_options(string $uri)
     {
@@ -168,15 +197,18 @@ class ClientMulti
 
         if ($curl) {
             $curl->request = $request;
-            /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
+
+        return $this;
     }
 
     /**
      * @param string     $uri
      * @param mixed|null $payload
      * @param string     $mime
+     *
+     * @return $this
      */
     public function add_patch(string $uri, $payload = null, string $mime = Mime::PLAIN)
     {
@@ -185,15 +217,18 @@ class ClientMulti
 
         if ($curl) {
             $curl->request = $request;
-            /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
+
+        return $this;
     }
 
     /**
      * @param string     $uri
      * @param mixed|null $payload
      * @param string     $mime
+     *
+     * @return $this
      */
     public function add_post(string $uri, $payload = null, string $mime = Mime::PLAIN)
     {
@@ -202,14 +237,17 @@ class ClientMulti
 
         if ($curl) {
             $curl->request = $request;
-            /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
+
+        return $this;
     }
 
     /**
      * @param string     $uri
      * @param mixed|null $payload
+     *
+     * @return $this
      */
     public function add_post_dom(string $uri, $payload = null)
     {
@@ -218,14 +256,17 @@ class ClientMulti
 
         if ($curl) {
             $curl->request = $request;
-            /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
+
+        return $this;
     }
 
     /**
      * @param string     $uri
      * @param mixed|null $payload
+     *
+     * @return $this
      */
     public function add_post_form(string $uri, $payload = null)
     {
@@ -234,14 +275,17 @@ class ClientMulti
 
         if ($curl) {
             $curl->request = $request;
-            /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
+
+        return $this;
     }
 
     /**
      * @param string     $uri
      * @param mixed|null $payload
+     *
+     * @return $this
      */
     public function add_post_json(string $uri, $payload = null)
     {
@@ -250,14 +294,17 @@ class ClientMulti
 
         if ($curl) {
             $curl->request = $request;
-            /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
+
+        return $this;
     }
 
     /**
      * @param string     $uri
      * @param mixed|null $payload
+     *
+     * @return $this
      */
     public function add_post_xml(string $uri, $payload = null)
     {
@@ -266,15 +313,18 @@ class ClientMulti
 
         if ($curl) {
             $curl->request = $request;
-            /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
+
+        return $this;
     }
 
     /**
      * @param string     $uri
      * @param mixed|null $payload
      * @param string     $mime
+     *
+     * @return $this
      */
     public function add_put(string $uri, $payload = null, string $mime = Mime::PLAIN)
     {
@@ -283,13 +333,16 @@ class ClientMulti
 
         if ($curl) {
             $curl->request = $request;
-            /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
+
+        return $this;
     }
 
     /**
      * @param Request|RequestInterface $request
+     *
+     * @return $this
      */
     public function add_request(RequestInterface $request)
     {
@@ -301,8 +354,9 @@ class ClientMulti
 
         if ($curl) {
             $curl->request = $request;
-            /** @noinspection UnusedFunctionResultInspection */
             $this->curlMulti->addCurl($curl);
         }
+
+        return $this;
     }
 }

@@ -19,7 +19,9 @@ class Stream implements StreamInterface
      */
     const READABLE_MODES = '/r|a\+|ab\+|w\+|wb\+|x\+|xb\+|c\+|cb\+/';
 
-    /** @var array Hash of readable and writable stream types */
+    /**
+     * @var array<string, array<string, bool>> Hash of readable and writable stream types
+     */
     const READ_WRITE_HASH = [
         'read' => [
             'r'   => true,
@@ -60,20 +62,44 @@ class Stream implements StreamInterface
         ],
     ];
 
+    /**
+     * @var string
+     */
     const WRITABLE_MODES = '/a|w|r\+|rb\+|rw|x|c/';
 
+    /**
+     * @var resource|null
+     */
     private $stream;
 
+    /**
+     * @var int|null
+     */
     private $size;
 
+    /**
+     * @var bool
+     */
     private $seekable;
 
+    /**
+     * @var bool
+     */
     private $readable;
 
+    /**
+     * @var bool
+     */
     private $writable;
 
+    /**
+     * @var string|null
+     */
     private $uri;
 
+    /**
+     * @var array
+     */
     private $customMetadata;
 
     /**
@@ -90,8 +116,8 @@ class Stream implements StreamInterface
      * - metadata: (array) Any additional metadata to return when the metadata
      *   of the stream is accessed.
      *
-     * @param resource $stream  stream resource to wrap
-     * @param array    $options associative array of options
+     * @param resource            $stream  stream resource to wrap
+     * @param array<string,mixed> $options associative array of options
      *
      * @throws \InvalidArgumentException if the stream is not a stream resource
      */
@@ -102,7 +128,7 @@ class Stream implements StreamInterface
         }
 
         if (isset($options['size'])) {
-            $this->size = $options['size'];
+            $this->size = (int) $options['size'];
         }
 
         $this->customMetadata = $options['metadata'] ?? [];
@@ -111,7 +137,7 @@ class Stream implements StreamInterface
 
         $this->stream = $stream;
         $meta = \stream_get_meta_data($this->stream);
-        $this->seekable = $meta['seekable'];
+        $this->seekable = (bool) $meta['seekable'];
         $this->readable = (bool) \preg_match(self::READABLE_MODES, $meta['mode']);
         $this->writable = (bool) \preg_match(self::WRITABLE_MODES, $meta['mode']);
         $this->uri = $this->getMetadata('uri');
@@ -132,6 +158,10 @@ class Stream implements StreamInterface
     {
         try {
             $this->seek(0);
+
+            if ($this->stream === null) {
+                return '';
+            }
 
             return (string) \stream_get_contents($this->stream);
         } catch (\Exception $e) {
@@ -162,8 +192,11 @@ class Stream implements StreamInterface
 
         $result = $this->stream;
         $this->stream = null;
-        $this->size = $this->uri = null;
-        $this->readable = $this->writable = $this->seekable = false;
+        $this->size = null;
+        $this->uri = null;
+        $this->readable = false;
+        $this->writable = false;
+        $this->seekable = false;
 
         return $result;
     }
@@ -228,7 +261,7 @@ class Stream implements StreamInterface
     }
 
     /**
-     * @return int|mixed|null
+     * @return int|null
      */
     public function getSize()
     {
@@ -310,6 +343,9 @@ class Stream implements StreamInterface
         return $string;
     }
 
+    /**
+     * @return void
+     */
     public function rewind()
     {
         $this->seek(0);
@@ -318,6 +354,8 @@ class Stream implements StreamInterface
     /**
      * @param int $offset
      * @param int $whence
+     *
+     * @return void
      */
     public function seek($offset, $whence = \SEEK_SET)
     {
@@ -419,6 +457,10 @@ class Stream implements StreamInterface
 
         if (\is_resource($body)) {
             $new = new static($body);
+            if ($new->stream === null) {
+                return null;
+            }
+
             $meta = \stream_get_meta_data($new->stream);
             $new->serialized = $serialized;
             $new->seekable = $meta['seekable'];

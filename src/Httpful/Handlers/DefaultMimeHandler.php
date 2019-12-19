@@ -23,6 +23,8 @@ class DefaultMimeHandler extends AbstractMimeHandler
 
     /**
      * @param array $args
+     *
+     * @return void
      */
     public function init(array $args)
     {

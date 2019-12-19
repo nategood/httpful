@@ -57,6 +57,8 @@ class Setup
 
     /**
      * Register default mime handlers.
+     *
+     * @return void
      */
     public static function initMimeHandlers()
     {
@@ -90,6 +92,8 @@ class Setup
 
     /**
      * @param callable|LoggerInterface|null $error_handler
+     *
+     * @return void
      */
     public static function registerGlobalErrorHandler($error_handler = null)
     {
@@ -106,6 +110,8 @@ class Setup
 
     /**
      * @param MimeHandlerInterface $global_mime_handler
+     *
+     * @return void
      */
     public static function registerGlobalMimeHandler(MimeHandlerInterface $global_mime_handler)
     {
@@ -115,6 +121,8 @@ class Setup
     /**
      * @param string               $mimeType
      * @param MimeHandlerInterface $handler
+     *
+     * @return void
      */
     public static function registerMimeHandler($mimeType, MimeHandlerInterface $handler)
     {

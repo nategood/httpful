@@ -27,8 +27,9 @@ class Mime
     const YAML = 'application/x-yaml';
 
     /**
-     * Map short name for a mime type
-     * to a full proper mime type
+     * Map short name for a mime type to a full proper mime type.
+     *
+     * @var array<string, string>
      */
     private static $mimes = [
         'json'       => self::JSON,

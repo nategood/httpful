@@ -18,6 +18,8 @@ class JsonMimeHandler extends DefaultMimeHandler
 
     /**
      * @param array $args
+     *
+     * @return void
      */
     public function init(array $args)
     {

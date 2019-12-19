@@ -1,14 +1,19 @@
 parameters:
+    level: max
+    paths:
+        - %currentWorkingDirectory%/src/
     reportUnmatchedIgnoredErrors: false
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false
     excludes_analyse:
         - %currentWorkingDirectory%/vendor/*
         - %currentWorkingDirectory%/tests/*
     autoload_files:
         - %currentWorkingDirectory%/vendor/autoload.php
     ignoreErrors:
-        - '#Httpful\\Headers::__construct\(\) does not call parent constructor#'
+        - '#Unsafe usage of new static#'
+        - '#should return static#'
         - '#function call_user_func expects callable#'
-        - '#Httpful\\Response\\Headers::__construct\(\) does not call parent constructor from Curl\\CaseInsensitiveArray\.#'
         - '#Result of \&\& is always false\.#'
         - '#Strict comparison using !== between null and null#'
         - '#Strict comparison using === between true and false#'

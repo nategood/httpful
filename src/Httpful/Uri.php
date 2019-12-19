@@ -566,6 +566,7 @@ class Uri implements UriInterface
 
         $result[] = self::_generateQueryString($key, $value);
 
+        /** @noinspection ImplodeMissUseInspection */
         return $uri->withQuery(\implode('&', $result));
     }
 
@@ -587,6 +588,7 @@ class Uri implements UriInterface
             $result[] = self::_generateQueryString($key, $value);
         }
 
+        /** @noinspection ImplodeMissUseInspection */
         return $uri->withQuery(\implode('&', $result));
     }
 
@@ -605,13 +607,16 @@ class Uri implements UriInterface
     {
         $result = self::_getFilteredQueryString($uri, [$key]);
 
+        /** @noinspection ImplodeMissUseInspection */
         return $uri->withQuery(\implode('&', $result));
     }
 
     /**
      * Apply parse_url parts to a URI.
      *
-     * @param array $parts array of parse_url parts to apply
+     * @param array<string,mixed> $parts array of parse_url parts to apply
+     *
+     * @return void
      */
     private function _applyParts(array $parts)
     {
@@ -784,7 +789,7 @@ class Uri implements UriInterface
 
     /**
      * @param UriInterface $uri
-     * @param array        $keys
+     * @param string[]     $keys
      *
      * @return array
      */
@@ -801,16 +806,24 @@ class Uri implements UriInterface
         return \array_filter(
             \explode('&', $current),
             static function ($part) use ($decodedKeys) {
-                return !\in_array(\rawurldecode(\explode('=', $part)[0]), $decodedKeys, true);
+                return !\in_array(\rawurldecode(\explode('=', $part, 2)[0]), $decodedKeys, true);
             }
         );
     }
 
+    /**
+     * @param string[] $match
+     *
+     * @return string
+     */
     private function _rawurlencodeMatchZero(array $match): string
     {
         return \rawurlencode($match[0]);
     }
 
+    /**
+     * @return void
+     */
     private function _removeDefaultPort()
     {
         if ($this->port !== null && self::isDefaultPort($this)) {
@@ -818,6 +831,9 @@ class Uri implements UriInterface
         }
     }
 
+    /**
+     * @return void
+     */
     private function _validateState()
     {
         if ($this->host === '' && ($this->scheme === 'http' || $this->scheme === 'https')) {

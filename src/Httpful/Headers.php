@@ -88,6 +88,8 @@ class Headers implements \ArrayAccess, \Countable, \Iterator
 
     /**
      * @see https://secure.php.net/manual/en/iterator.next.php
+     *
+     * @return void
      */
     public function next()
     {
@@ -96,6 +98,8 @@ class Headers implements \ArrayAccess, \Countable, \Iterator
 
     /**
      * @see https://secure.php.net/manual/en/iterator.rewind.php
+     *
+     * @return void
      */
     public function rewind()
     {
@@ -115,6 +119,8 @@ class Headers implements \ArrayAccess, \Countable, \Iterator
     /**
      * @param string $offset the offset to store the data at (case-insensitive)
      * @param mixed  $value  the data to store at the specified offset
+     *
+     * @return void
      */
     public function forceSet($offset, $value)
     {
@@ -125,6 +131,8 @@ class Headers implements \ArrayAccess, \Countable, \Iterator
 
     /**
      * @param string $offset
+     *
+     * @return void
      */
     public function forceUnset($offset)
     {
@@ -205,6 +213,8 @@ class Headers implements \ArrayAccess, \Countable, \Iterator
      * @param string $value
      *
      * @throws ResponseHeaderException
+     *
+     * @return void
      */
     public function offsetSet($offset, $value)
     {
@@ -215,6 +225,8 @@ class Headers implements \ArrayAccess, \Countable, \Iterator
      * @param string $offset
      *
      * @throws ResponseHeaderException
+     *
+     * @return void
      */
     public function offsetUnset($offset)
     {
@@ -320,6 +332,8 @@ class Headers implements \ArrayAccess, \Countable, \Iterator
      *
      * @param string|null $offset the offset to store the data at (case-insensitive)
      * @param mixed       $value  the data to store at the specified offset
+     *
+     * @return void
      */
     private function offsetSetForce($offset, $value)
     {
@@ -339,6 +353,8 @@ class Headers implements \ArrayAccess, \Countable, \Iterator
      * @see https://secure.php.net/manual/en/arrayaccess.offsetunset.php
      *
      * @param string $offset the offset to unset
+     *
+     * @return void
      */
     private function offsetUnsetForce($offset)
     {

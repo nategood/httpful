@@ -12,14 +12,14 @@ before_script:
   - wget https://scrutinizer-ci.com/ocular.phar
   - travis_retry composer self-update
   - travis_retry composer require satooshi/php-coveralls
-  - travis_retry composer require phpstan/phpstan-shim
+  - if [ "$(phpenv version-name)" == 7.3 ]; then travis_retry composer require phpstan/phpstan; fi
   - travis_retry composer install --no-interaction --prefer-source
   - composer dump-autoload -o
 
 script:
   - mkdir -p build/logs
   - php vendor/bin/phpunit -c phpunit.xml.dist
-  - php vendor/bin/phpstan analyse --level=7 --configuration=phpstan.neon src
+  - if [ "$(phpenv version-name)" == 7.3 ]; then php vendor/bin/phpstan analyse; fi
 
 after_script:
   - php vendor/bin/coveralls -v

@@ -47,7 +47,6 @@ final class ClientTest extends TestCase
         ];
         static::assertContains($head->getMetaData()['url'], $expectedForDifferentCurlVersions);
 
-        /** @noinspection PhpUnitTestsInspection */
         static::assertInternalType('string', (string) $head->getBody());
         static::assertSame('1.1', $head->getProtocolVersion());
 
