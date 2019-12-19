@@ -224,11 +224,12 @@ final class MultiCurl
             }
         }
 
+        $active = null;
         do {
             // Wait for activity on any curl_multi connection when curl_multi_select (libcurl) fails to correctly block.
             // https://bugs.php.net/bug.php?id=63411
-            if (\curl_multi_select($this->multiCurl) === -1) {
-                \usleep(100000);
+            if ($active && \curl_multi_select($this->multiCurl) === -1) {
+                \usleep(250);
             }
 
             \curl_multi_exec($this->multiCurl, $active);
