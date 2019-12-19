@@ -1,27 +1,54 @@
 {
-    "name": "nategood/httpful",
-    "description": "A Readable, Chainable, REST friendly, PHP HTTP Client",
-    "homepage": "http://github.com/nategood/httpful",
-    "license": "MIT",
-    "keywords": ["http", "curl", "rest", "restful", "api", "requests"],
-    "version": "0.2.20",
-    "authors": [
-        {
-            "name": "Nate Good",
-            "email": "me@nategood.com",
-            "homepage": "http://nategood.com"
-        }
-    ],
-    "require": {
-        "php": ">=5.3",
-        "ext-curl": "*"
+  "name": "voku/httpful",
+  "description": "A Readable, Chainable, REST friendly, PHP HTTP Client",
+  "keywords": [
+    "http",
+    "curl",
+    "rest",
+    "restful",
+    "api",
+    "requests"
+  ],
+  "homepage": "http://github.com/voku/httpful",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Nate Good",
+      "email": "me@nategood.com",
+      "homepage": "http://nategood.com"
     },
-    "autoload": {
-        "psr-0": {
-            "Httpful": "src/"
-        }
-    },
-    "require-dev": {
-        "phpunit/phpunit": "*"
+    {
+      "name": "Lars Moelleken",
+      "email": "lars@moelleken.org",
+      "homepage": "http://moelleken.org/"
     }
+  ],
+  "require": {
+    "php": ">=7.0",
+    "ext-curl": "*",
+    "ext-dom": "*",
+    "ext-fileinfo": "*",
+    "ext-json": "*",
+    "ext-simplexml": "*",
+    "ext-xmlwriter": "*",
+    "psr/http-client": "~1.0",
+    "psr/http-factory": "~1.0",
+    "psr/http-message": "~1.0",
+    "psr/log": "~1.1",
+    "voku/portable-utf8": "~5.4",
+    "voku/simple_html_dom": "~4.7"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "~6.0 || ~7.0"
+  },
+  "autoload": {
+    "psr-0": {
+      "Httpful": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Httpful\\tests\\": "tests/"
+    }
+  }
 }

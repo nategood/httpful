@@ -1,0 +1,21 @@
+parameters:
+    level: max
+    paths:
+        - %currentWorkingDirectory%/src/
+    reportUnmatchedIgnoredErrors: false
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false
+    excludes_analyse:
+        - %currentWorkingDirectory%/vendor/*
+        - %currentWorkingDirectory%/tests/*
+    autoload_files:
+        - %currentWorkingDirectory%/vendor/autoload.php
+    ignoreErrors:
+        - '#Unsafe usage of new static#'
+        - '#should return static#'
+        - '#function call_user_func expects callable#'
+        - '#Result of \&\& is always false\.#'
+        - '#Strict comparison using !== between null and null#'
+        - '#Strict comparison using === between true and false#'
+        - '#callback of method Httpful#'
+        - '#parameters of function call_user_func_array#'

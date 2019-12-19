@@ -1,9 +1,17 @@
 <?php
-// XML Example from GitHub
-require(__DIR__ . '/../bootstrap.php');
-use \Httpful\Request;
 
-$uri = 'https://github.com/api/v2/xml/user/show/nategood';
-$request = Request::get($uri)->send();
+declare(strict_types=1);
 
-echo "{$request->body->name} joined GitHub on " . date('M jS', strtotime($request->body->{'created-at'})) ."\n";
+// JSON Example via GitHub-API
+
+require __DIR__ . '/../vendor/autoload.php';
+
+$uri = 'https://api.github.com/users/voku';
+$response = \Httpful\Client::get_request($uri)
+    ->withHeader('X-Foo-Header', 'Just as a demo')
+    ->expectsJson()
+    ->send();
+
+$result = $response->getRawBody();
+
+echo $result['name'] . ' joined GitHub on ' . \date('M jS Y', \strtotime($result['created_at'])) . "\n";

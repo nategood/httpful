@@ -1,0 +1,3 @@
+test:
+  override:
+    - php vendor/bin/phpunit -c phpunit.xml.dist
