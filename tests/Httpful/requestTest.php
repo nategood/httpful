@@ -4,7 +4,7 @@
  */
 namespace Httpful\Test;
 
-class requestTest extends \PHPUnit_Framework_TestCase
+class requestTest extends \PHPUnit\Framework\TestCase
 {
 
     /**

@@ -21,7 +21,7 @@ use Httpful\Handlers\JsonHandler;
 
 define('TEST_SERVER', WEB_SERVER_HOST . ':' . WEB_SERVER_PORT);
 
-class HttpfulTest extends \PHPUnit_Framework_TestCase
+class HttpfulTest extends \PHPUnit\Framework\TestCase
 {
     const TEST_SERVER = TEST_SERVER;
     const TEST_URL = 'http://127.0.0.1:8008';
