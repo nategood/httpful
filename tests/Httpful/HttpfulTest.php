@@ -276,13 +276,16 @@ X-My-Header:Value2\r\n";
         $this->assertEquals("object", gettype($sxe));
         $this->assertEquals("SimpleXMLElement", get_class($sxe));
         $bools = $sxe->xpath('/stdClass/boolProp');
-        list( , $bool ) = each($bools);
+        // list( , $bool ) = each($bools);
+        $bool = array_shift($bools);
         $this->assertEquals("TRUE", (string) $bool);
         $ints = $sxe->xpath('/stdClass/arrayProp/array/k1/myClass/intProp');
-        list( , $int ) = each($ints);
+        // list( , $int ) = each($ints);
+        $int = array_shift($ints);
         $this->assertEquals("2", (string) $int);
         $strings = $sxe->xpath('/stdClass/stringProp');
-        list( , $string ) = each($strings);
+        // list( , $string ) = each($strings);
+        $string = array_shift($strings);
         $this->assertEquals("a string", (string) $string);
     }
 
