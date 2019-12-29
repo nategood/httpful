@@ -198,7 +198,7 @@ X-My-Header:Value2\r\n";
 
         $this->assertEquals(Mime::JSON, $r->expected_type);
         $r->_curlPrep();
-        $this->assertContains('application/json', $r->raw_headers);
+        $this->assertStringContainsString('application/json', $r->raw_headers);
     }
 
     function testCustomAccept()
@@ -208,7 +208,7 @@ X-My-Header:Value2\r\n";
             ->addHeader('Accept', $accept);
 
         $r->_curlPrep();
-        $this->assertContains($accept, $r->raw_headers);
+        $this->assertStringContainsString($accept, $r->raw_headers);
         $this->assertEquals($accept, $r->headers['Accept']);
     }
 
@@ -219,7 +219,7 @@ X-My-Header:Value2\r\n";
 
         $this->assertArrayHasKey('User-Agent', $r->headers);
         $r->_curlPrep();
-        $this->assertContains('User-Agent: ACME/1.2.3', $r->raw_headers);
+        $this->assertStringContainsString('User-Agent: ACME/1.2.3', $r->raw_headers);
         $this->assertNotContains('User-Agent: HttpFul/1.0', $r->raw_headers);
 
         $r = Request::get('http://example.com/')
@@ -227,7 +227,7 @@ X-My-Header:Value2\r\n";
 
         $this->assertArrayHasKey('User-Agent', $r->headers);
         $r->_curlPrep();
-        $this->assertContains('User-Agent:', $r->raw_headers);
+        $this->assertStringContainsString('User-Agent:', $r->raw_headers);
         $this->assertNotContains('User-Agent: HttpFul/1.0', $r->raw_headers);
     }
 
@@ -381,7 +381,7 @@ Content-Type: text/plain; charset=utf-8\r\n", $req);
     {
         $req = Request::init()->sendsAndExpects(Mime::JSON);
         $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
-        $this->assertContains('Content-Type: application/json', $response->raw_headers);
+        $this->assertStringContainsString('Content-Type: application/json', $response->raw_headers);
     }
 
     function testHasErrors()
