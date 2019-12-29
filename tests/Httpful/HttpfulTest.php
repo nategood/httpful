@@ -220,7 +220,7 @@ X-My-Header:Value2\r\n";
         $this->assertArrayHasKey('User-Agent', $r->headers);
         $r->_curlPrep();
         $this->assertStringContainsString('User-Agent: ACME/1.2.3', $r->raw_headers);
-        $this->assertNotContains('User-Agent: HttpFul/1.0', $r->raw_headers);
+        $this->assertStringNotContainsString('User-Agent: HttpFul/1.0', $r->raw_headers);
 
         $r = Request::get('http://example.com/')
             ->withUserAgent('');
@@ -228,7 +228,7 @@ X-My-Header:Value2\r\n";
         $this->assertArrayHasKey('User-Agent', $r->headers);
         $r->_curlPrep();
         $this->assertStringContainsString('User-Agent:', $r->raw_headers);
-        $this->assertNotContains('User-Agent: HttpFul/1.0', $r->raw_headers);
+        $this->assertStringNotContainsString('User-Agent: HttpFul/1.0', $r->raw_headers);
     }
 
     function testAuthSetup()
