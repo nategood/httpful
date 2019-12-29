@@ -264,7 +264,7 @@ X-My-Header:Value2\r\n";
 
         $this->assertEquals("value", $response->body->key);
         $this->assertEquals("value", $response->body->object->key);
-        $this->assertInternalType('array', $response->body->array);
+        $this->assertIsArray( $response->body->array);
         $this->assertEquals(1, $response->body->array[0]);
     }
 
@@ -296,7 +296,7 @@ X-My-Header:Value2\r\n";
 
         $this->assertEquals("Key1", $response->body[0][0]);
         $this->assertEquals("Value1", $response->body[1][0]);
-        $this->assertInternalType('string', $response->body[2][0]);
+        $this->assertIsString( $response->body[2][0]);
         $this->assertEquals("40.0", $response->body[2][0]);
     }
 
@@ -364,10 +364,10 @@ Content-Type: text/plain; charset=utf-8\r\n", $req);
     {
         $req = Request::init()->sendsAndExpects(Mime::JSON)->withoutAutoParsing();
         $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
-        $this->assertInternalType('string', $response->body);
+        $this->assertIsString( $response->body);
         $req = Request::init()->sendsAndExpects(Mime::JSON)->withAutoParsing();
         $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
-        $this->assertInternalType('object', $response->body);
+        $this->assertIsObject($response->body);
     }
 
     function testParseHeaders()
