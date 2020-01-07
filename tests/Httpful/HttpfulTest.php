@@ -32,6 +32,15 @@ class HttpfulTest extends \PHPUnit\Framework\TestCase
 Content-Type: application/json
 Connection: keep-alive
 Transfer-Encoding: chunked\r\n";
+    const SAMPLE_JSON_HEADER_LOWERCASE =
+        "HTTP/2 200 
+date: Tue, 07 Jan 2020 09:11:21 GMT
+content-type: application/json
+content-length: 513
+access-control-allow-origin: *
+access-control-allow-methods: GET, POST, PUT, PATCH, DELETE
+access-control-allow-headers: Authorization, Content-Type, Accept-Encoding, Cache-Control, DNT
+cache-control: private, must-revalidate\r\n";
     const SAMPLE_JSON_RESPONSE = '{"key":"value","object":{"key":"value"},"array":[1,2,3,4]}';
     const SAMPLE_CSV_HEADER =
 "HTTP/1.1 200 OK
@@ -261,6 +270,17 @@ X-My-Header:Value2\r\n";
     {
         $req = Request::init()->sendsAndExpects(Mime::JSON);
         $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
+
+        $this->assertEquals("value", $response->body->key);
+        $this->assertEquals("value", $response->body->object->key);
+        $this->assertIsArray( $response->body->array);
+        $this->assertEquals(1, $response->body->array[0]);
+    }
+
+    function testJsonResponseParseLowercaseHeaders()
+    {
+        $req = Request::init();
+        $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER_LOWERCASE, $req);
 
         $this->assertEquals("value", $response->body->key);
         $this->assertEquals("value", $response->body->object->key);
