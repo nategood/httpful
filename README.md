@@ -67,6 +67,10 @@ Httpful highly encourages sending in pull requests.  When submitting a pull requ
 
 # Changelog
 
+## 0.3.1
+
+ - FIX [PR #286](https://github.com/nategood/httpful/pull/286) Fixed header case sensitivity
+
 ## 0.3.0
 
  - REFACTOR Dropped support for dead versions of PHP. Updated the PHPUnit tests.
