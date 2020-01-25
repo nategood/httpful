@@ -127,6 +127,14 @@ class Request
     }
 
     /**
+     * @return bool does the request have a connection timeout?
+     */
+    public function hasConnectionTimeout()
+    {
+        return isset($this->connection_timeout);
+    }
+
+    /**
      * @return bool has the internal curl request been initialized?
      */
     public function hasBeenInitialized()
@@ -165,6 +173,23 @@ class Request
     public function timeoutIn($seconds)
     {
         return $this->timeout($seconds);
+    }
+
+    /**
+     * Specify a HTTP connection timeout
+     * @param float|int $timeout seconds to timeout the HTTP connection
+     * @return Request
+     * @throws Exception
+     */
+    public function setConnectionTimeout($connection_timeout)
+    {
+        if (!preg_match('/^\d+(\.\d+)?/', $connection_timeout)) {
+            throw new \InvalidArgumentException(
+                "Invalid connection timeout provided: " . var_export($connection_timeout, true)
+            );
+        }
+        $this->connection_timeout = $connection_timeout;
+        return $this;
     }
 
     /**
@@ -872,6 +897,14 @@ class Request
                 curl_setopt($ch, CURLOPT_TIMEOUT_MS, $this->timeout * 1000);
             } else {
                 curl_setopt($ch, CURLOPT_TIMEOUT, $this->timeout);
+            }
+        }
+
+        if ($this->hasConnectionTimeout()) {
+            if (defined('CURLOPT_CONNECTTIMEOUT_MS')) {
+                curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, $this->connection_timeout * 1000);
+            } else {
+                curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, $this->connection_timeout);
             }
         }
 
