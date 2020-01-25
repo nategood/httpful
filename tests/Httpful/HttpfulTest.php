@@ -570,8 +570,8 @@ Transfer-Encoding: chunked\r\n", $request);
 
         try {
             $result = $handler->parse('invalid{json');
-        } catch(\Exception $e) {
-            $this->assertEquals('Unable to parse response as JSON', $e->getMessage());
+        } catch (\Httpful\Exception\JsonParseException $e) {
+            $this->assertEquals('Unable to parse response as JSON: ' . json_last_error_msg(), $e->getMessage());
             return;
         }
         $this->fail('Expected an exception to be thrown due to invalid json');
