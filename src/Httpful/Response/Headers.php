@@ -46,7 +46,7 @@ final class Headers implements \ArrayAccess, \Countable {
      */
     public function offsetExists($offset)
     {
-        return isset($this->headers[$offset]);
+        return $this->getCaseInsensitive($offset) !== null;
     }
 
     /**
@@ -55,9 +55,7 @@ final class Headers implements \ArrayAccess, \Countable {
      */
     public function offsetGet($offset)
     {
-        if (isset($this->headers[$offset])) {
-            return $this->headers[$offset];
-        }
+        return $this->getCaseInsensitive($offset);
     }
 
     /**
@@ -95,4 +93,14 @@ final class Headers implements \ArrayAccess, \Countable {
         return $this->headers;
     }
 
+    private function getCaseInsensitive(string $key)
+    {
+        foreach ($this->headers as $header => $value) {
+            if (strtolower($key) === strtolower($header)) {
+                return $value;
+            }
+        }
+
+        return null;
+    }
 }
