@@ -995,7 +995,9 @@ class Request
     public function _determineLength($str)
     {
         if (function_exists('mb_strlen')) {
-            return mb_strlen($str, '8bit');
+            if (is_string($str)) {
+                return mb_strlen($str, '8bit');
+            }
         } else {
             return strlen($str);
         }
