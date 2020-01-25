@@ -610,11 +610,11 @@ class Request
 
     /**
      * Use a custom function to parse the response.
-     * @param \Closure $callback Takes the raw body of
+     * @param Callable $callback Takes the raw body of
      *    the http response and returns a mixed
      * @return Request
      */
-    public function parseWith(\Closure $callback)
+    public function parseWith(Callable $callback)
     {
         $this->parse_callback = $callback;
         return $this;
@@ -622,10 +622,10 @@ class Request
 
     /**
      * @see Request::parseResponsesWith()
-     * @param \Closure $callback
+     * @param Callable $callback
      * @return Request
      */
-    public function parseResponsesWith(\Closure $callback)
+    public function parseResponsesWith(Callable $callback)
     {
         return $this->parseWith($callback);
     }
