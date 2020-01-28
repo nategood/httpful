@@ -2725,8 +2725,10 @@ class Request implements \IteratorAggregate, RequestInterface
      * @throws NetworkErrorException
      *
      * @return Response
+     *
+     * @internal
      */
-    private function _buildResponse($result, Curl $curl = null): Response
+    public function _buildResponse($result, Curl $curl = null): Response
     {
         // fallback
         if ($curl === null) {
