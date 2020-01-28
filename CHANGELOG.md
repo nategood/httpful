@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.3.0 (2020-01-28) 
+
+- optimize "RequestInterface"-integration
+
 ## 2.2.0 (2020-01-28) 
 
 - add "ClientPromise" (\Http\Client\HttpAsyncClient)
