@@ -82,6 +82,19 @@ final class RequestTest extends TestCase
         static::assertSame('a:0:{}', (string) $r->getBody());
     }
 
+    public function testCreateRequest()
+    {
+        $request = (new \Httpful\Factory())->createRequest(
+            \Httpful\Http::POST,
+            \sprintf('/api/%d/store/', 3),
+            \Httpful\Mime::JSON,
+            \json_encode(['foo' => 'bar'])
+        );
+
+        static::assertSame(\Httpful\Http::POST, $request->getMethod());
+        static::assertSame('a:1:{i:0;s:13:"{"foo":"bar"}";}', (string) $request->getBody());
+    }
+
     public function testGetInvalidURL()
     {
         $this->expectException(\Httpful\Exception\NetworkErrorException::class);

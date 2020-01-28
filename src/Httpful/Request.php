@@ -2700,23 +2700,6 @@ class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
-     * @param bool $auto_parse perform automatic "smart"
-     *                         parsing based on Content-Type or "expectedType"
-     *                         If not auto parsing, Response->body returns the body
-     *                         as a string
-     *
-     * @return static
-     */
-    private function _autoParse(bool $auto_parse = true): self
-    {
-        $new = clone $this;
-
-        $new->auto_parse = $auto_parse;
-
-        return $new;
-    }
-
-    /**
      * Takes a curl result and generates a Response from it.
      *
      * @param false|mixed $result
@@ -2802,6 +2785,23 @@ class Request implements \IteratorAggregate, RequestInterface
             $this,
             $curl_info
         );
+    }
+
+    /**
+     * @param bool $auto_parse perform automatic "smart"
+     *                         parsing based on Content-Type or "expectedType"
+     *                         If not auto parsing, Response->body returns the body
+     *                         as a string
+     *
+     * @return static
+     */
+    private function _autoParse(bool $auto_parse = true): self
+    {
+        $new = clone $this;
+
+        $new->auto_parse = $auto_parse;
+
+        return $new;
     }
 
     /**

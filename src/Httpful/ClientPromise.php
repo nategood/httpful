@@ -21,7 +21,8 @@ class ClientPromise extends ClientMulti implements \Http\Client\HttpAsyncClient
     /**
      * @return MultiCurlPromise
      */
-    public function getPromise(): MultiCurlPromise {
+    public function getPromise(): MultiCurlPromise
+    {
         return new MultiCurlPromise($this->curlMulti);
     }
 
@@ -32,9 +33,10 @@ class ClientPromise extends ClientMulti implements \Http\Client\HttpAsyncClient
      *
      * @param RequestInterface $request
      *
-     * @return \Http\Promise\Promise Resolves a PSR-7 Response or fails with an Http\Client\Exception.
+     * @return \Http\Promise\Promise resolves a PSR-7 Response or fails with an Http\Client\Exception
      */
-    public function sendAsyncRequest(RequestInterface $request) {
+    public function sendAsyncRequest(RequestInterface $request)
+    {
         $this->add_request($request);
 
         return $this->getPromise();

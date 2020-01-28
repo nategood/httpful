@@ -277,7 +277,18 @@ class Client implements ClientInterface
     public function sendRequest(RequestInterface $request): ResponseInterface
     {
         if (!$request instanceof Request) {
-            $request = Request::{$request->getMethod()}($request->getUri());
+            /** @noinspection PhpSillyAssignmentInspection - helper for PhpStorm */
+            /** @var RequestInterface $request */
+            $request = $request;
+
+            /** @var Request $requestNew */
+            $requestNew = Request::{$request->getMethod()}($request->getUri());
+            $requestNew->withHeaders($request->getHeaders());
+            $requestNew->withProtocolVersion($request->getProtocolVersion());
+            $requestNew->withBody($request->getBody());
+            $requestNew->withRequestTarget($request->getRequestTarget());
+
+            $request = $requestNew;
         }
 
         return $request->send();

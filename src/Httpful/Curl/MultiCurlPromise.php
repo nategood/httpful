@@ -126,7 +126,7 @@ class MultiCurlPromise implements Promise
             $this->clientMulti->start();
             $this->state = Promise::FULFILLED;
         } catch (\ErrorException $e) {
-            $this->_error((string)$e);
+            $this->_error((string) $e);
         }
 
         return null;

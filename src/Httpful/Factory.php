@@ -26,12 +26,15 @@ class Factory implements RequestFactoryInterface, ServerRequestFactoryInterface,
      * @param string      $method
      * @param string      $uri
      * @param string|null $mime
+     * @param string      $body
      *
      * @return RequestInterface
      */
-    public function createRequest(string $method, $uri, string $mime = null): RequestInterface
+    public function createRequest(string $method, $uri, string $mime = null, string $body = ''): RequestInterface
     {
-        return (new Request($method, $mime))->withUriFromString($uri);
+        return (new Request($method, $mime))
+            ->withUriFromString($uri)
+            ->withBodyFromString($body);
     }
 
     /**
@@ -50,12 +53,15 @@ class Factory implements RequestFactoryInterface, ServerRequestFactoryInterface,
      * @param string      $uri
      * @param array       $serverParams
      * @param string|null $mime
+     * @param string      $body
      *
      * @return ServerRequestInterface
      */
-    public function createServerRequest(string $method, $uri, array $serverParams = [], $mime = null): ServerRequestInterface
+    public function createServerRequest(string $method, $uri, array $serverParams = [], $mime = null, string $body = ''): ServerRequestInterface
     {
-        return (new ServerRequest($method, $mime, null, $serverParams))->withUriFromString($uri);
+        return (new ServerRequest($method, $mime, null, $serverParams))
+            ->withUriFromString($uri)
+            ->withBodyFromString($body);
     }
 
     /**
