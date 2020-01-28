@@ -2457,7 +2457,7 @@ class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
-     * @param string[] $header
+     * @param string[]|string[][] $header
      *
      * @return static
      */
