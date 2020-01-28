@@ -1,53 +1,57 @@
 # Changelog
 
-## 2.1.0
+## 2.2.0 (2020-01-28) 
+
+- add "ClientPromise" (\Http\Client\HttpAsyncClient)
+
+## 2.1.0 (2019-12-19)
 
 - return $this for many methods from "Curl" & "MultiCurl"
 - optimize the speed of "MultiCurl"
 - use phpstan (0.12) + add more phpdocs
 
-## 2.0.0
+## 2.0.0 (2019-11-15)
 
 - add $params for "GET" / "DELETE" requests
 - free some more memory
 - more helpfully exception messages
 - fixes callbacks for "ClientMulti"
 
-## 1.0.0
+## 1.0.0 (2019-11-13)
 
  - fix all bugs reported by phpstan
  - clean-up dependencies
  - fix async support for POST data
 
-## 0.10.0
+## 0.10.0 (2019-11-12)
 
  - add support for async requests via CurlMulti
 
-## 0.9.0
+## 0.9.0 (2019-07-16)
 
  - add new header functions + many tests
 
-## 0.8.0
+## 0.8.0 (2019-07-06)
 
  - fix implementation of PSR standards + many tests
 
-## 0.7.1
+## 0.7.1 (2019-05-01)
 
  - fix "addHeaders()"
 
-## 0.7.0
+## 0.7.0 (2019-04-30)
 
  - fix return types of "Handlers"
  - add more helper functions for "Client" (with auto-completion via phpdoc)
 
-## 0.6.0
+## 0.6.0 (2019-04-30)
 
  - make more properties private && classes final v2
  - fix array usage with "Stream"
  - move "Request->init" into the "__constructor"
  - rename some internal classes + methods
 
-## 0.5.0
+## 0.5.0 (2019-04-29)
 
  - FEATURE Add "PSR-3" logging
  - FEATURE Add "PSR-18" HTTP Client - "\Httpful\Client"
