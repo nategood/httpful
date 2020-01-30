@@ -221,8 +221,10 @@ class Request
      */
     public function send()
     {
-        if (!$this->hasBeenInitialized())
+        $this->processUriParams();
+        if (!$this->hasBeenInitialized()) {
             $this->_curlPrep();
+        }
 
         $result = curl_exec($this->_ch);
 
@@ -247,6 +249,7 @@ class Request
     public function uri($uri)
     {
         $this->uri = $uri;
+
         return $this;
     }
 
@@ -1150,6 +1153,7 @@ class Request
      * @param string $uri optional uri to use
      * @param string $mime expected
      * @return Response
+     * @throws ConnectionErrorException
      */
     public static function getQuick($uri, $mime = null)
     {
@@ -1220,5 +1224,73 @@ class Request
     public static function options($uri)
     {
         return self::init(Http::OPTIONS)->uri($uri);
+    }
+
+    /**
+     * Adds parameter to uri
+     * @param string $name
+     * @param string $value
+     * @param bool   $withEqualSign
+     * @return Request
+     */
+    public function addUriParameter(string $name, ?string $value, bool $withEqualSign = true): Request
+    {
+        $this->uriParameters[$name] = $value;
+        if ($withEqualSign == false) {
+            $this->uriParametersWithoutEqualSign[$name] = $withEqualSign;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Removes parameter from uri
+     * @param string $name
+     * @return Request
+     */
+    public function removeUriParameter(string $name): Request
+    {
+        $this->removedUriParameters[] = $name;
+        unset($this->uriParameters[$name]);
+
+        return $this;
+    }
+
+    /**
+     * Add or remove parameters to/from uri. This method is automatically called in send request
+     */
+    public function processUriParams(): void
+    {
+        $paramsInUri = [];
+        $uri = $this->uri;
+        $paramsToUri = [];
+        $explodedUri = explode('?', $uri, 2);
+        if (count($explodedUri) > 1) {
+            [$uri, $params] = $explodedUri;
+            $explodedParams = explode('&', $params);
+            foreach ($explodedParams as $explodedParam) {
+                $explodedValues = explode('=', $explodedParam, 2);
+                if (count($explodedValues) == 1) {
+                    $this->uriParametersWithoutEqualSign[$explodedValues[0]] = false;
+                    $paramsInUri[$explodedValues[0]] = null;
+                    continue;
+                }
+                [$name, $value] = $explodedValues;
+                $paramsInUri[$name] = $value;
+            }
+        }
+        $parameters = array_merge($paramsInUri, $this->uriParameters);
+        foreach ($parameters as $key => $parameter) {
+            if (in_array($key, $this->removedUriParameters) === false) {
+                $equalSign = array_key_exists($key, $this->uriParametersWithoutEqualSign) ? '' : '=';
+                $paramsToUri[] = $key.$equalSign.$parameter;
+            }
+        }
+        if (count($paramsToUri) > 0) {
+            $this->uri = $uri.'?'.implode('&', $paramsToUri);
+
+            return;
+        }
+        $this->uri = $uri;
     }
 }

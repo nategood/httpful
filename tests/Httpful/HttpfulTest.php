@@ -23,9 +23,10 @@ define('TEST_SERVER', WEB_SERVER_HOST . ':' . WEB_SERVER_PORT);
 
 class HttpfulTest extends \PHPUnit\Framework\TestCase
 {
-    const TEST_SERVER = TEST_SERVER;
-    const TEST_URL = 'http://127.0.0.1:8008';
-    const TEST_URL_400 = 'http://127.0.0.1:8008/400';
+	const TEST_SERVER = TEST_SERVER;
+	const TEST_URL = 'http://127.0.0.1:8008';
+	const TEST_URL_400 = 'http://127.0.0.1:8008/400';
+	const TEST_URL_WITH_PARAMS = self::TEST_URL.'?paramName1=paramValue1&paramName2=paramValue2';
 
     const SAMPLE_JSON_HEADER =
 "HTTP/1.1 200 OK
@@ -70,6 +71,14 @@ Connection: keep-alive
 Transfer-Encoding: chunked
 X-My-Header:Value1
 X-My-Header:Value2\r\n";
+	const PARAM_NAME_1 = 'paramName1';
+	const PARAM_NAME_2 = 'paramName2';
+	const PARAM_NAME_3 = 'paramName3';
+	const PARAM_VALUE_1 = 'paramValue1';
+	const PARAM_VALUE_2 = 'paramValue2';
+	const PARAM_VALUE_3 = 'paramValue3';
+	const NEW_PARAM_VALUE_1 = 'newParamValue1';
+	const PARAM_NAME_WITHOUT_VALUE = 'paramNameWithoutValue';
 
     function testInit()
     {
@@ -608,21 +617,74 @@ Transfer-Encoding: chunked\r\n", $request);
         $this->fail('Expected an exception to be thrown due to invalid json');
     }
 
-    // /**
-    //  * Skeleton for testing against the 5.4 baked in server
-    //  */
-    // public function testLocalServer()
-    // {
-    //     if (!defined('WITHOUT_SERVER') || (defined('WITHOUT_SERVER') && !WITHOUT_SERVER)) {
-    //         // PHP test server seems to always set content type to application/octet-stream
-    //         // so force parsing as JSON here
-    //         Httpful::register('application/octet-stream', new \Httpful\Handlers\JsonHandler());
-    //         $response = Request::get(TEST_SERVER . '/test.json')
-    //             ->sendsAndExpects(MIME::JSON);
-    //         $response->send();
-    //         $this->assertTrue(...);
-    //     }
-    // }
+	public function testUriWithParams(): void
+	{
+		// Test with params in uri
+		$request = Request::get(self::TEST_URL_WITH_PARAMS);
+		$request->processUriParams();
+		$this->assertSame(self::TEST_URL_WITH_PARAMS, $request->uri);
+		// Test with params in uri and add new param
+		$request = Request::get(self::TEST_URL_WITH_PARAMS);
+		$request->addUriParameter(self::PARAM_NAME_3, self::PARAM_VALUE_3);
+		$request->processUriParams();
+		$this->assertSame(self::TEST_URL_WITH_PARAMS.'&'.self::PARAM_NAME_3.'='.self::PARAM_VALUE_3, $request->uri);
+		// Test remove params from uri
+		$request = Request::get(self::TEST_URL_WITH_PARAMS);
+		$request->removeUriParameter(self::PARAM_NAME_1);
+		$request->removeUriParameter(self::PARAM_NAME_2);
+		$request->processUriParams();
+		$this->assertSame(self::TEST_URL, $request->uri);
+		// Test add new param to uri
+		$request = Request::get(self::TEST_URL);
+		$request->addUriParameter(self::PARAM_NAME_1, self::PARAM_VALUE_1);
+		$request->processUriParams();
+		$this->assertSame(self::TEST_URL.'?'.self::PARAM_NAME_1.'='.self::PARAM_VALUE_1, $request->uri);
+		// Test set new value of param
+		$request = Request::get(self::TEST_URL_WITH_PARAMS);
+		$request->addUriParameter(self::PARAM_NAME_1, self::NEW_PARAM_VALUE_1);
+		$request->processUriParams();
+		$this->assertSame(self::TEST_URL.'?'.self::PARAM_NAME_1.'='.self::NEW_PARAM_VALUE_1.'&'.self::PARAM_NAME_2.'='.self::PARAM_VALUE_2, $request->uri);
+		// Test remove one param
+		$request->removeUriParameter(self::PARAM_NAME_1);
+		$request->processUriParams();
+		$this->assertSame(self::TEST_URL.'?'.self::PARAM_NAME_2.'='.self::PARAM_VALUE_2, $request->uri);
+		// Test add param with null value
+		$request = Request::get(self::TEST_URL);
+		$request->addUriParameter(self::PARAM_NAME_1, null);
+		$request->processUriParams();
+		$this->assertSame(self::TEST_URL.'?'.self::PARAM_NAME_1.'=', $request->uri);
+		// Test process uri param without value
+		$request = Request::get(self::TEST_URL.'?'.self::PARAM_NAME_WITHOUT_VALUE.'');
+		$request->processUriParams();
+		$this->assertSame(self::TEST_URL.'?'.self::PARAM_NAME_WITHOUT_VALUE, $request->uri);
+		// Test add param without value
+		$request = Request::get(self::TEST_URL);
+		$request->addUriParameter(self::PARAM_NAME_WITHOUT_VALUE, null, false);
+		$request->processUriParams();
+		$this->assertSame(self::TEST_URL.'?'. self::PARAM_NAME_WITHOUT_VALUE, $request->uri);
+		// Test add mixed params
+		$request = Request::get(self::TEST_URL);
+		$request->addUriParameter(self::PARAM_NAME_WITHOUT_VALUE, null, false);
+		$request->addUriParameter(self::PARAM_NAME_1, self::PARAM_VALUE_1);
+		$request->processUriParams();
+		$this->assertSame(self::TEST_URL.'?'.self::PARAM_NAME_WITHOUT_VALUE.'&'.self::PARAM_NAME_1.'='. self::PARAM_VALUE_1, $request->uri);
+	}
+
+	// /**
+	//  * Skeleton for testing against the 5.4 baked in server
+	//  */
+	// public function testLocalServer()
+	// {
+	//     if (!defined('WITHOUT_SERVER') || (defined('WITHOUT_SERVER') && !WITHOUT_SERVER)) {
+	//         // PHP test server seems to always set content type to application/octet-stream
+	//         // so force parsing as JSON here
+	//         Httpful::register('application/octet-stream', new \Httpful\Handlers\JsonHandler());
+	//         $response = Request::get(TEST_SERVER . '/test.json')
+	//             ->sendsAndExpects(MIME::JSON);
+	//         $response->send();
+	//         $this->assertTrue(...);
+	//     }
+	// }
 }
 
 class DemoMimeHandler extends \Httpful\Handlers\MimeHandlerAdapter
