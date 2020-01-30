@@ -87,6 +87,13 @@ class Request
     // Template Request object
     private static $_template;
 
+    /** @var array */
+    protected $uriParameters = [];
+    /** @var array */
+    protected $removedUriParameters = [];
+    /** @var array */
+    protected $uriParametersWithoutEqualSign = [];
+
     /**
      * We made the constructor protected to force the factory style.  This was
      * done to keep the syntax cleaner and better the support the idea of
