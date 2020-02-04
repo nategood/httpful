@@ -69,7 +69,7 @@ class Response
      */
     public function hasBody()
     {
-        return !empty($this->body);
+        return isset($this->body);
     }
 
     /**
