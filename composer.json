@@ -55,7 +55,7 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "Httpful\\tests\\": "tests/"
+      "Httpful\\tests\\": "tests/Httpful/"
     }
   }
 }
