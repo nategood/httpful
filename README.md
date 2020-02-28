@@ -34,7 +34,7 @@ Features
 // Make a request to the GitHub API.
 
 $uri = 'https://api.github.com/users/voku';
-$response = \Httpful\Client::get($uri, \Httpful\Mime::JSON);
+$response = \Httpful\Client::get($uri, null, \Httpful\Mime::JSON);
 
 echo $response->getBody()->name . ' joined GitHub on ' . date('M jS Y', strtotime($response->getBody()->created_at)) . "\n";
 ```
