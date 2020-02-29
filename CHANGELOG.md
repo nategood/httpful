@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.3.1 (2020-02-29)
+
+- merge upstream fixes from https://github.com/php-curl-class/php-curl-class/
+
 ## 2.3.0 (2020-01-28) 
 
 - optimize "RequestInterface"-integration
