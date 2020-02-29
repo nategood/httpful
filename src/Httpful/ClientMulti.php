@@ -78,6 +78,26 @@ class ClientMulti
      *
      * @return $this
      */
+    public function add_html(string $uri, array $params = null, $mime = Mime::HTML)
+    {
+        $request = Request::get($uri, $params, $mime)->followRedirects();
+        $curl = $request->_curlPrep()->_curl();
+
+        if ($curl) {
+            $curl->request = $request;
+            $this->curlMulti->addCurl($curl);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param string      $uri
+     * @param array|null  $params
+     * @param string|null $mime
+     *
+     * @return $this
+     */
     public function add_get(string $uri, array $params = null, $mime = Mime::PLAIN)
     {
         $request = Request::get($uri, $params, $mime)->followRedirects();
