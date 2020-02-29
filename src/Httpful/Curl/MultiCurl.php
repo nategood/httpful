@@ -150,7 +150,7 @@ final class MultiCurl
      * @param Curl            $curl
      * @param callable|string $mixed_filename
      *
-     * @return object
+     * @return Curl
      */
     public function addDownload(Curl $curl, $mixed_filename)
     {
@@ -158,18 +158,48 @@ final class MultiCurl
 
         // Use tmpfile() or php://temp to avoid "Too many open files" error.
         if (\is_callable($mixed_filename)) {
-            $callback = $mixed_filename;
-            $curl->downloadCompleteCallback = $callback;
+            $curl->downloadCompleteCallback = $mixed_filename;
+            $curl->downloadFileName = null;
             $curl->fileHandle = \tmpfile();
         } else {
             $filename = $mixed_filename;
-            $curl->downloadCompleteCallback = static function ($instance, $fh) use ($filename) {
-                \file_put_contents($filename, \stream_get_contents($fh));
-            };
-            $curl->fileHandle = \fopen('php://temp', 'wb');
+
+            // Use a temporary file when downloading. Not using a temporary file can cause an error when an existing
+            // file has already fully completed downloading and a new download is started with the same destination save
+            // path. The download request will include header "Range: bytes=$filesize-" which is syntactically valid,
+            // but unsatisfiable.
+            $download_filename = $filename . '.pccdownload';
+            $curl->downloadFileName = $download_filename;
+
+            // Attempt to resume download only when a temporary download file exists and is not empty.
+            if (\is_file($download_filename) && $filesize = \filesize($download_filename)) {
+                $first_byte_position = $filesize;
+                $range = $first_byte_position . '-';
+                $curl->setRange($range);
+                $curl->fileHandle = \fopen($download_filename, 'ab');
+
+                // Move the downloaded temporary file to the destination save path.
+                $curl->downloadCompleteCallback = static function ($instance, $fh) use ($download_filename, $filename) {
+                    // Close the open file handle before renaming the file.
+                    if (\is_resource($fh)) {
+                        \fclose($fh);
+                    }
+
+                    \rename($download_filename, $filename);
+                };
+            } else {
+                $curl->fileHandle = \fopen('php://temp', 'wb');
+                $curl->downloadCompleteCallback = static function ($instance, $fh) use ($filename) {
+                    \file_put_contents($filename, \stream_get_contents($fh));
+                };
+            }
         }
 
-        $curl->setOpt(\CURLOPT_FILE, $curl->fileHandle);
+        if ($curl->fileHandle === false) {
+            throw new \Httpful\Exception\ClientErrorException('Unable to write to file:' . $curl->downloadFileName);
+        }
+
+        $curl->setFile($curl->fileHandle);
         $curl->setOpt(\CURLOPT_CUSTOMREQUEST, 'GET');
         $curl->setOpt(\CURLOPT_HTTPGET, true);
 
