@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.3.2 (2020-02-29)
+
+- "ClientMulti" -> add "add_html()"
+
 ## 2.3.1 (2020-02-29)
 
 - merge upstream fixes from https://github.com/php-curl-class/php-curl-class/
