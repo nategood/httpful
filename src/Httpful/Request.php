@@ -43,7 +43,7 @@ class Request implements \IteratorAggregate, RequestInterface
     private $uri;
 
     /**
-     * @var UriInterface
+     * @var string
      */
     private $uri_cache;
 
@@ -119,10 +119,10 @@ class Request implements \IteratorAggregate, RequestInterface
     private $content_encoding = '';
 
     /**
-     * @var null|int
+     * @var int|null
      *               <p>e.g.: 80 or 443</p>
      */
-    private $port = null;
+    private $port;
 
     /**
      * @var int
@@ -165,7 +165,7 @@ class Request implements \IteratorAggregate, RequestInterface
     private $serialized_payload;
 
     /**
-     * @var array
+     * @var string[]|\CURLFile[]|string
      */
     private $payload = [];
 
@@ -1458,7 +1458,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function getPayload(): array
     {
-        return $this->payload;
+        return \is_string($this->payload) ? [$this->payload] : $this->payload;
     }
 
     /**
@@ -2182,6 +2182,9 @@ class Request implements \IteratorAggregate, RequestInterface
         foreach ($files as $key => $file) {
             $mimeType = \finfo_file($fInfo, $file);
             if ($mimeType !== false) {
+                if (\is_string($new->payload)) {
+                    $new->payload = []; // reset
+                }
                 $new->payload[$key] = \curl_file_create($file, $mimeType, \basename($file));
             }
         }
@@ -2974,8 +2977,20 @@ class Request implements \IteratorAggregate, RequestInterface
             if ($payload instanceof StreamInterface) {
                 $this->payload = (string) $payload;
             } elseif ($key === null) {
+                if (\is_string($this->payload)) {
+                    $tmpPayload = $this->payload;
+                    $this->payload = [];
+                    $this->payload[] = $tmpPayload;
+                }
+
                 $this->payload[] = $payload;
             } else {
+                if (\is_string($this->payload)) {
+                    $tmpPayload = $this->payload;
+                    $this->payload = [];
+                    $this->payload[] = $tmpPayload;
+                }
+
                 $this->payload[$key] = $payload;
             }
         }
@@ -3061,7 +3076,6 @@ class Request implements \IteratorAggregate, RequestInterface
         }
 
         if ($this->uri_cache === \serialize($this->uri)) {
-            \var_dump($this->uri);
             return;
         }
 

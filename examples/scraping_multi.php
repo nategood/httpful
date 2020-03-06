@@ -20,7 +20,7 @@ function scraping_multi(array $urls): array
     $promise = $client->getPromise();
 
     $return = [];
-    $promise->then(static function (\Httpful\Response $response, \Httpful\Request $request) use (&$return) {
+    $promise->then(static function (Httpful\Response $response, Httpful\Request $request) use (&$return) {
         /** @var \voku\helper\HtmlDomParser $dom */
         $dom = $response->getRawBody();
 

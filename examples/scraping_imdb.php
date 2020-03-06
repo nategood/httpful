@@ -11,9 +11,9 @@ function scraping_imdb(string $url): array
 
     // create HTML DOM
     $response = \Httpful\Client::get_request($url)
-                               ->expectsHtml()
-                               ->disableStrictSSL()
-                               ->send();
+        ->expectsHtml()
+        ->disableStrictSSL()
+        ->send();
 
     /** @var \voku\helper\HtmlDomParser $dom */
     $dom = $response->getRawBody();
