@@ -188,7 +188,8 @@ Transfer-Encoding: chunked\r\n";
     public function testCustomHeader()
     {
         $r = Request::get('http://example.com/')
-            ->withHeader('XTrivial', 'FooBar');
+            ->withHeader('XTrivial', 'FooBar')
+            ->withPort(80);
 
         $r->_curlPrep();
         static::assertContains('', $r->getRawHeaders());
@@ -708,6 +709,14 @@ Content-Type: text/plain; charset=utf-8\r\n",
         foreach ($strings as $string) {
             static::assertSame('a string', (string) $string);
         }
+    }
+
+    public function testIssue7()
+    {
+        $factory = new \Httpful\Factory();
+        $request = (new Request('GET'))->withBody($factory->createStream('abc'));
+
+        static::assertSame('abc', (string) $request->getBody());
     }
 }
 

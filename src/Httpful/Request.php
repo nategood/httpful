@@ -43,6 +43,11 @@ class Request implements \IteratorAggregate, RequestInterface
     private $uri;
 
     /**
+     * @var UriInterface
+     */
+    private $uri_cache;
+
+    /**
      * @var string
      */
     private $ssl_key = '';
@@ -112,6 +117,12 @@ class Request implements \IteratorAggregate, RequestInterface
      *             <p>e.g.: "gzip" or "deflate"</p>
      */
     private $content_encoding = '';
+
+    /**
+     * @var null|int
+     *               <p>e.g.: 80 or 443</p>
+     */
+    private $port = null;
 
     /**
      * @var int
@@ -383,6 +394,10 @@ class Request implements \IteratorAggregate, RequestInterface
         $this->curl->setOpt(\CURLOPT_RETURNTRANSFER, true);
 
         $this->curl->setOpt(\CURLOPT_ENCODING, $this->content_encoding);
+
+        if ($this->port !== null) {
+            $this->curl->setOpt(\CURLOPT_PORT, $this->port);
+        }
 
         $this->curl->setOpt(\CURLOPT_PROTOCOLS, \CURLPROTO_HTTP | \CURLPROTO_HTTPS);
 
@@ -2280,6 +2295,24 @@ class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
+     * @param int $port
+     *
+     * @return static
+     */
+    public function withPort(int $port): self
+    {
+        $new = clone $this;
+
+        $new->port = $port;
+        if ($new->uri) {
+            $new->uri = $new->uri->withPort($port);
+            $new->_updateHostFromUri();
+        }
+
+        return $new;
+    }
+
+    /**
      * @param string $encoding
      *
      * @return static
@@ -2864,13 +2897,13 @@ class Request implements \IteratorAggregate, RequestInterface
      * Added in support for custom payload serializers.
      * The serialize_payload_method stuff still holds true though.
      *
-     * @param array $payload
+     * @param array|string $payload
      *
      * @return mixed
      *
      * @see Request::registerPayloadSerializer()
      */
-    private function _serializePayload(array $payload)
+    private function _serializePayload($payload)
     {
         if (empty($payload)) {
             return '';
@@ -2883,6 +2916,8 @@ class Request implements \IteratorAggregate, RequestInterface
         // When we are in "smart" mode, don't serialize strings/scalars, assume they are already serialized.
         if (
             $this->serialize_payload_method === static::SERIALIZE_PAYLOAD_SMART
+            &&
+            \is_array($payload)
             &&
             \count($payload) === 1
             &&
@@ -2937,10 +2972,8 @@ class Request implements \IteratorAggregate, RequestInterface
             }
 
             if ($payload instanceof StreamInterface) {
-                $payload = (string) $payload;
-            }
-
-            if ($key === null) {
+                $this->payload = (string) $payload;
+            } elseif ($key === null) {
                 $this->payload[] = $payload;
             } else {
                 $this->payload[$key] = $payload;
@@ -3027,9 +3060,8 @@ class Request implements \IteratorAggregate, RequestInterface
             return;
         }
 
-        static $URL_CACHE = null;
-
-        if ($URL_CACHE === $this->uri) {
+        if ($this->uri_cache === \serialize($this->uri)) {
+            \var_dump($this->uri);
             return;
         }
 
@@ -3048,7 +3080,7 @@ class Request implements \IteratorAggregate, RequestInterface
         // See: http://tools.ietf.org/html/rfc7230#section-5.4
         $this->headers = new Headers(['Host' => [$host]] + $this->withoutHeader('Host')->getHeaders());
 
-        $URL_CACHE = $this->uri;
+        $this->uri_cache = \serialize($this->uri);
     }
 
     /**

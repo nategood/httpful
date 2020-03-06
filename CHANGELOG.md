@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.4.0 (2020-03-06)
+
+- add "Request->withPort(int $port)"
+- fix "Request Body Not Preserved" #7
+
 ## 2.3.2 (2020-02-29)
 
 - "ClientMulti" -> add "add_html()"

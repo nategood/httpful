@@ -232,6 +232,11 @@ final class RequestTest extends TestCase
         $request = new Request('GET');
         $request = $request->withUri(new Uri('https://nyholm.tech:443'));
         static::assertSame('nyholm.tech', $request->getHeaderLine('Host'));
+
+        $request = new Request('GET');
+        $request = $request->withUri(new Uri('https://nyholm.tech:8080'))
+                           ->withPort(8081);
+        static::assertSame('nyholm.tech:8081', $request->getHeaderLine('Host'));
     }
 
     public function testValidateRequestUri()
