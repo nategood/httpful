@@ -26,7 +26,8 @@ class HttpfulTest extends \PHPUnit\Framework\TestCase
 	const TEST_SERVER = TEST_SERVER;
 	const TEST_URL = 'http://127.0.0.1:8008';
 	const TEST_URL_400 = 'http://127.0.0.1:8008/400';
-	const TEST_URL_WITH_PARAMS = self::TEST_URL.'?paramName1=paramValue1&paramName2=paramValue2';
+	const TEST_URL_PARAMS = '?paramName1=paramValue1&paramName2=paramValue2';
+    const TEST_URL_PARAMS_ENCODED = '?paramName1=paramValue1&paramName2=paramValue2';
 
     const SAMPLE_JSON_HEADER =
 "HTTP/1.1 200 OK
@@ -620,16 +621,16 @@ Transfer-Encoding: chunked\r\n", $request);
 	public function testUriWithParams(): void
 	{
 		// Test with params in uri
-		$request = Request::get(self::TEST_URL_WITH_PARAMS);
+		$request = Request::get(self::TEST_URL.self::TEST_URL_PARAMS);
 		$request->processUriParams();
-		$this->assertSame(self::TEST_URL_WITH_PARAMS, $request->uri);
+		$this->assertSame(self::TEST_URL.self::TEST_URL_PARAMS_ENCODED, $request->uri);
 		// Test with params in uri and add new param
-		$request = Request::get(self::TEST_URL_WITH_PARAMS);
+		$request = Request::get(self::TEST_URL.self::TEST_URL_PARAMS);
 		$request->addUriParameter(self::PARAM_NAME_3, self::PARAM_VALUE_3);
 		$request->processUriParams();
-		$this->assertSame(self::TEST_URL_WITH_PARAMS.'&'.self::PARAM_NAME_3.'='.self::PARAM_VALUE_3, $request->uri);
+        $this->assertSame(self::TEST_URL.self::TEST_URL_PARAMS_ENCODED.'&'.urlencode(self::PARAM_NAME_3).'='.urlencode(self::PARAM_VALUE_3), $request->uri);
 		// Test remove params from uri
-		$request = Request::get(self::TEST_URL_WITH_PARAMS);
+		$request = Request::get(self::TEST_URL.self::TEST_URL_PARAMS);
 		$request->removeUriParameter(self::PARAM_NAME_1);
 		$request->removeUriParameter(self::PARAM_NAME_2);
 		$request->processUriParams();
@@ -638,36 +639,43 @@ Transfer-Encoding: chunked\r\n", $request);
 		$request = Request::get(self::TEST_URL);
 		$request->addUriParameter(self::PARAM_NAME_1, self::PARAM_VALUE_1);
 		$request->processUriParams();
-		$this->assertSame(self::TEST_URL.'?'.self::PARAM_NAME_1.'='.self::PARAM_VALUE_1, $request->uri);
+		$this->assertSame(self::TEST_URL.'?'.urlencode(self::PARAM_NAME_1).'='.urlencode(self::PARAM_VALUE_1), $request->uri);
 		// Test set new value of param
-		$request = Request::get(self::TEST_URL_WITH_PARAMS);
+		$request = Request::get(self::TEST_URL.self::TEST_URL_PARAMS);
 		$request->addUriParameter(self::PARAM_NAME_1, self::NEW_PARAM_VALUE_1);
 		$request->processUriParams();
-		$this->assertSame(self::TEST_URL.'?'.self::PARAM_NAME_1.'='.self::NEW_PARAM_VALUE_1.'&'.self::PARAM_NAME_2.'='.self::PARAM_VALUE_2, $request->uri);
+		$this->assertSame(self::TEST_URL.'?'.urlencode(self::PARAM_NAME_1).'='.urlencode(self::NEW_PARAM_VALUE_1).'&'.urlencode(self::PARAM_NAME_2).'='.urlencode(self::PARAM_VALUE_2), $request->uri);
 		// Test remove one param
+        $request = Request::get(self::TEST_URL.self::TEST_URL_PARAMS);
+        $request->addUriParameter(self::PARAM_NAME_1, self::NEW_PARAM_VALUE_1);
 		$request->removeUriParameter(self::PARAM_NAME_1);
 		$request->processUriParams();
-		$this->assertSame(self::TEST_URL.'?'.self::PARAM_NAME_2.'='.self::PARAM_VALUE_2, $request->uri);
+		$this->assertSame(self::TEST_URL.'?'.urlencode(self::PARAM_NAME_2).'='.urlencode(self::PARAM_VALUE_2), $request->uri);
 		// Test add param with null value
 		$request = Request::get(self::TEST_URL);
 		$request->addUriParameter(self::PARAM_NAME_1, null);
 		$request->processUriParams();
-		$this->assertSame(self::TEST_URL.'?'.self::PARAM_NAME_1.'=', $request->uri);
+		$this->assertSame(self::TEST_URL.'?'.urlencode(self::PARAM_NAME_1).'=', $request->uri);
 		// Test process uri param without value
 		$request = Request::get(self::TEST_URL.'?'.self::PARAM_NAME_WITHOUT_VALUE.'');
 		$request->processUriParams();
-		$this->assertSame(self::TEST_URL.'?'.self::PARAM_NAME_WITHOUT_VALUE, $request->uri);
+		$this->assertSame(self::TEST_URL.'?'.urlencode(self::PARAM_NAME_WITHOUT_VALUE), $request->uri);
 		// Test add param without value
 		$request = Request::get(self::TEST_URL);
 		$request->addUriParameter(self::PARAM_NAME_WITHOUT_VALUE, null, false);
 		$request->processUriParams();
-		$this->assertSame(self::TEST_URL.'?'. self::PARAM_NAME_WITHOUT_VALUE, $request->uri);
+		$this->assertSame(self::TEST_URL.'?'. urlencode(self::PARAM_NAME_WITHOUT_VALUE), $request->uri);
 		// Test add mixed params
 		$request = Request::get(self::TEST_URL);
 		$request->addUriParameter(self::PARAM_NAME_WITHOUT_VALUE, null, false);
 		$request->addUriParameter(self::PARAM_NAME_1, self::PARAM_VALUE_1);
 		$request->processUriParams();
-		$this->assertSame(self::TEST_URL.'?'.self::PARAM_NAME_WITHOUT_VALUE.'&'.self::PARAM_NAME_1.'='. self::PARAM_VALUE_1, $request->uri);
+		$this->assertSame(self::TEST_URL.'?'.urlencode(self::PARAM_NAME_WITHOUT_VALUE).'&'.urlencode(self::PARAM_NAME_1).'='. urlencode(self::PARAM_VALUE_1), $request->uri);
+		// Test add request body object
+        $request = Request::get(self::TEST_URL);
+        $request->addUriParameter('filter', '{"limit":10,"skip":200}');
+        $request->processUriParams();
+        $this->assertSame(self::TEST_URL.'?filter=%7B%22limit%22%3A10%2C%22skip%22%3A200%7D', $request->uri);
 	}
 
 	// /**

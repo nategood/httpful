@@ -1242,9 +1242,9 @@ class Request
      */
     public function addUriParameter(string $name, ?string $value, bool $withEqualSign = true): Request
     {
-        $this->uriParameters[$name] = $value;
+        $this->uriParameters[urlencode($name)] = urlencode($value);
         if ($withEqualSign == false) {
-            $this->uriParametersWithoutEqualSign[$name] = $withEqualSign;
+            $this->uriParametersWithoutEqualSign[urlencode($name)] = $withEqualSign;
         }
 
         return $this;
@@ -1257,8 +1257,8 @@ class Request
      */
     public function removeUriParameter(string $name): Request
     {
-        $this->removedUriParameters[] = $name;
-        unset($this->uriParameters[$name]);
+        $this->removedUriParameters[] = urlencode($name);
+        unset($this->uriParameters[urlencode($name)]);
 
         return $this;
     }
