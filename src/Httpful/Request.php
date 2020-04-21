@@ -2,7 +2,14 @@
 
 namespace Httpful;
 
+use Closure;
+use Exception;
 use Httpful\Exception\ConnectionErrorException;
+use function curl_version;
+use function implode;
+use function parse_url;
+use function preg_replace;
+
 
 /**
  * Clean, simple class for sending HTTP requests
@@ -85,7 +92,14 @@ class Request
            $_debug;
 
     // Template Request object
-    private static $_template;
+    protected static $template;
+
+    /** @var array */
+    protected $uriParameters = [];
+    /** @var array */
+    protected $removedUriParameters = [];
+    /** @var array */
+    protected $uriParametersWithoutEqualSign = [];
 
     /**
      * We made the constructor protected to force the factory style.  This was
@@ -118,7 +132,7 @@ class Request
      */
     public static function ini(Request $template)
     {
-        self::$_template = clone $template;
+        self::$template = clone $template;
     }
 
     /**
@@ -127,7 +141,7 @@ class Request
      */
     public static function resetIni()
     {
-        self::_initializeDefaults();
+        self::initializeDefaults();
     }
 
     /**
@@ -138,7 +152,7 @@ class Request
      */
     public static function d($attr)
     {
-        return isset($attr) ? self::$_template->$attr : self::$_template;
+        return isset($attr) ? self::$template->$attr : self::$template;
     }
 
     // Accessors
@@ -221,8 +235,10 @@ class Request
      */
     public function send()
     {
-        if (!$this->hasBeenInitialized())
+        $this->processUriParams();
+        if (!$this->hasBeenInitialized()) {
             $this->_curlPrep();
+        }
 
         $result = curl_exec($this->_ch);
 
@@ -247,6 +263,7 @@ class Request
     public function uri($uri)
     {
         $this->uri = $uri;
+
         return $this;
     }
 
@@ -641,11 +658,11 @@ class Request
 
     /**
      * Use a custom function to parse the response.
-     * @param \Closure $callback Takes the raw body of
+     * @param Closure $callback Takes the raw body of
      *    the http response and returns a mixed
      * @return Request
      */
-    public function parseWith(\Closure $callback)
+    public function parseWith(Closure $callback)
     {
         $this->parse_callback = $callback;
         return $this;
@@ -653,10 +670,10 @@ class Request
 
     /**
      * @see Request::parseResponsesWith()
-     * @param \Closure $callback
+     * @param Closure $callback
      * @return Request
      */
-    public function parseResponsesWith(\Closure $callback)
+    public function parseResponsesWith(Closure $callback)
     {
         return $this->parseWith($callback);
     }
@@ -664,10 +681,10 @@ class Request
     /**
      * Callback called to handle HTTP errors. When nothing is set, defaults
      * to logging via `error_log`
-     * @param \Closure $callback (string $error)
+     * @param Closure $callback (string $error)
      * @return Request
      */
-    public function whenError(\Closure $callback)
+    public function whenError(Closure $callback)
     {
         $this->error_callback = $callback;
         return $this;
@@ -676,10 +693,10 @@ class Request
     /**
      * Callback invoked after payload has been serialized but before
      * the request has been built.
-     * @param \Closure $callback (Request $request)
+     * @param Closure $callback (Request $request)
      * @return Request
      */
-    public function beforeSend(\Closure $callback)
+    public function beforeSend(Closure $callback)
     {
         $this->send_callback = $callback;
         return $this;
@@ -693,11 +710,11 @@ class Request
      * 'application/json' would take precedence over the '*' callback.
      *
      * @param string $mime mime type we're registering
-     * @param \Closure $callback takes one argument, $payload,
+     * @param Closure $callback takes one argument, $payload,
      *    which is the payload that we'll be
      * @return Request
      */
-    public function registerPayloadSerializer($mime, \Closure $callback)
+    public function registerPayloadSerializer($mime, Closure $callback)
     {
         $this->payload_serializers[Mime::getFullMime($mime)] = $callback;
         return $this;
@@ -705,10 +722,10 @@ class Request
 
     /**
      * @see Request::registerPayloadSerializer()
-     * @param \Closure $callback
+     * @param Closure $callback
      * @return Request
      */
-    public function serializePayloadWith(\Closure $callback)
+    public function serializePayloadWith(Closure $callback)
     {
         return $this->registerPayloadSerializer('*', $callback);
     }
@@ -783,7 +800,7 @@ class Request
      * Request instantiation), it promotes readability
      * and flexibility within the class.
      */
-    private static function _initializeDefaults()
+    protected static function initializeDefaults()
     {
         // This is the only place you will
         // see this constructor syntax.  It
@@ -791,10 +808,10 @@ class Request
         // recusion.  Do not use this syntax elsewhere.
         // It goes against the whole readability
         // and transparency idea.
-        self::$_template = new Request(array('method' => Http::GET));
+        self::$template = new Request(array('method' => Http::GET));
 
         // This is more like it...
-        self::$_template
+        self::$template
             ->withoutStrictSSL();
     }
 
@@ -803,18 +820,18 @@ class Request
      * Doesn't copy variables prefixed with _
      * @return Request
      */
-    private function _setDefaults()
+    protected function setDefaults()
     {
-        if (!isset(self::$_template))
-            self::_initializeDefaults();
-        foreach (self::$_template as $k=>$v) {
+        if (!isset(self::$template))
+            self::initializeDefaults();
+        foreach (self::$template as $k=> $v) {
             if ($k[0] != '_')
                 $this->$k = $v;
         }
         return $this;
     }
 
-    private function _error($error)
+    private function error($error)
     {
         // TODO add in support for various Loggers that follow
         // PSR 3 https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-3-logger-interface.md
@@ -839,12 +856,12 @@ class Request
         Bootstrap::init();
 
         // Setup the default template if need be
-        if (!isset(self::$_template))
-            self::_initializeDefaults();
+        if (!isset(self::$template))
+            self::initializeDefaults();
 
         $request = new Request();
         return $request
-               ->_setDefaults()
+               ->setDefaults()
                ->method($method)
                ->sendsType($mime)
                ->expectsType($mime);
@@ -855,13 +872,13 @@ class Request
      * library cURL to set up the HTTP request.
      * Note: It does NOT actually send the request
      * @return Request
-     * @throws \Exception
+     * @throws Exception
      */
     public function _curlPrep()
     {
         // Check for required stuff
         if (!isset($this->uri))
-            throw new \Exception('Attempting to send a request before defining a URI endpoint.');
+            throw new Exception('Attempting to send a request before defining a URI endpoint.');
 
         if (isset($this->payload)) {
             $this->serialized_payload = $this->_serializePayload($this->payload);
@@ -885,10 +902,10 @@ class Request
         if ($this->hasClientSideCert()) {
 
             if (!file_exists($this->client_key))
-                throw new \Exception('Could not read Client Key');
+                throw new Exception('Could not read Client Key');
 
             if (!file_exists($this->client_cert))
-                throw new \Exception('Could not read Client Certificate');
+                throw new Exception('Could not read Client Certificate');
 
             curl_setopt($ch, CURLOPT_SSLCERTTYPE,   $this->client_encoding);
             curl_setopt($ch, CURLOPT_SSLKEYTYPE,    $this->client_encoding);
@@ -961,12 +978,12 @@ class Request
             $headers[] = "$header: $value";
         }
 
-        $url = \parse_url($this->uri);
+        $url = parse_url($this->uri);
         $path = (isset($url['path']) ? $url['path'] : '/').(isset($url['query']) ? '?'.$url['query'] : '');
         $this->raw_headers = "{$this->method} $path HTTP/1.1\r\n";
         $host = (isset($url['host']) ? $url['host'] : 'localhost').(isset($url['port']) ? ':'.$url['port'] : '');
         $this->raw_headers .= "Host: $host\r\n";
-        $this->raw_headers .= \implode("\r\n", $headers);
+        $this->raw_headers .= implode("\r\n", $headers);
         $this->raw_headers .= "\r\n";
 
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
@@ -1015,7 +1032,7 @@ class Request
     public function buildUserAgent()
     {
         $user_agent = 'User-Agent: Httpful/' . Httpful::VERSION . ' (cURL/';
-        $curl = \curl_version();
+        $curl = curl_version();
 
         if (isset($curl['version'])) {
             $user_agent .= $curl['version'];
@@ -1026,7 +1043,7 @@ class Request
         $user_agent .= ' PHP/'. PHP_VERSION . ' (' . PHP_OS . ')';
 
         if (isset($_SERVER['SERVER_SOFTWARE'])) {
-            $user_agent .= ' ' . \preg_replace('~PHP/[\d\.]+~U', '',
+            $user_agent .= ' ' . preg_replace('~PHP/[\d\.]+~U', '',
                 $_SERVER['SERVER_SOFTWARE']);
         } else {
             if (isset($_SERVER['TERM_PROGRAM'])) {
@@ -1055,7 +1072,7 @@ class Request
         if ($result === false) {
             if ($curlErrorNumber = curl_errno($this->_ch)) {
                 $curlErrorString = curl_error($this->_ch);
-                $this->_error($curlErrorString);
+                $this->error($curlErrorString);
 
                 $exception = new ConnectionErrorException('Unable to connect to "'.$this->uri.'": '
                         . $curlErrorNumber . ' ' . $curlErrorString);
@@ -1066,7 +1083,7 @@ class Request
                 throw $exception;
             }
 
-            $this->_error('Unable to connect to "'.$this->uri.'".');
+            $this->error('Unable to connect to "'.$this->uri.'".');
             throw new ConnectionErrorException('Unable to connect to "'.$this->uri.'".');
         }
 
@@ -1150,6 +1167,7 @@ class Request
      * @param string $uri optional uri to use
      * @param string $mime expected
      * @return Response
+     * @throws ConnectionErrorException
      */
     public static function getQuick($uri, $mime = null)
     {
@@ -1220,5 +1238,73 @@ class Request
     public static function options($uri)
     {
         return self::init(Http::OPTIONS)->uri($uri);
+    }
+
+    /**
+     * Adds parameter to uri
+     * @param string $name
+     * @param string $value
+     * @param bool   $withEqualSign
+     * @return Request
+     */
+    public function addUriParameter(string $name, ?string $value, bool $withEqualSign = true): Request
+    {
+        $this->uriParameters[urlencode($name)] = urlencode($value);
+        if ($withEqualSign == false) {
+            $this->uriParametersWithoutEqualSign[urlencode($name)] = $withEqualSign;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Removes parameter from uri
+     * @param string $name
+     * @return Request
+     */
+    public function removeUriParameter(string $name): Request
+    {
+        $this->removedUriParameters[] = urlencode($name);
+        unset($this->uriParameters[urlencode($name)]);
+
+        return $this;
+    }
+
+    /**
+     * Add or remove parameters to/from uri. This method is automatically called in send request
+     */
+    public function processUriParams(): void
+    {
+        $paramsInUri = [];
+        $uri = $this->uri;
+        $paramsToUri = [];
+        $explodedUri = explode('?', $uri, 2);
+        if (count($explodedUri) > 1) {
+            [$uri, $params] = $explodedUri;
+            $explodedParams = explode('&', $params);
+            foreach ($explodedParams as $explodedParam) {
+                $explodedValues = explode('=', $explodedParam, 2);
+                if (count($explodedValues) == 1) {
+                    $this->uriParametersWithoutEqualSign[$explodedValues[0]] = false;
+                    $paramsInUri[$explodedValues[0]] = null;
+                    continue;
+                }
+                [$name, $value] = $explodedValues;
+                $paramsInUri[$name] = $value;
+            }
+        }
+        $parameters = array_merge($paramsInUri, $this->uriParameters);
+        foreach ($parameters as $key => $parameter) {
+            if (in_array($key, $this->removedUriParameters) === false) {
+                $equalSign = array_key_exists($key, $this->uriParametersWithoutEqualSign) ? '' : '=';
+                $paramsToUri[] = $key.$equalSign.$parameter;
+            }
+        }
+        if (count($paramsToUri) > 0) {
+            $this->uri = $uri.'?'.implode('&', $paramsToUri);
+
+            return;
+        }
+        $this->uri = $uri;
     }
 }
