@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.4.1 (2020-05-04)
+
+- "Client->download()" -> added timeout parameter
+- "HtmlMimeHandler" -> fix non UTF-8 string input
+- "Response" -> fix Header-Parsing for empty responses
+
 ## 2.4.0 (2020-03-06)
 
 - add "Request->withPort(int $port)"
