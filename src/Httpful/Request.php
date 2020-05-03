@@ -165,7 +165,7 @@ class Request implements \IteratorAggregate, RequestInterface
     private $serialized_payload;
 
     /**
-     * @var string[]|\CURLFile[]|string
+     * @var \CURLFile[]|string|string[]
      */
     private $payload = [];
 
@@ -2083,6 +2083,12 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function withTimeout($timeout): self
     {
+        if (!\preg_match('/^\d+(\.\d+)?/', (string) $timeout)) {
+            throw new \InvalidArgumentException(
+                'Invalid timeout provided: ' . \var_export($timeout, true)
+            );
+        }
+
         $new = clone $this;
 
         $new->timeout = $timeout;

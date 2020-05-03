@@ -23,6 +23,10 @@ class HtmlMimeHandler extends DefaultMimeHandler
             return null;
         }
 
+        if (\voku\helper\UTF8::is_utf8($body) === false) {
+            $body = \voku\helper\UTF8::to_utf8($body);
+        }
+
         return HtmlDomParser::str_get_html($body);
     }
 

@@ -31,7 +31,7 @@
     "ext-json": "*",
     "ext-simplexml": "*",
     "ext-xmlwriter": "*",
-    "php-http/httplug": "2.0.*",
+    "php-http/httplug": "2.1.*",
     "php-http/promise": "1.0.*",
     "psr/http-client": "1.0.*",
     "psr/http-factory": "1.0.*",

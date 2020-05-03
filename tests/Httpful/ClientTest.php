@@ -219,11 +219,11 @@ final class ClientTest extends TestCase
 
     public function testDownloadSimple()
     {
-        $testFileUrl = 'http://speedtest.ftp.otenet.gr/files/test100k.db';
+        $testFileUrl = 'http://thetofu.com/webtest/webmachine/test100k/test100.log';
         $tmpFile = \tempnam('/tmp', 'FOO');
         $expectedFileContent = \file_get_contents($testFileUrl);
 
-        $response = Client::download($testFileUrl, $tmpFile);
+        $response = Client::download($testFileUrl, $tmpFile, 5);
 
         static::assertTrue(\count($response->getHeaders()) > 0);
         static::assertSame($expectedFileContent, $response->getRawBody());

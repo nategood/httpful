@@ -35,14 +35,22 @@ class Client implements ClientInterface
     }
 
     /**
-     * @param string $uri
-     * @param string $file_path
+     * @param string    $uri
+     * @param string    $file_path
+     * @param float|int $timeout
      *
      * @return Response
      */
-    public static function download(string $uri, $file_path): Response
+    public static function download(string $uri, $file_path, $timeout = 0): Response
     {
-        return Request::download($uri, $file_path)->send();
+        $request = Request::download($uri, $file_path);
+
+        if ($timeout > 0) {
+            $request->withTimeout($timeout)
+                ->withConnectionTimeoutInSeconds($timeout / 10);
+        }
+
+        return $request->send();
     }
 
     /**

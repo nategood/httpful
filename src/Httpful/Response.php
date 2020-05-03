@@ -105,11 +105,19 @@ class Response implements ResponseInterface
             $this->meta_data['protocol_version'] = '1.1';
         }
 
-        if (\is_string($headers)) {
+        if (
+            \is_string($headers)
+            &&
+            $headers !== ''
+        ) {
             $this->code = $this->_getResponseCodeFromHeaderString($headers);
             $this->reason = Http::reason($this->code);
             $this->headers = Headers::fromString($headers);
-        } elseif (\is_array($headers)) {
+        } elseif (
+            \is_array($headers)
+            &&
+            \count($headers) > 0
+        ) {
             $this->code = 200;
             $this->reason = Http::reason($this->code);
             $this->headers = new Headers($headers);
@@ -189,7 +197,7 @@ class Response implements ResponseInterface
             ||
             !\is_numeric($parts[1])
         ) {
-            throw new ResponseException('Unable to parse response code from HTTP response due to malformed response: ' . \print_r($parts, true));
+            throw new ResponseException('Unable to parse response code from HTTP response due to malformed response: "' . \print_r($headers, true) . '"');
         }
 
         return (int) $parts[1];
