@@ -21,6 +21,7 @@ Features
  - Client Side Certificate Auth (SSL)
  - Request "Download"
  - Request "Templates"
+ - Parallel Request (via curl_multi)
  - PSR-3: Logger Interface
  - PSR-7: HTTP Message Interface
  - PSR-17: HTTP Factory Interface
