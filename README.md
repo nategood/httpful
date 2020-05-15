@@ -9,7 +9,7 @@
 
 # 📯 Httpful
 
-Forked some years ago from [nategood/httpful](https://github.com/nategood/httpful) with added support for parallel request and many PSR Interfaces: A Chainable, REST Friendly Wrapper for cURL with many "PSR-HTTP" implemented inferfaces. 
+Forked some years ago from [nategood/httpful](https://github.com/nategood/httpful) + added support for parallel request and implemented many PSR Interfaces: A Chainable, REST Friendly Wrapper for cURL with many "PSR-HTTP" implemented inferfaces. 
 
 Features
 
