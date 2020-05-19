@@ -2,8 +2,8 @@
 [![Coverage Status](https://coveralls.io/repos/github/voku/httpful/badge.svg?branch=master)](https://coveralls.io/github/voku/httpful?branch=master)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/5882e37a6cd24f6c9d1cf70a08064146)](https://www.codacy.com/app/voku/httpful)
 [![Latest Stable Version](https://poser.pugx.org/voku/httpful/v/stable)](https://packagist.org/packages/voku/httpful) 
-[![Total Downloads](https://poser.pugx.org/voku/httpful/downloads)](https://packagist.org/packages/voku/httpful) 
-[![License](https://poser.pugx.org/voku/arrayy/license)](https://packagist.org/packages/voku/arrayy)
+[![Total Downloads](https://poser.pugx.org/voku/httpful/downloads)](https://packagist.org/packages/voku/httpful)
+[![License](https://poser.pugx.org/voku/httpful/license)](https://packagist.org/packages/voku/httpful)
 [![Donate to this project using Paypal](https://img.shields.io/badge/paypal-donate-yellow.svg)](https://www.paypal.me/moelleken)
 [![Donate to this project using Patreon](https://img.shields.io/badge/patreon-donate-yellow.svg)](https://www.patreon.com/voku)
 
