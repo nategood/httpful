@@ -584,7 +584,7 @@ final class Curl
      */
     public function getResponseCookie($key)
     {
-        return isset($this->responseCookies[$key]) ? $this->responseCookies[$key] : null;
+        return $this->responseCookies[$key] ?? null;
     }
 
     /**

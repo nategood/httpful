@@ -118,7 +118,7 @@ final class UriResolver
             $segments = \explode('/', $target->getPath());
             $lastSegment = \end($segments);
 
-            return $emptyPathUri->withPath($lastSegment === '' || $lastSegment === false ? './' : $lastSegment);
+            return $emptyPathUri->withPath($lastSegment === '' ? './' : $lastSegment);
         }
 
         return $emptyPathUri;
@@ -141,6 +141,7 @@ final class UriResolver
 
         $results = [];
         $segments = \explode('/', $path);
+        $segment = '';
         foreach ($segments as $segment) {
             if ($segment === '..') {
                 \array_pop($results);
@@ -166,7 +167,7 @@ final class UriResolver
             $newPath !== ''
             &&
             (
-                isset($segment)
+                $segment
                 &&
                 (
                     $segment === '.'

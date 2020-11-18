@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.4.2 (2020-11-18)
+
+[+]: update vendor stuff + fix tests
+
 ## 2.4.1 (2020-05-04)
 
 - "Client->download()" -> added timeout parameter
