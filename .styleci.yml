@@ -3,7 +3,6 @@ preset: psr2
 enabled:
   - unused_use
   - include
-  - self_accessor
   - single_quote
   - ordered_use
 

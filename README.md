@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/voku/httpful.svg?branch=master)](https://travis-ci.org/voku/httpful)
+[![Build Status](https://travis-ci.com/voku/httpful.svg?branch=master)](https://travis-ci.com/voku/httpful)
 [![Coverage Status](https://coveralls.io/repos/github/voku/httpful/badge.svg?branch=master)](https://coveralls.io/github/voku/httpful?branch=master)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/5882e37a6cd24f6c9d1cf70a08064146)](https://www.codacy.com/app/voku/httpful)
 [![Latest Stable Version](https://poser.pugx.org/voku/httpful/v/stable)](https://packagist.org/packages/voku/httpful) 
