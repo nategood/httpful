@@ -171,7 +171,7 @@ return PhpCsFixer\Config::create()
                                 'phpdoc_var_without_name'                       => true,
                                 'php_unit_construct'                            => true,
                                 'php_unit_dedicate_assert'                      => true,
-                                'php_unit_expectation'                          => true,
+                                'php_unit_expectation'                          => false, // break old code
                                 'php_unit_fqcn_annotation'                      => true,
                                 'php_unit_internal_class'                       => true,
                                 'php_unit_method_casing'                        => true,

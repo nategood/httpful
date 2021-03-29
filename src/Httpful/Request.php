@@ -625,7 +625,7 @@ class Request implements \IteratorAggregate, RequestInterface
         $user_agent = 'User-Agent: Http/PhpClient (cURL/';
         $curl = \curl_version();
 
-        if (isset($curl['version'])) {
+        if ($curl && isset($curl['version'])) {
             $user_agent .= $curl['version'];
         } else {
             $user_agent .= '?.?.?';
@@ -1925,6 +1925,7 @@ class Request implements \IteratorAggregate, RequestInterface
                 if ($result === false) {
                     /** @noinspection NotOptimalIfConditionsInspection */
                     if (
+                        /* @phpstan-ignore-next-line | FP? */
                         $this->curl->errorCode === \CURLE_WRITE_ERROR
                         ||
                         $this->curl->errorCode === \CURLE_BAD_CONTENT_ENCODING
