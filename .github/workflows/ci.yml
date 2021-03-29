@@ -1,0 +1,101 @@
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: [
+            7.0,
+            7.1,
+            7.2,
+            7.3,
+            7.4,
+            8.0
+        ]
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@2.9.0
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: xdebug
+          extensions: zip
+          tools: composer
+
+      - name: Determine composer cache directory
+        id: composer-cache
+        run: echo "::set-output name=directory::$(composer config cache-dir)"
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v2.1.3
+        with:
+          path: ${{ steps.composer-cache.outputs.directory }}
+          key: ${{ matrix.php }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ matrix.php }}-composer-
+
+      - name: Install dependencies
+        run: |
+          if [[ "${{ matrix.php }}" == "7.4" ]]; then
+            composer require phpstan/phpstan --no-update
+          fi;
+
+          if [[ "${{ matrix.composer }}" == "lowest" ]]; then
+            composer update --prefer-dist --no-interaction --prefer-lowest --prefer-stable
+          fi;
+
+          if [[ "${{ matrix.composer }}" == "basic" ]]; then
+            composer update --prefer-dist --no-interaction
+          fi;
+
+          composer dump-autoload -o
+
+      - name: Run tests
+        run: |
+          mkdir -p build/logs
+          php vendor/bin/phpunit -c phpunit.xml.dist --coverage-clover=build/logs/clover.xml
+
+      - name: Run phpstan
+        continue-on-error: true
+        if: ${{ matrix.php == '7.4' }}
+        run: |
+          php vendor/bin/phpstan analyse
+
+      - name: Upload coverage results to Coveralls
+        env:
+            COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+            composer global require php-coveralls/php-coveralls
+            php-coveralls --coverage_clover=build/logs/clover.xml -v
+
+      - name: Upload coverage results to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          files: build/logs/clover.xml
+          
+      - name: Upload coverage results to Scrutinizer
+        uses: sudo-bot/action-scrutinizer@latest
+        with:
+          cli-args: "--format=php-clover build/logs/clover.xml"
+      
+      - name: Archive logs artifacts
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: logs_composer-${{ matrix.composer }}_php-${{ matrix.php }}
+          path: |
+            build/logs
