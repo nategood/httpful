@@ -34,8 +34,13 @@ final class ClientMultiTest extends TestCase
         $multi->start();
 
         static::assertCount(2, $results);
-        static::assertContains('<!doctype html>', (string) $results[0]);
-        static::assertContains('Lars Moelleken', (string) $results[1]);
+        if (\method_exists(__CLASS__, 'assertStringContainsString')) {
+            static::assertStringContainsString('<!doctype html>', (string) $results[0]);
+            static::assertStringContainsString('Lars Moelleken', (string) $results[1]);
+        } else {
+            static::assertContains('<!doctype html>', (string) $results[0]);
+            static::assertContains('Lars Moelleken', (string) $results[1]);
+        }
     }
 
     public function testBasicAuthRequest()
@@ -145,16 +150,28 @@ final class ClientMultiTest extends TestCase
             ] === $data['data']
         );
 
-        static::assertContains('https://postman-echo.com/post', $data['url']);
+        if (\method_exists(__CLASS__, 'assertStringContainsString')) {
+            static::assertStringContainsString('https://postman-echo.com/post', $data['url']);
+        } else {
+            static::assertContains('https://postman-echo.com/post', $data['url']);
+        }
 
         static::assertSame('https', $data['headers']['x-forwarded-proto']);
 
         static::assertSame('gzip', $data['headers']['accept-encoding']);
 
-        static::assertContains('Basic ', $data['headers']['authorization']);
+        if (\method_exists(__CLASS__, 'assertStringContainsString')) {
+            static::assertStringContainsString('Basic ', $data['headers']['authorization']);
+        } else {
+            static::assertContains('Basic ', $data['headers']['authorization']);
+        }
 
         static::assertSame('application/json', $data['headers']['content-type']);
 
-        static::assertContains('Http/PhpClient', $data['headers']['user-agent']);
+        if (\method_exists(__CLASS__, 'assertStringContainsString')) {
+            static::assertStringContainsString('Http/PhpClient', $data['headers']['user-agent']);
+        } else {
+            static::assertContains('Http/PhpClient', $data['headers']['user-agent']);
+        }
     }
 }

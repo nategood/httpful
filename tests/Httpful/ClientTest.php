@@ -47,7 +47,7 @@ final class ClientTest extends TestCase
         ];
         static::assertContains($head->getMetaData()['url'], $expectedForDifferentCurlVersions);
 
-        static::assertInternalType('string', (string) $head->getBody());
+        static::assertTrue(is_string((string)$head->getBody()));
         static::assertSame('1.1', $head->getProtocolVersion());
 
         $post = Client::post('http://www.google.com?a=b');
@@ -128,17 +128,29 @@ final class ClientTest extends TestCase
             $data['data']
         );
 
-        static::assertContains('https://postman-echo.com/post', $data['url']);
+        if (\method_exists(__CLASS__, 'assertStringContainsString')) {
+            static::assertStringContainsString('https://postman-echo.com/post', $data['url']);
+        } else {
+            static::assertContains('https://postman-echo.com/post', $data['url']);
+        }
 
         static::assertSame('https', $data['headers']['x-forwarded-proto']);
 
         static::assertSame('deflate', $data['headers']['accept-encoding']);
 
-        static::assertContains('Basic ', $data['headers']['authorization']);
+        if (\method_exists(__CLASS__, 'assertStringContainsString')) {
+            static::assertStringContainsString('Basic ', $data['headers']['authorization']);
+        } else {
+            static::assertContains('Basic ', $data['headers']['authorization']);
+        }
 
         static::assertSame('application/json', $data['headers']['content-type']);
 
-        static::assertContains('Http/PhpClient', $data['headers']['user-agent']);
+        if (\method_exists(__CLASS__, 'assertStringContainsString')) {
+            static::assertStringContainsString('Http/PhpClient', $data['headers']['user-agent']);
+        } else {
+            static::assertContains('Http/PhpClient', $data['headers']['user-agent']);
+        }
     }
 
     public function testBasicAuthRequest()
@@ -186,21 +198,34 @@ final class ClientTest extends TestCase
 
         static::assertSame('1.1', $response->getProtocolVersion());
         static::assertSame(200, $response->getStatusCode());
-        static::assertContains('"content-type":"application\/json"', (string) $response);
+
+        if (\method_exists(__CLASS__, 'assertStringContainsString')) {
+            static::assertStringContainsString('"content-type":"application\/json"', (string) $response);
+        } else {
+            static::assertContains('"content-type":"application\/json"', (string) $response);
+        }
     }
 
     public function testPutCall()
     {
         $response = Client::put('https://postman-echo.com/put', 'lall');
 
-        static::assertContains('"data":"lall"', (string) $response);
+        if (\method_exists(__CLASS__, 'assertStringContainsString')) {
+            static::assertStringContainsString('"data":"lall"', (string) $response);
+        } else {
+            static::assertContains('"data":"lall"', (string) $response);
+        }
     }
 
     public function testPatchCall()
     {
         $response = Client::patch('https://postman-echo.com/patch', 'lall');
 
-        static::assertContains('"data":"lall"', (string) $response);
+        if (\method_exists(__CLASS__, 'assertStringContainsString')) {
+            static::assertStringContainsString('"data":"lall"', (string) $response);
+        } else {
+            static::assertContains('"data":"lall"', (string) $response);
+        }
     }
 
     public function testJsonHelper()
@@ -320,7 +345,12 @@ final class ClientTest extends TestCase
     public function testSelfSignedCertificate()
     {
         $this->expectException(NetworkExceptionInterface::class);
-        $this->expectExceptionMessageRegExp('/.*certificat.*/');
+        if (\method_exists(__CLASS__, 'expectExceptionMessageRegExp')) {
+            $this->expectExceptionMessageRegExp('/.*certificat.*/');
+        } else {
+            $this->expectExceptionMessageMatches('/.*certificat.*/');
+        }
+
         $client = new Client();
         $request = (new Request('GET'))->withUriFromString('https://self-signed.badssl.com/')->enableStrictSSL();
         /** @noinspection UnusedFunctionResultInspection */
@@ -336,7 +366,11 @@ final class ClientTest extends TestCase
         $response = $client->sendRequest($request);
 
         static::assertEquals(200, $response->getStatusCode());
-        static::assertContains('self-signed.<br>badssl.com', (string) $response);
+        if (\method_exists(__CLASS__, 'assertStringContainsString')) {
+            static::assertStringContainsString('self-signed.<br>badssl.com', (string) $response);
+        } else {
+            static::assertContains('self-signed.<br>badssl.com', (string) $response);
+        }
 
         // ---
 
@@ -357,7 +391,11 @@ final class ClientTest extends TestCase
         $request = (new Request('GET'))->withUriFromString('http://www.google.com/DOES/NOT/EXISTS');
         $response = $client->sendRequest($request);
         static::assertEquals(404, $response->getStatusCode());
-        static::assertContains('<title>Error 404 (Not Found)', (string) $response->getBody());
+        if (\method_exists(__CLASS__, 'assertStringContainsString')) {
+            static::assertStringContainsString('<title>Error 404 (Not Found)', (string) $response->getBody());
+        } else {
+            static::assertContains('<title>Error 404 (Not Found)', (string) $response->getBody());
+        }
     }
 
     public function testHostNotFound()
@@ -388,8 +426,14 @@ final class ClientTest extends TestCase
             ->withUriFromString('https://moelleken.org/');
         $response = $client->sendRequest($request);
         static::assertEquals(200, $response->getStatusCode());
-        static::assertContains('Lars Moelleken', (string) $response->getBody());
+
+        if (\method_exists(__CLASS__, 'assertStringContainsString')) {
+            static::assertStringContainsString('Lars Moelleken', (string) $response->getBody());
+        } else {
+            static::assertContains('Lars Moelleken', (string) $response->getBody());
+        }
         static::assertContains($response->getProtocolVersion(), ['1.1', '2']);
+
         static::assertEquals(['text/html; charset=utf-8'], $response->getHeader('content-type'));
     }
 

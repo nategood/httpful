@@ -9,7 +9,7 @@
     "api",
     "requests"
   ],
-  "homepage": "http://github.com/voku/httpful",
+  "homepage": "https://github.com/voku/httpful",
   "license": "MIT",
   "authors": [
     {
@@ -20,7 +20,7 @@
     {
       "name": "Lars Moelleken",
       "email": "lars@moelleken.org",
-      "homepage": "http://moelleken.org/"
+      "homepage": "https://moelleken.org/"
     }
   ],
   "require": {
@@ -41,7 +41,7 @@
     "voku/simple_html_dom": "~4.7"
   },
   "require-dev": {
-    "phpunit/phpunit": "~6.0 || ~7.0"
+    "phpunit/phpunit": "~6.0 || ~7.0 || ~9.0"
   },
   "provide": {
     "php-http/async-client-implementation": "1.0",

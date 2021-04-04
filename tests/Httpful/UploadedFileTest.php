@@ -20,20 +20,6 @@ final class UploadedFileTest extends TestCase
      */
     private $cleanup = [];
 
-    protected function setUp()
-    {
-        $this->cleanup = [];
-    }
-
-    protected function tearDown()
-    {
-        foreach ($this->cleanup as $file) {
-            if (\is_string($file) && \file_exists($file)) {
-                \unlink($file);
-            }
-        }
-    }
-
     /**
      * @return array
      */
@@ -304,5 +290,17 @@ final class UploadedFileTest extends TestCase
         $uploadedFile->moveTo($to);
 
         static::assertFileEquals(__FILE__, $to);
+    }
+
+    public function testCleanUp()
+    {
+        $this->cleanup[] = $from = \tempnam(\sys_get_temp_dir(), 'test');
+
+        // PhpUnit "tearDown" need void return but old PHP version do not support it, so here is a hack ...
+        foreach ($this->cleanup as $file) {
+            if (\is_string($file) && \file_exists($file)) {
+                static::assertTrue(\unlink($file));
+            }
+        }
     }
 }

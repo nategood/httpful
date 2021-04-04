@@ -112,7 +112,7 @@ final class StreamTest extends TestCase
         static::assertTrue($stream->isWritable());
         static::assertTrue($stream->isSeekable());
         static::assertSame('php://temp', $stream->getMetadata('uri'));
-        static::assertInternalType('array', $stream->getMetadata());
+        static::assertTrue(is_array( $stream->getMetadata()));
         static::assertSame(4, $stream->getSize());
         static::assertFalse($stream->eof());
         $stream->close();

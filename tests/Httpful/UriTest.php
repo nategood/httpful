@@ -135,7 +135,7 @@ final class UriTest extends TestCase
     public function testParseUriPortCannotBeZero()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Unable to parse URI');
+        $this->expectExceptionMessage('Invalid port: 0');
 
         new Uri('//example.com:0');
     }

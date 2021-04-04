@@ -90,7 +90,12 @@ Transfer-Encoding: chunked\r\n";
 
         static::assertSame(Mime::JSON, $r->getExpectedType());
         $r->_curlPrep();
-        static::assertContains('application/json', $r->getRawHeaders());
+
+        if (\method_exists(__CLASS__, 'assertStringContainsString')) {
+            static::assertStringContainsString('application/json', $r->getRawHeaders());
+        } else {
+            static::assertContains('application/json', $r->getRawHeaders());
+        }
     }
 
     public function testAttach()
@@ -153,7 +158,7 @@ Transfer-Encoding: chunked\r\n";
 
         static::assertSame('Key1', $response->getRawBody()[0][0]);
         static::assertSame('Value1', $response->getRawBody()[1][0]);
-        static::assertInternalType('string', $response->getRawBody()[2][0]);
+        static::assertTrue(is_string($response->getRawBody()[2][0]));
         static::assertSame('40.0', $response->getRawBody()[2][0]);
     }
 
@@ -164,7 +169,12 @@ Transfer-Encoding: chunked\r\n";
             ->withHeader('Accept', $accept);
 
         $r->_curlPrep();
-        static::assertContains($accept, $r->getRawHeaders());
+
+        if (\method_exists(__CLASS__, 'assertStringContainsString')) {
+            static::assertStringContainsString($accept, $r->getRawHeaders());
+        } else {
+            static::assertContains($accept, $r->getRawHeaders());
+        }
         static::assertSame($accept, $r->getHeaders()['Accept'][0]);
     }
 
@@ -180,7 +190,13 @@ Transfer-Encoding: chunked\r\n";
             );
 
         $r->_curlPrep();
-        static::assertContains($accept, $r->getRawHeaders());
+
+        if (\method_exists(__CLASS__, 'assertStringContainsString')) {
+            static::assertStringContainsString($accept, $r->getRawHeaders());
+        } else {
+            static::assertContains($accept, $r->getRawHeaders());
+        }
+
         static::assertSame($accept, $r->getHeaders()['Accept'][0]);
         static::assertSame('Bar', $r->getHeaders()['Foo'][0]);
     }
@@ -192,7 +208,13 @@ Transfer-Encoding: chunked\r\n";
             ->withPort(80);
 
         $r->_curlPrep();
-        static::assertContains('', $r->getRawHeaders());
+
+        if (\method_exists(__CLASS__, 'assertStringContainsString')) {
+            static::assertStringContainsString('', $r->getRawHeaders());
+        } else {
+            static::assertContains('', $r->getRawHeaders());
+        }
+
         static::assertSame('FooBar', $r->getHeaders()['XTrivial'][0]);
     }
 
@@ -357,7 +379,7 @@ Transfer-Encoding: chunked\r\n";
 
         static::assertSame('value', $response->getRawBody()['key']);
         static::assertSame('value', $response->getRawBody()['object']['key']);
-        static::assertInternalType('array', $response->getRawBody()['array']);
+        static::assertTrue(is_array( $response->getRawBody()['array']));
         static::assertSame(1, $response->getRawBody()['array'][0]);
     }
 
@@ -398,10 +420,10 @@ Transfer-Encoding: chunked\r\n",
     {
         $req = (new Request())->withMimeType(Mime::JSON)->disableAutoParsing();
         $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
-        static::assertInternalType('string', (string) $response->getBody());
+        static::assertTrue(is_string( (string) $response->getBody()));
         $req = (new Request())->withMimeType(Mime::JSON)->enableAutoParsing();
         $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
-        static::assertInternalType('array', $response->getRawBody());
+        static::assertTrue(is_array( $response->getRawBody()));
     }
 
     public function testOverrideXmlHandler()
@@ -551,7 +573,12 @@ Content-Type: text/plain; charset=utf-8\r\n",
     {
         $req = (new Request())->withMimeType(Mime::JSON);
         $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
-        static::assertContains('Content-Type: application/json', $response->getRawHeaders());
+
+        if (\method_exists(__CLASS__, 'assertStringContainsString')) {
+            static::assertStringContainsString('Content-Type: application/json', $response->getRawHeaders());
+        } else {
+            static::assertContains('Content-Type: application/json', $response->getRawHeaders());
+        }
     }
 
     public function testmimeType()
@@ -635,7 +662,7 @@ Content-Type: text/plain; charset=utf-8\r\n",
                 ->withTimeout(0.1)
                 ->send();
         } catch (NetworkErrorException $e) {
-            static::assertInternalType('resource', $e->getCurlObject()->getCurl());
+            static::assertTrue(is_resource($e->getCurlObject()->getCurl()));
             static::assertTrue($e->wasTimeout());
 
             return;
@@ -658,16 +685,28 @@ Content-Type: text/plain; charset=utf-8\r\n",
 
         static::assertArrayHasKey('User-Agent', $r->getHeaders());
         $r->_curlPrep();
-        static::assertContains('User-Agent: ACME/1.2.3', $r->getRawHeaders());
-        static::assertNotContains('User-Agent: HttpFul/1.0', $r->getRawHeaders());
+
+        if (\method_exists(__CLASS__, 'assertStringContainsString')) {
+            static::assertStringContainsString('User-Agent: ACME/1.2.3', $r->getRawHeaders());
+            static::assertStringNotContainsString('User-Agent: HttpFul/1.0', $r->getRawHeaders());
+        } else {
+            static::assertContains('User-Agent: ACME/1.2.3', $r->getRawHeaders());
+            static::assertNotContains('User-Agent: HttpFul/1.0', $r->getRawHeaders());
+        }
+
 
         $r = Request::get('http://example.com/')
             ->withUserAgent('');
 
         static::assertArrayHasKey('User-Agent', $r->getHeaders());
         $r->_curlPrep();
-        static::assertContains('User-Agent:', $r->getRawHeaders());
-        static::assertNotContains('User-Agent: HttpFul/1.0', $r->getRawHeaders());
+        if (\method_exists(__CLASS__, 'assertStringContainsString')) {
+            static::assertStringContainsString('User-Agent:', $r->getRawHeaders());
+            static::assertStringNotContainsString('User-Agent: HttpFul/1.0', $r->getRawHeaders());
+        } else {
+            static::assertContains('User-Agent:', $r->getRawHeaders());
+            static::assertNotContains('User-Agent: HttpFul/1.0', $r->getRawHeaders());
+        }
     }
 
     public function testWhenError()

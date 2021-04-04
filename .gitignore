@@ -3,6 +3,7 @@ downloads
 
 # Tests
 server.log
+.phpunit.result.cache
 
 # Build
 /build/

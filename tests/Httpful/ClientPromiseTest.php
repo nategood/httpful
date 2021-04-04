@@ -33,7 +33,12 @@ final class ClientPromiseTest extends TestCase
         $promise->wait();
 
         static::assertInstanceOf(Response::class, $result);
-        static::assertContains('Lars Moelleken', (string) $result);
+
+        if (\method_exists(__CLASS__, 'assertStringContainsString')) {
+            static::assertStringContainsString('Lars Moelleken', (string) $result);
+        } else {
+            static::assertContains('Lars Moelleken', (string) $result);
+        }
     }
 
     public function testGetMultiPromise()
@@ -54,7 +59,13 @@ final class ClientPromiseTest extends TestCase
         $promise->wait();
 
         static::assertCount(2, $results);
-        static::assertContains('<!doctype html>', (string) $results[0]);
-        static::assertContains('Lars Moelleken', (string) $results[1]);
+
+        if (\method_exists(__CLASS__, 'assertStringContainsString')) {
+            static::assertStringContainsString('<!doctype html>', (string) $results[0]);
+            static::assertStringContainsString('Lars Moelleken', (string) $results[1]);
+        } else {
+            static::assertContains('<!doctype html>', (string) $results[0]);
+            static::assertContains('Lars Moelleken', (string) $results[1]);
+        }
     }
 }
