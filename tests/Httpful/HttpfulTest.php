@@ -663,8 +663,8 @@ Content-Type: text/plain; charset=utf-8\r\n",
                 ->withTimeout(0.1)
                 ->send();
         } catch (NetworkErrorException $e) {
-            static::assertTrue(is_resource($e->getCurlObject()->getCurl()));
-            static::assertTrue($e->wasTimeout());
+            static::assertTrue(is_resource($e->getCurlObject()->getCurl()). 'is_resource');
+            static::assertTrue($e->wasTimeout(), 'wasTimeout');
 
             return;
         }

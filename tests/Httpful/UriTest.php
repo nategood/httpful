@@ -135,7 +135,11 @@ final class UriTest extends TestCase
     public function testParseUriPortCannotBeZero()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Invalid port: 0');
+        if (\voku\helper\Bootup::is_php('7.3')) {
+            $this->expectExceptionMessage('Unable to parse URI');
+        } else {
+            $this->expectExceptionMessage('Invalid port: 0');
+        }
 
         new Uri('//example.com:0');
     }
