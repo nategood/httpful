@@ -24,6 +24,7 @@ jobs:
             7.4,
             8.0
         ]
+        composer: [basic]
     timeout-minutes: 10
     steps:
       - name: Checkout code
@@ -67,7 +68,6 @@ jobs:
       - name: Run tests
         run: |
           mkdir -p build/logs
-          ls -al vendor/bin/
           php vendor/bin/phpunit -c phpunit.xml.dist --coverage-clover=build/logs/clover.xml
 
       - name: Run phpstan
