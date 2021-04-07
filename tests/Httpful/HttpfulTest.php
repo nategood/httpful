@@ -659,7 +659,7 @@ Content-Type: text/plain; charset=utf-8\r\n",
         try {
             (new Request())
                 ->withUriFromString(self::TIMEOUT_URI)
-                ->withTimeout(0.1)
+                ->withTimeout(0.01)
                 ->send();
         } catch (NetworkErrorException $e) {
             static::assertTrue(is_resource($e->getCurlObject()->getCurl()));
