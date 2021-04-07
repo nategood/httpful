@@ -499,7 +499,11 @@ final class ClientTest extends TestCase
     public function testExpiredTimeout()
     {
         $this->expectException(NetworkExceptionInterface::class);
-        $this->expectExceptionMessageMatches('/Timeout was reached/');
+        if (\method_exists(__CLASS__, 'expectExceptionMessageRegExp')) {
+            $this->expectExceptionMessageRegExp('/Timeout was reached/');
+        } else {
+            $this->expectExceptionMessageMatches('/Timeout was reached/');
+        }
         $client = new Client();
         $request = (new Request())->withUriFromString('http://slowwly.robertomurray.co.uk/delay/10000/url/http://www.example.com')
             ->withConnectionTimeoutInSeconds(0.001);
