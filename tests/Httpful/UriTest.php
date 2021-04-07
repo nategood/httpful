@@ -136,9 +136,9 @@ final class UriTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         if (\voku\helper\Bootup::is_php('7.3')) {
-            $this->expectExceptionMessage('Unable to parse URI');
-        } else {
             $this->expectExceptionMessage('Invalid port: 0');
+        } else {
+            $this->expectExceptionMessage('Unable to parse URI');
         }
 
         new Uri('//example.com:0');
