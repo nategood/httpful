@@ -81,7 +81,7 @@ Transfer-Encoding: chunked\r\n";
 
     const TEST_URL_400 = 'http://127.0.0.1:8008/400';
 
-    const TIMEOUT_URI = 'http://suckup.de/timeout.php';
+    const TIMEOUT_URI = 'https://suckup.de/timeout.php';
 
     public function testAccept()
     {
@@ -658,8 +658,9 @@ Content-Type: text/plain; charset=utf-8\r\n",
     {
         try {
             (new Request())
+                ->followRedirects(true)
                 ->withUriFromString(self::TIMEOUT_URI)
-                ->withTimeout(0.01)
+                ->withTimeout(0.1)
                 ->send();
         } catch (NetworkErrorException $e) {
             static::assertTrue(is_resource($e->getCurlObject()->getCurl()));
