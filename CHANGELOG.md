@@ -1,8 +1,13 @@
 # Changelog
 
+## 2.4.3 (2021-04-07)
+
+- fix for old PHP versions
+- use Github Actions
+
 ## 2.4.2 (2020-11-18)
 
-[+]: update vendor stuff + fix tests
+- update vendor stuff + fix tests
 
 ## 2.4.1 (2020-05-04)
 
