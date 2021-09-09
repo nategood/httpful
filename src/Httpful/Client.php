@@ -91,7 +91,7 @@ class Client implements ClientInterface
      * @param string     $uri
      * @param array|null $param
      *
-     * @return false|string
+     * @return mixed
      */
     public static function get_json(string $uri, array $param = null)
     {
@@ -223,7 +223,7 @@ class Client implements ClientInterface
      * @param string     $uri
      * @param mixed|null $payload
      *
-     * @return false|string
+     * @return mixed
      */
     public static function post_json(string $uri, $payload = null)
     {
