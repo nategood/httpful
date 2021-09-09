@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.4.4 (2021-09-09)
+
+- fixes for phpdoc only
+
 ## 2.4.3 (2021-04-07)
 
 - fix for old PHP versions
