@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.4.5 (2021-09-14)
+
+- "XmlMimeHandler" -> show the borken xml
+
 ## 2.4.4 (2021-09-09)
 
 - fixes for phpdoc only
