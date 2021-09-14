@@ -46,7 +46,7 @@ class XmlMimeHandler extends DefaultMimeHandler
 
         $parsed = \simplexml_load_string($body, \SimpleXMLElement::class, $this->libxml_opts, $this->namespace);
         if ($parsed === false) {
-            throw new XmlParseException('Unable to parse response as XML');
+            throw new XmlParseException('Unable to parse response as XML: ' . $body);
         }
 
         return $parsed;
