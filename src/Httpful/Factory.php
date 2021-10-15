@@ -23,25 +23,32 @@ use Psr\Http\Message\UriInterface;
 class Factory implements RequestFactoryInterface, ServerRequestFactoryInterface, StreamFactoryInterface, ResponseFactoryInterface, UriFactoryInterface, UploadedFileFactoryInterface
 {
     /**
-     * @param string      $method
-     * @param string      $uri
-     * @param string|null $mime
-     * @param string      $body
+     * @param string          $method
+     * @param string          $uri
+     * @param string|null     $mime
+     * @param string|string[] $body
      *
-     * @return RequestInterface
+     * @return Request
      */
-    public function createRequest(string $method, $uri, string $mime = null, string $body = ''): RequestInterface
+    public function createRequest(string $method, $uri, string $mime = null, $body = ''): RequestInterface
     {
-        return (new Request($method, $mime))
-            ->withUriFromString($uri)
-            ->withBodyFromString($body);
+        $return = (new Request($method, $mime))
+            ->withUriFromString($uri);
+
+        if (is_array($body)) {
+            $return = $return->withBodyFromArray($body);
+        } else {
+            $return = $return->withBodyFromString($body);
+        }
+
+        return $return;
     }
 
     /**
      * @param int         $code
      * @param string|null $reasonPhrase
      *
-     * @return ResponseInterface
+     * @return Response
      */
     public function createResponse(int $code = 200, string $reasonPhrase = null): ResponseInterface
     {
@@ -55,7 +62,7 @@ class Factory implements RequestFactoryInterface, ServerRequestFactoryInterface,
      * @param string|null $mime
      * @param string      $body
      *
-     * @return ServerRequestInterface
+     * @return ServerRequest
      */
     public function createServerRequest(string $method, $uri, array $serverParams = [], $mime = null, string $body = ''): ServerRequestInterface
     {

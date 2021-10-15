@@ -405,7 +405,7 @@ class Request implements \IteratorAggregate, RequestInterface
 
         // set Content-Length to the size of the payload if present
         if ($this->serialized_payload) {
-            $this->curl->setOpt(\CURLOPT_POSTFIELDS, (string) $this->serialized_payload);
+            $this->curl->setOpt(\CURLOPT_POSTFIELDS,  $this->serialized_payload);
 
             if (!$this->isUpload()) {
                 $this->headers->forceSet('Content-Length', $this->_determineLength($this->serialized_payload));
@@ -2170,7 +2170,7 @@ class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
-     * @param array $files
+     * @param array<string,string> $files
      *
      * @return static
      */
@@ -2934,15 +2934,14 @@ class Request implements \IteratorAggregate, RequestInterface
             \array_keys($payload)[0] === 0
             &&
             \is_scalar($payload_first = \array_values($payload)[0])
-            &&
-            !\is_array($payload_first)
         ) {
             return $payload_first;
         }
 
         // Use a custom serializer if one is registered for this mime type.
+        $issetContentType = isset($this->payload_serializers[$this->content_type]);
         if (
-            ($issetContentType = isset($this->payload_serializers[$this->content_type]))
+            $issetContentType
             ||
             isset($this->payload_serializers['*'])
         ) {

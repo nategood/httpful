@@ -266,6 +266,7 @@ final class UriResolver
         // A reference to am empty last segment or an empty first sub-segment must be prefixed with "./".
         // This also applies to a segment with a colon character (e.g., "file:colon") that cannot be used
         // as the first segment of a relative-path reference, as it would be mistaken for a scheme name.
+        /* @phpstan-ignore-next-line | FP? */
         if ($relativePath === '' || \strpos(\explode('/', $relativePath, 2)[0], ':') !== false) {
             $relativePath = "./${relativePath}";
         } elseif ($relativePath[0] === '/') {

@@ -15,7 +15,7 @@ final class DevtoTest extends TestCase
     {
         // init
         $user = 'suckup_de';
-        $ARTICLES_ENDPOINT = 'https://dev.to/api/articles';
+        $ARTICLES_ENDPOINT = 'https://dev.to/api/articles?page=1&per_page=2';
 
         // Prepare client-side promise handling.
         $client = new \Httpful\ClientPromise();
@@ -42,6 +42,6 @@ final class DevtoTest extends TestCase
         // Wait for the promise to be fulfilled or rejected.
         $promise->wait();
 
-        static::assertTrue(\count($results) > 1);
+        static::assertTrue(\count($results) === 2);
     }
 }
