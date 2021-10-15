@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.4.6 (2021-10-15)
+
+- fix file upload
+
 ## 2.4.5 (2021-09-14)
 
 - "XmlMimeHandler" -> show the borken xml
