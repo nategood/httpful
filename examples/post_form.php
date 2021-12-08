@@ -18,12 +18,12 @@ $query = \http_build_query(['foo1' => 'PHP']);
 $http = new \Httpful\Factory();
 
 $response = (new \Httpful\Client())->sendRequest(
-$http->createRequest(
+    $http->createRequest(
     \Httpful\Http::POST,
-    "https://postman-echo.com/post",
+    'https://postman-echo.com/post',
     \Httpful\Mime::FORM,
     $query
-    )
+)
 );
 $result = $response->getRawBody();
 echo $result['form']['foo1'] . "\n"; // response from postman
@@ -38,7 +38,7 @@ $filename = __DIR__ . '/../tests/static/test_image.jpg';
 $response = (new \Httpful\Client())->sendRequest(
     $http->createRequest(
         \Httpful\Http::POST,
-        "https://postman-echo.com/post",
+        'https://postman-echo.com/post',
         \Httpful\Mime::FORM,
         $form
     )->withAttachment(['foo2' => $filename])
