@@ -379,7 +379,7 @@ Transfer-Encoding: chunked\r\n";
 
         static::assertSame('value', $response->getRawBody()['key']);
         static::assertSame('value', $response->getRawBody()['object']['key']);
-        static::assertTrue(is_array( $response->getRawBody()['array']));
+        static::assertTrue(is_array($response->getRawBody()['array']));
         static::assertSame(1, $response->getRawBody()['array'][0]);
     }
 
@@ -420,10 +420,10 @@ Transfer-Encoding: chunked\r\n",
     {
         $req = (new Request())->withMimeType(Mime::JSON)->disableAutoParsing();
         $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
-        static::assertTrue(is_string( (string) $response->getBody()));
+        static::assertTrue(is_string((string) $response->getBody()));
         $req = (new Request())->withMimeType(Mime::JSON)->enableAutoParsing();
         $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
-        static::assertTrue(is_array( $response->getRawBody()));
+        static::assertTrue(is_array($response->getRawBody()));
     }
 
     public function testOverrideXmlHandler()

@@ -405,7 +405,7 @@ class Request implements \IteratorAggregate, RequestInterface
 
         // set Content-Length to the size of the payload if present
         if ($this->serialized_payload) {
-            $this->curl->setOpt(\CURLOPT_POSTFIELDS,  $this->serialized_payload);
+            $this->curl->setOpt(\CURLOPT_POSTFIELDS, $this->serialized_payload);
 
             if (!$this->isUpload()) {
                 $this->headers->forceSet('Content-Length', $this->_determineLength($this->serialized_payload));
