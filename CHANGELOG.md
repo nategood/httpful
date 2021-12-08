@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.4.7 (2021-12-08)
+
+- update "portable-utf8"
+
 ## 2.4.6 (2021-10-15)
 
 - fix file upload
