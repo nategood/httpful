@@ -37,7 +37,7 @@
     "psr/http-factory": "1.0.*",
     "psr/http-message": "1.0.*",
     "psr/log": "1.1.*",
-    "voku/portable-utf8": "~5.4",
+    "voku/portable-utf8": "~6.0",
     "voku/simple_html_dom": "~4.7"
   },
   "require-dev": {
