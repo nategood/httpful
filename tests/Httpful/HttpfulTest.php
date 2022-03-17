@@ -266,6 +266,20 @@ X-My-Header:Value2\r\n";
         $this->assertTrue($r->hasDigestAuth());
     }
 
+    function testAcceptEncoding()
+    {
+        $r = Request::get('http://example.com/');
+        $r->_curlPrep();
+
+        $this->assertEquals('', $r->headers['Accept-Encoding']);
+
+        $accept_encoding = 'gzip, compress, br';
+        $r->addHeader('Accept-Encoding', $accept_encoding);
+        $r->_curlPrep();
+        
+        $this->assertEquals($accept_encoding, $r->headers['Accept-Encoding']);
+    }
+
     function testJsonResponseParse()
     {
         $req = Request::init()->sendsAndExpects(Mime::JSON);

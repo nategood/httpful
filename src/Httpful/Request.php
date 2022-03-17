@@ -952,6 +952,14 @@ class Request
             $headers[] = $accept;
         }
 
+        // Set Accept-Encoding to empty string if not provided
+        if (!isset($this->headers['Accept-Encoding'])) {
+            $this->headers['Accept-Encoding'] = '';
+        }
+
+        // Set curl encoding based on Accept-Encoding
+        curl_setopt($ch, CURLOPT_ENCODING, $this->headers['Accept-Encoding']);
+
         // Solve a bug on squid proxy, NONE/411 when miss content length
         if (!isset($this->headers['Content-Length']) && !$this->isUpload()) {
             $this->headers['Content-Length'] = 0;
