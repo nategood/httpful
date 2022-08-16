@@ -9,8 +9,7 @@ final class Headers implements \ArrayAccess, \Countable {
     /**
      * @param array $headers
      */
-    private function __construct($headers)
-    {
+    private function __construct($headers) {
         $this->headers = $headers;
     }
 
@@ -18,8 +17,7 @@ final class Headers implements \ArrayAccess, \Countable {
      * @param string $string
      * @return Headers
      */
-    public static function fromString($string)
-    {
+    public static function fromString($string) {
         $headers = preg_split("/(\r|\n)+/", $string, -1, \PREG_SPLIT_NO_EMPTY);
         $parse_headers = array();
         for ($i = 1; $i < count($headers); $i++) {
@@ -44,8 +42,7 @@ final class Headers implements \ArrayAccess, \Countable {
      * @param string $offset
      * @return bool
      */
-    public function offsetExists($offset)
-    {
+    public function offsetExists($offset): bool {
         return $this->getCaseInsensitive($offset) !== null;
     }
 
@@ -53,8 +50,7 @@ final class Headers implements \ArrayAccess, \Countable {
      * @param string $offset
      * @return mixed
      */
-    public function offsetGet($offset)
-    {
+    public function offsetGet($offset): mixed {
         return $this->getCaseInsensitive($offset);
     }
 
@@ -63,8 +59,7 @@ final class Headers implements \ArrayAccess, \Countable {
      * @param string $value
      * @throws \Exception
      */
-    public function offsetSet($offset, $value)
-    {
+    public function offsetSet($offset, $value): void {
         throw new \Exception("Headers are read-only.");
     }
 
@@ -72,29 +67,25 @@ final class Headers implements \ArrayAccess, \Countable {
      * @param string $offset
      * @throws \Exception
      */
-    public function offsetUnset($offset)
-    {
+    public function offsetUnset($offset): void {
         throw new \Exception("Headers are read-only.");
     }
 
     /**
      * @return int
      */
-    public function count()
-    {
+    public function count(): int {
         return count($this->headers);
     }
 
     /**
      * @return array
      */
-    public function toArray()
-    {
+    public function toArray() {
         return $this->headers;
     }
 
-    private function getCaseInsensitive(string $key)
-    {
+    private function getCaseInsensitive(string $key) {
         foreach ($this->headers as $header => $value) {
             if (strtolower($key) === strtolower($header)) {
                 return $value;
@@ -103,4 +94,5 @@ final class Headers implements \ArrayAccess, \Countable {
 
         return null;
     }
+
 }
