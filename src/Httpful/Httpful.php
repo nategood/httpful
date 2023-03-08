@@ -3,7 +3,8 @@
 namespace Httpful;
 
 class Httpful {
-    const VERSION = '0.3.0';
+
+    const VERSION = '0.3.3';
 
     private static $mimeRegistrar = array();
     private static $default = null;
@@ -12,8 +13,7 @@ class Httpful {
      * @param string $mimeType
      * @param \Httpful\Handlers\MimeHandlerAdapter $handler
      */
-    public static function register($mimeType, \Httpful\Handlers\MimeHandlerAdapter $handler)
-    {
+    public static function register($mimeType, \Httpful\Handlers\MimeHandlerAdapter $handler) {
         self::$mimeRegistrar[$mimeType] = $handler;
     }
 
@@ -21,8 +21,7 @@ class Httpful {
      * @param string $mimeType defaults to MimeHandlerAdapter
      * @return \Httpful\Handlers\MimeHandlerAdapter
      */
-    public static function get($mimeType = null)
-    {
+    public static function get($mimeType = null) {
         if (isset(self::$mimeRegistrar[$mimeType])) {
             return self::$mimeRegistrar[$mimeType];
         }
@@ -40,8 +39,8 @@ class Httpful {
      * @param string $mimeType
      * @return bool
      */
-    public static function hasParserRegistered($mimeType)
-    {
+    public static function hasParserRegistered($mimeType) {
         return isset(self::$mimeRegistrar[$mimeType]);
     }
+
 }
