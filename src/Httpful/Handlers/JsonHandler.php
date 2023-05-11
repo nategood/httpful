@@ -14,7 +14,7 @@ class JsonHandler extends MimeHandlerAdapter
 
     public function init(array $args)
     {
-        $this->decode_as_array = !!(array_key_exists('decode_as_array', $args) ? $args['decode_as_array'] : false);
+        $this->decode_as_array = (bool) ($args['decode_as_array'] ?? false);
     }
 
     /**
