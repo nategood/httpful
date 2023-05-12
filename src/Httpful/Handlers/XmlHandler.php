@@ -61,7 +61,7 @@ class XmlHandler extends MimeHandlerAdapter
      * @return string
      * @author Ted Zellers
      */
-    public function serialize_clean($payload)
+    public function serialize_clean($payload): string
     {
         $xml = new \XMLWriter;
         $xml->openMemory();
@@ -90,7 +90,7 @@ class XmlHandler extends MimeHandlerAdapter
     /**
      * @author Zack Douglas <zack@zackerydouglas.info>
      */
-    private function _future_serializeAsXml($value, $node = null, $dom = null)
+    private function _future_serializeAsXml($value, $node = null, $dom = null): array
     {
         if (!$dom) {
             $dom = new \DOMDocument;
@@ -121,7 +121,7 @@ class XmlHandler extends MimeHandlerAdapter
     /**
      * @author Zack Douglas <zack@zackerydouglas.info>
      */
-    private function _future_serializeArrayAsXml($value, &$parent, &$dom)
+    private function _future_serializeArrayAsXml($value, &$parent, &$dom): array
     {
         foreach ($value as $k => &$v) {
             $n = $k;
@@ -137,7 +137,7 @@ class XmlHandler extends MimeHandlerAdapter
     /**
      * @author Zack Douglas <zack@zackerydouglas.info>
      */
-    private function _future_serializeObjectAsXml($value, &$parent, &$dom)
+    private function _future_serializeObjectAsXml($value, &$parent, &$dom): array
     {
         $refl = new \ReflectionObject($value);
         foreach ($refl->getProperties() as $pr) {

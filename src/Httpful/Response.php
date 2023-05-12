@@ -9,7 +9,6 @@ namespace Httpful;
  */
 class Response
 {
-
     public $body,
            $raw_body,
            $headers,
@@ -79,7 +78,7 @@ class Response
      * @param string Http response body
      * @return mixed (array|string|object) the response parse accordingly
      */
-    public function _parse($body)
+    public function _parse(string $body)
     {
         // If the user decided to forgo the automatic
         // smart parsing, short circuit.
@@ -98,13 +97,13 @@ class Response
         //  3. If provided, use the "parent type" of the mime type from the response
         //  4. Default to the content-type provided in the response
         $parse_with = $this->request->expected_type;
+
         if (empty($this->request->expected_type)) {
             $parse_with = Httpful::hasParserRegistered($this->content_type)
                 ? $this->content_type
                 : $this->parent_type;
         }
-
-       return Httpful::get($parse_with)->parse($body);
+        return Httpful::get($parse_with)->parse($body);
     }
 
     /**

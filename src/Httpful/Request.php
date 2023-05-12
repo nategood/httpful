@@ -1,5 +1,4 @@
 <?php
-
 namespace Httpful;
 
 use Httpful\Exception\ConnectionErrorException;
@@ -401,14 +400,15 @@ class Request
      * @param string $mime
      * @return Request
      */
-    public function expects($mime)
+    public function expects(?string $mime)
     {
         if (empty($mime)) return $this;
         $this->expected_type = Mime::getFullMime($mime);
+
         return $this;
     }
     // @alias of expects
-    public function expectsType($mime)
+    public function expectsType(?string $mime)
     {
         return $this->expects($mime);
     }
@@ -749,6 +749,7 @@ class Request
             //     throw new \Exception("Unsupported Content-Type $mime");
             // }
         }
+
         if (substr($method, 0, 7) === 'expects') {
             $mime = strtolower(substr($method, 7));
             if (Mime::supportsMimeType($mime)) {
@@ -947,7 +948,7 @@ class Request
         $headers[] = "Content-Type: {$this->content_type}";
 
         // allow custom Accept header if set
-        if ($this->headers['Accept'] === null) {
+        if (!isset($this->headers['Accept'])) {
             // http://pretty-rfc.herokuapp.com/RFC2616#header.accept
             $accept = 'Accept: */*; q=0.5, text/plain; q=0.8, text/html;level=3;';
 
@@ -1086,7 +1087,7 @@ class Request
 
         $body = array_pop($response);
         $headers = array_pop($response);
-
+        
         return new Response($body, $headers, $this, $info);
     }
 
