@@ -21,9 +21,10 @@ final class Headers implements \ArrayAccess, \Countable {
     public static function fromString($string)
     {
         $headers = preg_split("/(\r|\n)+/", $string, -1, \PREG_SPLIT_NO_EMPTY);
-        $parse_headers = array();
-        for ($i = 1; $i < count($headers); $i++) {
-            [($key, $raw_value] = explode(':', $headers[$i], 2);
+        $parse_headers = [];
+        $headersCount = count($headers);
+        for ($i = 1; $i < $headersCount; $i++) {
+            [$key, $raw_value] = explode(':', $headers[$i], 2);
             $key = trim($key);
             $value = trim($raw_value);
             if (array_key_exists($key, $parse_headers)) {
@@ -61,6 +62,7 @@ final class Headers implements \ArrayAccess, \Countable {
      * @param string $offset
      * @param string $value
      * @throws \Exception
+     * @return never
      */
     public function offsetSet($offset, $value)
     {
@@ -70,6 +72,7 @@ final class Headers implements \ArrayAccess, \Countable {
     /**
      * @param string $offset
      * @throws \Exception
+     * @return never
      */
     public function offsetUnset($offset)
     {
