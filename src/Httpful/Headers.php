@@ -59,6 +59,7 @@ class Headers implements \ArrayAccess, \Countable, \Iterator
      *
      * @return int the number of elements stored in the array
      */
+    #[\ReturnTypeWillChange]
     public function count()
     {
         return (int) \count($this->data);
@@ -69,6 +70,7 @@ class Headers implements \ArrayAccess, \Countable, \Iterator
      *
      * @return mixed data at the current position
      */
+    #[\ReturnTypeWillChange]
     public function current()
     {
         return \current($this->data);
@@ -79,6 +81,7 @@ class Headers implements \ArrayAccess, \Countable, \Iterator
      *
      * @return mixed case-sensitive key at current position
      */
+    #[\ReturnTypeWillChange]
     public function key()
     {
         $key = \key($this->data);
@@ -91,6 +94,7 @@ class Headers implements \ArrayAccess, \Countable, \Iterator
      *
      * @return void
      */
+    #[\ReturnTypeWillChange]
     public function next()
     {
         \next($this->data);
@@ -101,6 +105,7 @@ class Headers implements \ArrayAccess, \Countable, \Iterator
      *
      * @return void
      */
+    #[\ReturnTypeWillChange]
     public function rewind()
     {
         \reset($this->data);
@@ -111,6 +116,7 @@ class Headers implements \ArrayAccess, \Countable, \Iterator
      *
      * @return bool if the current position is valid
      */
+    #[\ReturnTypeWillChange]
     public function valid()
     {
         return \key($this->data) !== null;
@@ -186,6 +192,7 @@ class Headers implements \ArrayAccess, \Countable, \Iterator
      *
      * @return bool if the offset exists
      */
+    #[\ReturnTypeWillChange]
     public function offsetExists($offset)
     {
         return (bool) \array_key_exists(\strtolower($offset), $this->data);
@@ -201,6 +208,7 @@ class Headers implements \ArrayAccess, \Countable, \Iterator
      *
      * @return mixed the data stored at the offset
      */
+    #[\ReturnTypeWillChange]
     public function offsetGet($offset)
     {
         $offsetLower = \strtolower($offset);
@@ -216,6 +224,7 @@ class Headers implements \ArrayAccess, \Countable, \Iterator
      *
      * @return void
      */
+    #[\ReturnTypeWillChange]
     public function offsetSet($offset, $value)
     {
         throw new ResponseHeaderException('Headers are read-only.');
@@ -228,6 +237,7 @@ class Headers implements \ArrayAccess, \Countable, \Iterator
      *
      * @return void
      */
+    #[\ReturnTypeWillChange]
     public function offsetUnset($offset)
     {
         throw new ResponseHeaderException('Headers are read-only.');

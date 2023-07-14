@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.4.9 (2023-07-15)
+
+- use "ReturnTypeWillChange" to ignore return type changes from PHP >= 8.1
+
 ## 2.4.8 (2023-07-14)
 
 - update dependencies "httplug / http-message"
