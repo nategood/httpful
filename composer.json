@@ -31,11 +31,11 @@
     "ext-json": "*",
     "ext-simplexml": "*",
     "ext-xmlwriter": "*",
-    "php-http/httplug": "2.2.* || 2.1.*",
+    "php-http/httplug": "2.4.* || 2.3.* || 2.2.* || 2.1.*",
     "php-http/promise": "1.1.* || 1.0.*",
     "psr/http-client": "1.0.*",
     "psr/http-factory": "1.0.*",
-    "psr/http-message": "1.0.*",
+    "psr/http-message": "1.1.* || 1.0.*",
     "psr/log": "1.1.*",
     "voku/portable-utf8": "~6.0",
     "voku/simple_html_dom": "~4.7"
