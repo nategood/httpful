@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.4.8 (2023-07-14)
+
+- update dependencies "httplug / http-message"
+
 ## 2.4.7 (2021-12-08)
 
 - update "portable-utf8"
