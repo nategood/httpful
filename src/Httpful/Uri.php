@@ -96,7 +96,7 @@ class Uri implements UriInterface
             $parts = \parse_url($uri);
 
             if ($parts === false) {
-                throw new \InvalidArgumentException("Unable to parse URI: ${uri}");
+                throw new \InvalidArgumentException("Unable to parse URI: {$uri}");
             }
 
             $this->_applyParts($parts);

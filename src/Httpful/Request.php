@@ -427,10 +427,10 @@ class Request implements \IteratorAggregate, RequestInterface
         foreach ($this->headers as $header => $value) {
             if (\is_array($value)) {
                 foreach ($value as $valueInner) {
-                    $headers[] = "${header}: ${valueInner}";
+                    $headers[] = "{$header}: {$valueInner}";
                 }
             } else {
-                $headers[] = "${header}: ${value}";
+                $headers[] = "{$header}: {$value}";
             }
         }
 
@@ -475,7 +475,7 @@ class Request implements \IteratorAggregate, RequestInterface
         }
 
         $path = ($url['path'] ?? '/') . (isset($url['query']) ? '?' . $url['query'] : '');
-        $this->raw_headers = "{$this->method} ${path} HTTP/{$this->protocol_version}\r\n";
+        $this->raw_headers = "{$this->method} {$path} HTTP/{$this->protocol_version}\r\n";
         $this->raw_headers .= \implode("\r\n", $headers);
         $this->raw_headers .= "\r\n";
 
@@ -1586,12 +1586,9 @@ class Request implements \IteratorAggregate, RequestInterface
          *  but also by environment variable called http_proxy.
          */
         return (
-                   isset($this->additional_curl_opts[\CURLOPT_PROXY])
-                   &&
-                   \is_string($this->additional_curl_opts[\CURLOPT_PROXY])
-               )
-               ||
-               \getenv('http_proxy');
+            isset($this->additional_curl_opts[\CURLOPT_PROXY])
+            && \is_string($this->additional_curl_opts[\CURLOPT_PROXY])
+        ) || \getenv('http_proxy');
     }
 
     /**
@@ -1916,7 +1913,6 @@ class Request implements \IteratorAggregate, RequestInterface
                 ||
                 $this->curl->errorCode === \CURLE_BAD_CONTENT_ENCODING
             ) {
-
                 // Docs say 'identity,' but 'none' seems to work (sometimes?).
                 $this->curl->setOpt(\CURLOPT_ENCODING, 'none');
 
@@ -2166,7 +2162,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function withAddedCookie(string $name, string $value): self
     {
-        return $this->withAddedHeader('Cookie', "${name}=${value}");
+        return $this->withAddedHeader('Cookie', "{$name}={$value}");
     }
 
     /**
@@ -2431,7 +2427,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function withCookie(string $name, string $value): self
     {
-        return $this->withHeader('Cookie', "${name}=${value}");
+        return $this->withHeader('Cookie', "{$name}={$value}");
     }
 
     /**
@@ -2612,7 +2608,7 @@ class Request implements \IteratorAggregate, RequestInterface
      *                                Default null, no authentication
      * @param string   $auth_username Authentication username. Default null
      * @param string   $auth_password Authentication password. Default null
-     * @param int      $proxy_type    Proxy-Tye for Curl. Default is "Proxy::HTTP"
+     * @param int      $proxy_type    Proxy-Type for Curl. Default is "Proxy::HTTP"
      *
      * @return static
      */
