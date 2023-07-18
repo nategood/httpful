@@ -695,7 +695,6 @@ Content-Type: text/plain; charset=utf-8\r\n",
             static::assertNotContains('User-Agent: HttpFul/1.0', $r->getRawHeaders());
         }
 
-
         $r = Request::get('http://example.com/')
             ->withUserAgent('');
 

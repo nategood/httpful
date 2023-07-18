@@ -384,7 +384,7 @@ final class UriTest extends TestCase
             // Don't encode path segments
             ['/pa/th//two?q=va/lue#frag/ment', '/pa/th//two', 'q=va/lue', 'frag/ment', '/pa/th//two?q=va/lue#frag/ment'],
             // Don't encode unreserved chars or sub-delimiters
-            ["/${unreserved}?${unreserved}#${unreserved}", "/${unreserved}", $unreserved, $unreserved, "/${unreserved}?${unreserved}#${unreserved}"],
+            ["/{$unreserved}?{$unreserved}#{$unreserved}", "/{$unreserved}", $unreserved, $unreserved, "/{$unreserved}?{$unreserved}#{$unreserved}"],
             // Encoded unreserved chars are not decoded
             ['/p%61th?q=v%61lue#fr%61gment', '/p%61th', 'q=v%61lue', 'fr%61gment', '/p%61th?q=v%61lue#fr%61gment'],
         ];

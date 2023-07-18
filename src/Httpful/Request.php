@@ -427,10 +427,10 @@ class Request implements \IteratorAggregate, RequestInterface
         foreach ($this->headers as $header => $value) {
             if (\is_array($value)) {
                 foreach ($value as $valueInner) {
-                    $headers[] = "${header}: ${valueInner}";
+                    $headers[] = "{$header}: {$valueInner}";
                 }
             } else {
-                $headers[] = "${header}: ${value}";
+                $headers[] = "{$header}: {$value}";
             }
         }
 
@@ -475,7 +475,7 @@ class Request implements \IteratorAggregate, RequestInterface
         }
 
         $path = ($url['path'] ?? '/') . (isset($url['query']) ? '?' . $url['query'] : '');
-        $this->raw_headers = "{$this->method} ${path} HTTP/{$this->protocol_version}\r\n";
+        $this->raw_headers = "{$this->method} {$path} HTTP/{$this->protocol_version}\r\n";
         $this->raw_headers .= \implode("\r\n", $headers);
         $this->raw_headers .= "\r\n";
 
@@ -2166,7 +2166,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function withAddedCookie(string $name, string $value): self
     {
-        return $this->withAddedHeader('Cookie', "${name}=${value}");
+        return $this->withAddedHeader('Cookie', "{$name}={$value}");
     }
 
     /**
@@ -2431,7 +2431,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function withCookie(string $name, string $value): self
     {
-        return $this->withHeader('Cookie', "${name}=${value}");
+        return $this->withHeader('Cookie', "{$name}={$value}");
     }
 
     /**
