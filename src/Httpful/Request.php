@@ -1586,12 +1586,9 @@ class Request implements \IteratorAggregate, RequestInterface
          *  but also by environment variable called http_proxy.
          */
         return (
-                   isset($this->additional_curl_opts[\CURLOPT_PROXY])
-                   &&
-                   \is_string($this->additional_curl_opts[\CURLOPT_PROXY])
-               )
-               ||
-               \getenv('http_proxy');
+            isset($this->additional_curl_opts[\CURLOPT_PROXY])
+            && \is_string($this->additional_curl_opts[\CURLOPT_PROXY])
+        ) || \getenv('http_proxy');
     }
 
     /**
