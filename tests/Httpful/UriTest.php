@@ -384,7 +384,7 @@ final class UriTest extends TestCase
             // Don't encode path segments
             ['/pa/th//two?q=va/lue#frag/ment', '/pa/th//two', 'q=va/lue', 'frag/ment', '/pa/th//two?q=va/lue#frag/ment'],
             // Don't encode unreserved chars or sub-delimiters
-            ["/${unreserved}?${unreserved}#${unreserved}", "/${unreserved}", $unreserved, $unreserved, "/${unreserved}?${unreserved}#${unreserved}"],
+            ["/{$unreserved}?{$unreserved}#{$unreserved}", "/{$unreserved}", $unreserved, $unreserved, "/{$unreserved}?{$unreserved}#{$unreserved}"],
             // Encoded unreserved chars are not decoded
             ['/p%61th?q=v%61lue#fr%61gment', '/p%61th', 'q=v%61lue', 'fr%61gment', '/p%61th?q=v%61lue#fr%61gment'],
         ];
@@ -451,7 +451,7 @@ final class UriTest extends TestCase
         static::assertSame('//example.com/foo', (string) $uri);
     }
 
-    public function testRemoveExtraSlashesWihoutHost()
+    public function testRemoveExtraSlashesWithoutHost()
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('The path of a URI without an authority must not start with two slashes');

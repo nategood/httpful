@@ -18,7 +18,7 @@
 
 ## 2.4.5 (2021-09-14)
 
-- "XmlMimeHandler" -> show the borken xml
+- "XmlMimeHandler" -> show the broken xml
 
 ## 2.4.4 (2021-09-09)
 
