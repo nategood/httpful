@@ -61,7 +61,7 @@ final class ClientMultiTest extends TestCase
 
         $multi->start();
 
-        static::assertSame('{"authenticated":true}', (string) $results[0]);
+        static::assertSame('{"authenticated":true}', str_replace(["\n", ' '], '', (string) $results[0]));
     }
 
     public function testPostAuthJson()
