@@ -1913,7 +1913,6 @@ class Request implements \IteratorAggregate, RequestInterface
                 ||
                 $this->curl->errorCode === \CURLE_BAD_CONTENT_ENCODING
             ) {
-
                 // Docs say 'identity,' but 'none' seems to work (sometimes?).
                 $this->curl->setOpt(\CURLOPT_ENCODING, 'none');
 
