@@ -451,7 +451,7 @@ final class UriTest extends TestCase
         static::assertSame('//example.com/foo', (string) $uri);
     }
 
-    public function testRemoveExtraSlashesWihoutHost()
+    public function testRemoveExtraSlashesWithoutHost()
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('The path of a URI without an authority must not start with two slashes');

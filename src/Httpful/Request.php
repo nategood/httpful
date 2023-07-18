@@ -2612,7 +2612,7 @@ class Request implements \IteratorAggregate, RequestInterface
      *                                Default null, no authentication
      * @param string   $auth_username Authentication username. Default null
      * @param string   $auth_password Authentication password. Default null
-     * @param int      $proxy_type    Proxy-Tye for Curl. Default is "Proxy::HTTP"
+     * @param int      $proxy_type    Proxy-Type for Curl. Default is "Proxy::HTTP"
      *
      * @return static
      */
