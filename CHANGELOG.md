@@ -2,13 +2,14 @@
 
 ## 3.0.0 (2023-07-20)
 
+- minimal PHP version 7.4
 - allow to use "psr/http-message" 2.0.* 
 - allow to use "psr/log" 2.0.* || 3.0.*
 
 breaking change:
-- minimal PHP version 7.4
-- fixed "Response->hasBody()", now if will return `false` for an empty body
-- "Stream->getContents()" now returns always a string, if we need the old behaviors, use can use "Stream->getContentsUnserialized()"
+- "Response->hasBody()" was fixed, now it will return `false` for an empty body
+- "Request->getUri()" now always returns an `UriInterface` , if we need the old behaviors, use can use "Request->getUriOrNull()"
+- "Stream->getContents()" now always returns a `string`, if we need the old behaviors, use can use "Stream->getContentsUnserialized()"
 - "psr/http-message" v2 has return types, so you need to use them too, if you extend one of this classes
 
 ## 2.4.9 (2023-07-15)
