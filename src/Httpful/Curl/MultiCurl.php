@@ -8,7 +8,7 @@ namespace Httpful\Curl;
 final class MultiCurl
 {
     /**
-     * @var resource
+     * @var resource|\CurlMultiHandle
      */
     private $multiCurl;
 
@@ -69,12 +69,7 @@ final class MultiCurl
 
     public function __construct()
     {
-        $multiCurl = \curl_multi_init();
-        if ($multiCurl === false) {
-            throw new \RuntimeException('curl_multi_init() returned false!');
-        }
-
-        $this->multiCurl = $multiCurl;
+        $this->multiCurl = \curl_multi_init();
     }
 
     public function __destruct()
@@ -117,7 +112,11 @@ final class MultiCurl
             $curl->close();
         }
 
-        if (\is_resource($this->multiCurl)) {
+        if (
+            \is_resource($this->multiCurl)
+            ||
+            (class_exists('CurlMultiHandle') && $this->multiCurl instanceof \CurlMultiHandle)
+        ) {
             \curl_multi_close($this->multiCurl);
         }
     }
@@ -371,7 +370,7 @@ final class MultiCurl
     }
 
     /**
-     * @return false|resource
+     * @return resource|\CurlMultiHandle
      */
     public function getMultiCurl()
     {

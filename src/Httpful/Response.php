@@ -358,7 +358,7 @@ class Response implements ResponseInterface
      *
      * @return static
      */
-    public function withAddedHeader($name, $value)
+    public function withAddedHeader($name, $value): \Psr\Http\Message\MessageInterface
     {
         $new = clone $this;
 
@@ -390,7 +390,7 @@ class Response implements ResponseInterface
      *
      * @return static
      */
-    public function withBody(StreamInterface $body)
+    public function withBody(StreamInterface $body): \Psr\Http\Message\MessageInterface
     {
         $new = clone $this;
 
@@ -416,7 +416,7 @@ class Response implements ResponseInterface
      *
      * @return static
      */
-    public function withHeader($name, $value)
+    public function withHeader($name, $value): \Psr\Http\Message\MessageInterface
     {
         $new = clone $this;
 
@@ -443,7 +443,7 @@ class Response implements ResponseInterface
      *
      * @return static
      */
-    public function withProtocolVersion($version)
+    public function withProtocolVersion($version): \Psr\Http\Message\MessageInterface
     {
         $new = clone $this;
 
@@ -475,7 +475,7 @@ class Response implements ResponseInterface
      *
      * @return static
      */
-    public function withStatus($code, $reasonPhrase = null)
+    public function withStatus($code, $reasonPhrase = null): ResponseInterface
     {
         $new = clone $this;
 
@@ -507,7 +507,7 @@ class Response implements ResponseInterface
      *
      * @return static
      */
-    public function withoutHeader($name)
+    public function withoutHeader($name): \Psr\Http\Message\MessageInterface
     {
         $new = clone $this;
 
@@ -572,12 +572,9 @@ class Response implements ResponseInterface
         return $this->raw_headers;
     }
 
-    /**
-     * @return bool
-     */
     public function hasBody(): bool
     {
-        return !empty($this->body);
+        return $this->body->getSize()  > 0;
     }
 
     /**

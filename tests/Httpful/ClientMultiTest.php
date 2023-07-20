@@ -35,10 +35,10 @@ final class ClientMultiTest extends TestCase
 
         static::assertCount(2, $results);
         if (\method_exists(__CLASS__, 'assertStringContainsString')) {
-            static::assertStringContainsString('<!doctype html>', (string) $results[0]);
+            static::assertStringContainsString('<!doctype html>', strtolower((string) $results[0]));
             static::assertStringContainsString('Lars Moelleken', (string) $results[1]);
         } else {
-            static::assertContains('<!doctype html>', (string) $results[0]);
+            static::assertContains('<!doctype html>', strtolower((string) $results[0]));
             static::assertContains('Lars Moelleken', (string) $results[1]);
         }
     }

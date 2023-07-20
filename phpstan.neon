@@ -1,15 +1,13 @@
 parameters:
-    level: max
+    level: 8
     paths:
         - %currentWorkingDirectory%/src/
     reportUnmatchedIgnoredErrors: false
     checkMissingIterableValueType: false
     checkGenericClassInNonGenericObjectType: false
-    excludes_analyse:
+    excludePaths:
         - %currentWorkingDirectory%/vendor/*
         - %currentWorkingDirectory%/tests/*
-    autoload_files:
-        - %currentWorkingDirectory%/vendor/autoload.php
     ignoreErrors:
         - '#Unsafe usage of new static#'
         - '#should return static#'

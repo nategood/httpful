@@ -106,7 +106,7 @@ class Uri implements UriInterface
     /**
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         return self::composeComponents(
             $this->scheme,
@@ -165,7 +165,7 @@ class Uri implements UriInterface
     /**
      * @return int|null
      */
-    public function getPort()
+    public function getPort(): ?int
     {
         return $this->port;
     }
@@ -199,7 +199,7 @@ class Uri implements UriInterface
      *
      * @return $this|Uri|UriInterface
      */
-    public function withFragment($fragment)
+    public function withFragment($fragment): UriInterface
     {
         $fragment = $this->_filterQueryAndFragment($fragment);
 
@@ -218,7 +218,7 @@ class Uri implements UriInterface
      *
      * @return $this|Uri|UriInterface
      */
-    public function withHost($host)
+    public function withHost($host): UriInterface
     {
         $host = $this->_filterHost($host);
 
@@ -238,7 +238,7 @@ class Uri implements UriInterface
      *
      * @return $this|Uri|UriInterface
      */
-    public function withPath($path)
+    public function withPath($path): UriInterface
     {
         $path = $this->_filterPath($path);
 
@@ -258,7 +258,7 @@ class Uri implements UriInterface
      *
      * @return $this|Uri|UriInterface
      */
-    public function withPort($port)
+    public function withPort($port): UriInterface
     {
         $port = $this->_filterPort($port);
 
@@ -279,7 +279,7 @@ class Uri implements UriInterface
      *
      * @return $this|Uri|UriInterface
      */
-    public function withQuery($query)
+    public function withQuery($query): UriInterface
     {
         $query = $this->_filterQueryAndFragment($query);
 
@@ -298,7 +298,7 @@ class Uri implements UriInterface
      *
      * @return $this|Uri|UriInterface
      */
-    public function withScheme($scheme)
+    public function withScheme($scheme): UriInterface
     {
         $scheme = $this->_filterScheme($scheme);
 
@@ -320,7 +320,7 @@ class Uri implements UriInterface
      *
      * @return $this|Uri|UriInterface
      */
-    public function withUserInfo($user, $password = null)
+    public function withUserInfo($user, $password = null): UriInterface
     {
         $info = $this->_filterUserInfoComponent($user);
         if ($password !== null) {

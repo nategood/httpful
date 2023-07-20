@@ -122,7 +122,7 @@ class UploadedFile implements UploadedFileInterface
     /**
      * @return string|null
      */
-    public function getClientFilename()
+    public function getClientFilename(): ?string
     {
         return $this->clientFilename;
     }
@@ -130,7 +130,7 @@ class UploadedFile implements UploadedFileInterface
     /**
      * @return string|null
      */
-    public function getClientMediaType()
+    public function getClientMediaType(): ?string
     {
         return $this->clientMediaType;
     }
@@ -176,7 +176,7 @@ class UploadedFile implements UploadedFileInterface
      *
      * @return void
      */
-    public function moveTo($targetPath)
+    public function moveTo($targetPath): void
     {
         $this->_validateActive();
 

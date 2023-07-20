@@ -16,14 +16,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: [
-            7.0,
-            7.1,
-            7.2,
-            7.3,
-            7.4,
-            8.0
-        ]
+        php:
+          - '7.4'
+          - '8.0'
+          - '8.1'
+          - '8.2'
         composer: [basic]
     timeout-minutes: 10
     steps:
@@ -87,12 +84,7 @@ jobs:
         uses: codecov/codecov-action@v1
         with:
           files: build/logs/clover.xml
-          
-      - name: Upload coverage results to Scrutinizer
-        uses: sudo-bot/action-scrutinizer@latest
-        with:
-          cli-args: "--format=php-clover build/logs/clover.xml"
-      
+
       - name: Archive logs artifacts
         if: ${{ failure() }}
         uses: actions/upload-artifact@v2

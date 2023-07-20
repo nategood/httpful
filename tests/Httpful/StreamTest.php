@@ -19,7 +19,7 @@ final class StreamTest extends TestCase
 
         $stream = Http::stream($array);
 
-        static::assertSame($array, $stream->getContents());
+        static::assertSame($array, $stream->getContentsUnserialized());
     }
 
     public function testCanDetachStream()

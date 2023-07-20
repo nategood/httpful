@@ -9,6 +9,7 @@ use Httpful\Curl\MultiCurl;
 use Httpful\Exception\ClientErrorException;
 use Httpful\Exception\NetworkErrorException;
 use Httpful\Exception\RequestException;
+use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
@@ -1138,10 +1139,22 @@ class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
-     * @return Uri|UriInterface|null
+     * @return null|Uri|UriInterface
      */
-    public function getUri()
+    public function getUriOrNull(): ?UriInterface
     {
+        return $this->uri;
+    }
+
+    /**
+     * @return Uri|UriInterface
+     */
+    public function getUri(): UriInterface
+    {
+        if ($this->uri === null) {
+            throw new RequestException($this, 'URI is not set.');
+        }
+
         return $this->uri;
     }
 
@@ -1177,7 +1190,7 @@ class Request implements \IteratorAggregate, RequestInterface
      *
      * @return static
      */
-    public function withAddedHeader($name, $value)
+    public function withAddedHeader($name, $value): MessageInterface
     {
         if (!\is_string($name) || $name === '') {
             throw new \InvalidArgumentException('Header name must be an RFC 7230 compatible string.');
@@ -1213,13 +1226,11 @@ class Request implements \IteratorAggregate, RequestInterface
      *
      * @return static
      */
-    public function withBody(StreamInterface $body)
+    public function withBody(StreamInterface $body): MessageInterface
     {
         $stream = Http::stream($body);
 
-        $new = clone $this;
-
-        return $new->_setBody($stream, null);
+        return (clone $this)->_setBody($stream, null);
     }
 
     /**
@@ -1270,7 +1281,7 @@ class Request implements \IteratorAggregate, RequestInterface
      *
      * @return static
      */
-    public function withMethod($method)
+    public function withMethod($method): RequestInterface
     {
         $new = clone $this;
 
@@ -1294,7 +1305,7 @@ class Request implements \IteratorAggregate, RequestInterface
      *
      * @return static
      */
-    public function withProtocolVersion($version)
+    public function withProtocolVersion($version): MessageInterface
     {
         $new = clone $this;
 
@@ -1322,7 +1333,7 @@ class Request implements \IteratorAggregate, RequestInterface
      *
      * @return static
      */
-    public function withRequestTarget($requestTarget)
+    public function withRequestTarget($requestTarget): RequestInterface
     {
         if (\preg_match('#\\s#', $requestTarget)) {
             throw new \InvalidArgumentException('Invalid request target provided; cannot contain whitespace');
@@ -1369,11 +1380,9 @@ class Request implements \IteratorAggregate, RequestInterface
      *
      * @return static
      */
-    public function withUri(UriInterface $uri, $preserveHost = false)
+    public function withUri(UriInterface $uri, $preserveHost = false): RequestInterface
     {
-        $new = clone $this;
-
-        return $new->_withUri($uri, $preserveHost);
+        return (clone $this)->_withUri($uri, $preserveHost);
     }
 
     /**
@@ -1512,7 +1521,7 @@ class Request implements \IteratorAggregate, RequestInterface
     }
 
     /**
-     * @return bool has the internal curl (non multi) request been initialized?
+     * @return bool has the internal curl (non-multi) request been initialized?
      */
     public function hasBeenInitialized(): bool
     {
@@ -1919,7 +1928,6 @@ class Request implements \IteratorAggregate, RequestInterface
                 $result = $this->curl->exec();
 
                 if ($result === false) {
-                    /** @noinspection NotOptimalIfConditionsInspection */
                     if (
                         /* @phpstan-ignore-next-line | FP? */
                         $this->curl->errorCode === \CURLE_WRITE_ERROR
@@ -2340,9 +2348,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function withContentType($mime, string $fallback = null): self
     {
-        $new = clone $this;
-
-        return $new->_withContentType($mime, $fallback);
+        return (clone $this)->_withContentType($mime, $fallback);
     }
 
     /**
@@ -2490,9 +2496,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function withExpectedType($mime, string $fallback = null): self
     {
-        $new = clone $this;
-
-        return $new->_withExpectedType($mime, $fallback);
+        return (clone $this)->_withExpectedType($mime, $fallback);
     }
 
     /**
@@ -2521,9 +2525,7 @@ class Request implements \IteratorAggregate, RequestInterface
      */
     public function withMimeType($mime): self
     {
-        $new = clone $this;
-
-        return $new->_withMimeType($mime);
+        return (clone $this)->_withMimeType($mime);
     }
 
     /**
@@ -2718,9 +2720,7 @@ class Request implements \IteratorAggregate, RequestInterface
     public function withUriFromString(string $uri, bool $useClone = true): self
     {
         if ($useClone) {
-            $new = clone $this;
-
-            return $new->withUri(new Uri($uri));
+            return (clone $this)->withUri(new Uri($uri));
         }
 
         return $this->_withUri(new Uri($uri));
@@ -3115,10 +3115,6 @@ class Request implements \IteratorAggregate, RequestInterface
             $mime = $fallback;
         }
 
-        if (empty($mime)) {
-            return $this;
-        }
-
         $this->content_type = Mime::getFullMime($mime);
 
         if ($this->isUpload()) {
@@ -3142,10 +3138,6 @@ class Request implements \IteratorAggregate, RequestInterface
 
         if (empty($mime)) {
             $mime = $fallback;
-        }
-
-        if (empty($mime)) {
-            return $this;
         }
 
         $this->expected_type = Mime::getFullMime($mime);

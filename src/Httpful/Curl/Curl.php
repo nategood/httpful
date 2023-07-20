@@ -56,7 +56,7 @@ final class Curl
     public $httpStatusCode = 0;
 
     /**
-     * @var bool|string
+     * @var null|bool|string
      */
     public $rawResponse;
 
@@ -111,7 +111,7 @@ final class Curl
     public $request;
 
     /**
-     * @var resource
+     * @var false|resource|\CurlHandle
      */
     private $curl;
 
@@ -242,7 +242,11 @@ final class Curl
      */
     public function close()
     {
-        if (\is_resource($this->curl)) {
+        if (
+            \is_resource($this->curl)
+            ||
+            (\class_exists('CurlHandle') && $this->curl instanceof \CurlHandle)
+        ) {
             \curl_close($this->curl);
         }
     }
@@ -328,7 +332,7 @@ final class Curl
     }
 
     /**
-     * @param false|resource|null $ch
+     * @param false|\CurlHandle|resource|null $ch
      *
      * @return mixed returns the value provided by parseResponse
      */
@@ -342,7 +346,7 @@ final class Curl
             $this->rawResponse = \curl_exec($this->curl);
             $this->curlErrorCode = \curl_errno($this->curl);
             $this->curlErrorMessage = \curl_error($this->curl);
-        } elseif ($ch !== null) {
+        } else {
             $this->rawResponse = \curl_multi_getcontent($ch);
             $this->curlErrorMessage = \curl_error($ch);
         }
@@ -449,7 +453,7 @@ final class Curl
     }
 
     /**
-     * @return false|resource
+     * @return false|resource|\CurlHandle
      */
     public function getCurl()
     {
@@ -554,7 +558,7 @@ final class Curl
     }
 
     /**
-     * @return bool|string
+     * @return null|bool|string
      */
     public function getRawResponse()
     {
@@ -677,7 +681,15 @@ final class Curl
      */
     public function reset()
     {
-        if (\function_exists('curl_reset') && \is_resource($this->curl)) {
+        if (
+            \function_exists('curl_reset')
+            &&
+            (
+                \is_resource($this->curl)
+                ||
+                (\class_exists('CurlHandle') && $this->curl instanceof \CurlHandle)
+            )
+        ) {
             \curl_reset($this->curl);
         } else {
             $this->curl = \curl_init();
@@ -1039,7 +1051,7 @@ final class Curl
 
     /**
      * @param string $url
-     * @param mixed  $mixed_data
+     * @param scalar|array<array-key,scalar> $mixed_data
      *
      * @return $this
      */
@@ -1142,7 +1154,7 @@ final class Curl
 
     /**
      * @param string $url
-     * @param mixed  $mixed_data
+     * @param scalar|array<array-key,scalar> $mixed_data
      *
      * @return string
      */
@@ -1153,7 +1165,7 @@ final class Curl
 
         if (!empty($mixed_data)) {
             $query_mark = \strpos($url, '?') > 0 ? '&' : '?';
-            if (\is_string($mixed_data)) {
+            if (\is_scalar($mixed_data)) {
                 $query_string .= $query_mark . $mixed_data;
             } elseif (\is_array($mixed_data)) {
                 $query_string .= $query_mark . \http_build_query($mixed_data, '', '&');

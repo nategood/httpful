@@ -468,7 +468,8 @@ final class ClientTest extends TestCase
         $dataToSend = ['abc' => 'def'];
         $request = (new Request('PUT', Mime::JSON))
             ->withUriFromString('https://httpbin.org/put')
-            ->withBodyFromArray($dataToSend);
+            ->withBodyFromArray($dataToSend)
+            ->withTimeout(60);
         $response = $client->sendRequest($request);
         static::assertEquals(200, $response->getStatusCode());
         $body = \json_decode((string) $response, true);

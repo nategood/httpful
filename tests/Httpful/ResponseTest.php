@@ -23,6 +23,7 @@ final class ResponseTest extends TestCase
         static::assertSame([], $r->getHeaders());
         static::assertInstanceOf(StreamInterface::class, $r->getBody());
         static::assertSame('', (string) $r->getBody());
+        static::assertFalse($r->hasBody());
     }
 
     public function testCanConstructWithStatusCode()
