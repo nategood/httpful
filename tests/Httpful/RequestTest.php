@@ -269,7 +269,7 @@ final class RequestTest extends TestCase
         $r2 = $r1->withUri($u2);
         static::assertNotSame($r1, $r2);
         static::assertSame($u2, $r2->getUri());
-        static::assertSame($u1, $r1->getUri());
+        static::assertSame($u1, $r1->getUriOrNull());
 
         $r3 = (new Request('GET'))->withUriFromString('/');
         $u3 = $r3->getUri();
