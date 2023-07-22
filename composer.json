@@ -47,7 +47,7 @@
     "php-http/async-client-implementation": "1.0",
     "php-http/client-implementation": "1.0",
     "psr/http-client-implementation": "1.0",
-    "psr/http-factory-implementation": "1.ß"
+    "psr/http-factory-implementation": "1.0"
   },
   "autoload": {
     "psr-0": {
