@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.1 (2023-07-22)
+
+- "composer.json" -> provide "psr/http-factory-implementation"
+
 ## 3.0.0 (2023-07-20)
 
 - minimal PHP version 7.4
