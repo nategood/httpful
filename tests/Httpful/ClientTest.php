@@ -161,7 +161,7 @@ final class ClientTest extends TestCase
                 ->withBasicAuth('postman', 'password')
         );
 
-        static::assertSame('{"authenticated":true}', str_replace(["\n", ' '], '',(string) $response));
+        static::assertSame('{"authenticated":true}', str_replace(["\n", ' '], '', (string) $response));
     }
 
     public function testDigestAuthRequest()
@@ -172,7 +172,7 @@ final class ClientTest extends TestCase
                 ->withDigestAuth('postman', 'password')
         );
 
-        static::assertSame('{"authenticated":true}', str_replace(["\n", ' '], '',(string) $response));
+        static::assertSame('{"authenticated":true}', str_replace(["\n", ' '], '', (string) $response));
     }
 
     public function testSendJsonRequest()
@@ -211,9 +211,9 @@ final class ClientTest extends TestCase
         $response = Client::put('https://postman-echo.com/put', 'lall');
 
         if (\method_exists(__CLASS__, 'assertStringContainsString')) {
-            static::assertStringContainsString('"data":"lall"', str_replace(["\n", ' '], '',(string) $response));
+            static::assertStringContainsString('"data":"lall"', str_replace(["\n", ' '], '', (string) $response));
         } else {
-            static::assertContains('"data":"lall"', str_replace(["\n", ' '], '',(string) $response));
+            static::assertContains('"data":"lall"', str_replace(["\n", ' '], '', (string) $response));
         }
     }
 
@@ -222,9 +222,9 @@ final class ClientTest extends TestCase
         $response = Client::patch('https://postman-echo.com/patch', 'lall');
 
         if (\method_exists(__CLASS__, 'assertStringContainsString')) {
-            static::assertStringContainsString('"data":"lall"', str_replace(["\n", ' '], '',(string) $response));
+            static::assertStringContainsString('"data":"lall"', str_replace(["\n", ' '], '', (string) $response));
         } else {
-            static::assertContains('"data":"lall"', str_replace(["\n", ' '], '',(string) $response));
+            static::assertContains('"data":"lall"', str_replace(["\n", ' '], '', (string) $response));
         }
     }
 
