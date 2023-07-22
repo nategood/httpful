@@ -19,11 +19,11 @@ $http = new \Httpful\Factory();
 
 $response = (new \Httpful\Client())->sendRequest(
     $http->createRequest(
-    \Httpful\Http::POST,
-    'https://postman-echo.com/post',
-    \Httpful\Mime::FORM,
-    $query
-)
+        \Httpful\Http::POST,
+        'https://postman-echo.com/post',
+        \Httpful\Mime::FORM,
+        $query
+    )
 );
 $result = $response->getRawBody();
 echo $result['form']['foo1'] . "\n"; // response from postman
