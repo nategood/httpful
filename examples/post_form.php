@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-// JSON Example via GitHub-API
-
 require __DIR__ . '/../vendor/autoload.php';
 
 // ------------------- SHORT VERSION
