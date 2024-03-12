@@ -234,7 +234,7 @@ class Request
         $response = $this->buildResponse($result);
 
         curl_close($this->_ch);
-        unset($this->_ch);
+        $this->_ch = null;
 
         return $response;
     }
