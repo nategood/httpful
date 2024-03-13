@@ -9,7 +9,7 @@
  */
 namespace Httpful\Test;
 
-require(dirname(dirname(dirname(__FILE__))) . '/bootstrap.php');
+require(dirname(__FILE__),3) . '/bootstrap.php');
 \Httpful\Bootstrap::init();
 
 use Httpful\Httpful;
@@ -21,40 +21,49 @@ use Httpful\Handlers\JsonHandler;
 
 define('TEST_SERVER', WEB_SERVER_HOST . ':' . WEB_SERVER_PORT);
 
-class HttpfulTest extends \PHPUnit_Framework_TestCase
+class HttpfulTest extends \PHPUnit\Framework\TestCase
 {
-    const TEST_SERVER = TEST_SERVER;
-    const TEST_URL = 'http://127.0.0.1:8008';
-    const TEST_URL_400 = 'http://127.0.0.1:8008/400';
+    public const TEST_SERVER = TEST_SERVER;
+    public const TEST_URL = 'http://127.0.0.1:8008';
+    public const TEST_URL_400 = 'http://127.0.0.1:8008/400';
 
-    const SAMPLE_JSON_HEADER =
+    public const SAMPLE_JSON_HEADER =
 "HTTP/1.1 200 OK
 Content-Type: application/json
 Connection: keep-alive
 Transfer-Encoding: chunked\r\n";
-    const SAMPLE_JSON_RESPONSE = '{"key":"value","object":{"key":"value"},"array":[1,2,3,4]}';
-    const SAMPLE_CSV_HEADER =
+    public const SAMPLE_JSON_HEADER_LOWERCASE =
+        "HTTP/2 200 
+date: Tue, 07 Jan 2020 09:11:21 GMT
+content-type: application/json
+content-length: 513
+access-control-allow-origin: *
+access-control-allow-methods: GET, POST, PUT, PATCH, DELETE
+access-control-allow-headers: Authorization, Content-Type, Accept-Encoding, Cache-Control, DNT
+cache-control: private, must-revalidate\r\n";
+    public const SAMPLE_JSON_RESPONSE = '{"key":"value","object":{"key":"value"},"array":[1,2,3,4]}';
+    public const SAMPLE_CSV_HEADER =
 "HTTP/1.1 200 OK
 Content-Type: text/csv
 Connection: keep-alive
 Transfer-Encoding: chunked\r\n";
-    const SAMPLE_CSV_RESPONSE =
+    public const SAMPLE_CSV_RESPONSE =
 "Key1,Key2
 Value1,Value2
 \"40.0\",\"Forty\"";
-    const SAMPLE_XML_RESPONSE = '<stdClass><arrayProp><array><k1><myClass><intProp>2</intProp></myClass></k1></array></arrayProp><stringProp>a string</stringProp><boolProp>TRUE</boolProp></stdClass>';
-    const SAMPLE_XML_HEADER =
+    public const SAMPLE_XML_RESPONSE = '<stdClass><arrayProp><array><k1><myClass><intProp>2</intProp></myClass></k1></array></arrayProp><stringProp>a string</stringProp><boolProp>TRUE</boolProp></stdClass>';
+    public const SAMPLE_XML_HEADER =
 "HTTP/1.1 200 OK
 Content-Type: application/xml
 Connection: keep-alive
 Transfer-Encoding: chunked\r\n";
-    const SAMPLE_VENDOR_HEADER =
+    public const SAMPLE_VENDOR_HEADER =
 "HTTP/1.1 200 OK
 Content-Type: application/vnd.nategood.message+xml
 Connection: keep-alive
 Transfer-Encoding: chunked\r\n";
-    const SAMPLE_VENDOR_TYPE = "application/vnd.nategood.message+xml";
-    const SAMPLE_MULTI_HEADER =
+    public const SAMPLE_VENDOR_TYPE = "application/vnd.nategood.message+xml";
+    public const SAMPLE_MULTI_HEADER =
 "HTTP/1.1 200 OK
 Content-Type: application/json
 Connection: keep-alive
@@ -65,8 +74,8 @@ X-My-Header:Value2\r\n";
     function testInit()
     {
       $r = Request::init();
-      // Did we get a 'Request' object?
-      $this->assertEquals('Httpful\Request', get_class($r));
+      // Did we get a 'Request' object?      
+      $this->assertEquals(\Httpful\Request::class, get_class($r));
     }
 
     function testDetermineLength()
@@ -81,11 +90,11 @@ X-My-Header:Value2\r\n";
 
     function testMethods()
     {
-      $valid_methods = array('get', 'post', 'delete', 'put', 'options', 'head');
+      $valid_methods = ['get', 'post', 'delete', 'put', 'options', 'head'];
       $url = 'http://example.com/';
-      foreach ($valid_methods as $method) {
-        $r = call_user_func(array('Httpful\Request', $method), $url);
-        $this->assertEquals('Httpful\Request', get_class($r));
+      foreach ($valid_methods as $method) {        
+        $r = call_user_func([\Httpful\Request::class, $method], $url);
+        $this->assertEquals(\Httpful\Request::class, get_class($r));        
         $this->assertEquals(strtoupper($method), $r->method);
       }
     }
@@ -198,7 +207,7 @@ X-My-Header:Value2\r\n";
 
         $this->assertEquals(Mime::JSON, $r->expected_type);
         $r->_curlPrep();
-        $this->assertContains('application/json', $r->raw_headers);
+        $this->assertStringContainsString('application/json', $r->raw_headers);
     }
 
     function testCustomAccept()
@@ -208,7 +217,7 @@ X-My-Header:Value2\r\n";
             ->addHeader('Accept', $accept);
 
         $r->_curlPrep();
-        $this->assertContains($accept, $r->raw_headers);
+        $this->assertStringContainsString($accept, $r->raw_headers);
         $this->assertEquals($accept, $r->headers['Accept']);
     }
 
@@ -219,16 +228,16 @@ X-My-Header:Value2\r\n";
 
         $this->assertArrayHasKey('User-Agent', $r->headers);
         $r->_curlPrep();
-        $this->assertContains('User-Agent: ACME/1.2.3', $r->raw_headers);
-        $this->assertNotContains('User-Agent: HttpFul/1.0', $r->raw_headers);
+        $this->assertStringContainsString('User-Agent: ACME/1.2.3', $r->raw_headers);
+        $this->assertStringNotContainsString('User-Agent: HttpFul/1.0', $r->raw_headers);
 
         $r = Request::get('http://example.com/')
             ->withUserAgent('');
 
         $this->assertArrayHasKey('User-Agent', $r->headers);
         $r->_curlPrep();
-        $this->assertContains('User-Agent:', $r->raw_headers);
-        $this->assertNotContains('User-Agent: HttpFul/1.0', $r->raw_headers);
+        $this->assertStringContainsString('User-Agent:', $r->raw_headers);
+        $this->assertStringNotContainsString('User-Agent: HttpFul/1.0', $r->raw_headers);
     }
 
     function testAuthSetup()
@@ -264,7 +273,18 @@ X-My-Header:Value2\r\n";
 
         $this->assertEquals("value", $response->body->key);
         $this->assertEquals("value", $response->body->object->key);
-        $this->assertInternalType('array', $response->body->array);
+        $this->assertIsArray( $response->body->array);
+        $this->assertEquals(1, $response->body->array[0]);
+    }
+
+    function testJsonResponseParseLowercaseHeaders()
+    {
+        $req = Request::init();
+        $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER_LOWERCASE, $req);
+
+        $this->assertEquals("value", $response->body->key);
+        $this->assertEquals("value", $response->body->object->key);
+        $this->assertIsArray( $response->body->array);
         $this->assertEquals(1, $response->body->array[0]);
     }
 
@@ -276,13 +296,16 @@ X-My-Header:Value2\r\n";
         $this->assertEquals("object", gettype($sxe));
         $this->assertEquals("SimpleXMLElement", get_class($sxe));
         $bools = $sxe->xpath('/stdClass/boolProp');
-        list( , $bool ) = each($bools);
+        // list( , $bool ) = each($bools);
+        $bool = array_shift($bools);
         $this->assertEquals("TRUE", (string) $bool);
         $ints = $sxe->xpath('/stdClass/arrayProp/array/k1/myClass/intProp');
-        list( , $int ) = each($ints);
+        // list( , $int ) = each($ints);
+        $int = array_shift($ints);
         $this->assertEquals("2", (string) $int);
         $strings = $sxe->xpath('/stdClass/stringProp');
-        list( , $string ) = each($strings);
+        // list( , $string ) = each($strings);
+        $string = array_shift($strings);
         $this->assertEquals("a string", (string) $string);
     }
 
@@ -293,7 +316,7 @@ X-My-Header:Value2\r\n";
 
         $this->assertEquals("Key1", $response->body[0][0]);
         $this->assertEquals("Value1", $response->body[1][0]);
-        $this->assertInternalType('string', $response->body[2][0]);
+        $this->assertIsString( $response->body[2][0]);
         $this->assertEquals("40.0", $response->body[2][0]);
     }
 
@@ -321,10 +344,10 @@ Content-Type: text/plain; charset=utf-8\r\n", $req);
     }
 
     function testAttach() {
-        $req = Request::init();
-        $testsPath = realpath(dirname(__FILE__) . DIRECTORY_SEPARATOR . '..');
-        $filename = $testsPath . DIRECTORY_SEPARATOR . 'test_image.jpg';
-        $req->attach(array('index' => $filename));
+        $req = Request::init();        
+        $testsPath = realpath(__DIR__ . DIRECTORY_SEPARATOR . '..');
+        $filename = $testsPath . DIRECTORY_SEPARATOR . 'test_image.jpg';        
+        $req->attach(['index' => $filename]);
         $payload = $req->payload['index'];
         // PHP 5.5  + will take advantage of CURLFile while previous
         // versions just use the string syntax
@@ -361,10 +384,10 @@ Content-Type: text/plain; charset=utf-8\r\n", $req);
     {
         $req = Request::init()->sendsAndExpects(Mime::JSON)->withoutAutoParsing();
         $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
-        $this->assertInternalType('string', $response->body);
+        $this->assertIsString( $response->body);
         $req = Request::init()->sendsAndExpects(Mime::JSON)->withAutoParsing();
         $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
-        $this->assertInternalType('object', $response->body);
+        $this->assertIsObject($response->body);
     }
 
     function testParseHeaders()
@@ -378,7 +401,7 @@ Content-Type: text/plain; charset=utf-8\r\n", $req);
     {
         $req = Request::init()->sendsAndExpects(Mime::JSON);
         $response = new Response(self::SAMPLE_JSON_RESPONSE, self::SAMPLE_JSON_HEADER, $req);
-        $this->assertContains('Content-Type: application/json', $response->raw_headers);
+        $this->assertStringContainsString('Content-Type: application/json', $response->raw_headers);
     }
 
     function testHasErrors()
@@ -535,7 +558,7 @@ Transfer-Encoding: chunked\r\n", $request);
         // Lazy test...
         $prev = \Httpful\Httpful::get(\Httpful\Mime::XML);
         $this->assertEquals($prev, new \Httpful\Handlers\XmlHandler());
-        $conf = array('namespace' => 'http://example.com');
+        $conf = ['namespace' => 'http://example.com'];
         \Httpful\Httpful::register(\Httpful\Mime::XML, new \Httpful\Handlers\XmlHandler($conf));
         $new = \Httpful\Httpful::get(\Httpful\Mime::XML);
         $this->assertNotEquals($prev, $new);
@@ -554,16 +577,24 @@ Transfer-Encoding: chunked\r\n", $request);
         $this->assertTrue($r->hasProxy());
     }
 
+    public function testHasProxyWithEnvironmentProxy()
+    {
+        putenv('http_proxy=http://127.0.0.1:300/');
+        $r = Request::get('some_other_url');
+        $this->assertTrue($r->hasProxy());
+    }
+
+
     public function testParseJSON()
     {
         $handler = new JsonHandler();
 
-        $bodies = array(
+        $bodies = [
             'foo',
-            array(),
-            array('foo', 'bar'),
+            [],
+            ['foo', 'bar'],
             null
-        );
+        ];
         foreach ($bodies as $body) {
             $this->assertEquals($body, $handler->parse(json_encode($body)));
         }
