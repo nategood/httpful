@@ -970,6 +970,7 @@ class Request
         $this->raw_headers .= "\r\n";
 
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+	curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
 
         if ($this->_debug) {
             curl_setopt($ch, CURLOPT_VERBOSE, true);
