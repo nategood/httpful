@@ -67,9 +67,9 @@ Httpful highly encourages sending in pull requests. When submitting a pull reque
 
 ## 1.0.0
 
-- SECURITY Make certificate validation the default. This is a potentially breaking, but important security change. Validation can still be skipped but must be explicitly skipped via withoutStrictSSL.
-- REFACTOR [PR #305] Remove deprecated functionality pre PHP 8.0
-- REFACTOR Partially from [PR #282] Add CI support for running tests now that Travis is gone.
+- SECURITY [Make certificate validation the default](https://huntr.com/bounties/8d59c089-92f1-4b73-90f8-54968a70e2fb). This is a potentially breaking change and as a result, bumping major version number in line with semver. Validation can still be skipped but must be explicitly skipped via withoutStrictSSL.
+- REFACTOR [PR #305](https://github.com/nategood/httpful/pull/305) Remove deprecated functionality pre PHP 8.1
+- REFACTOR Partially from [PR #282](https://github.com/nategood/httpful/pull/282) Add CI support for running tests now that Travis is gone.
 
 ## 0.3.2
 
