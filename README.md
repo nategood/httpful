@@ -2,7 +2,7 @@
 
 [![Build Status](https://secure.travis-ci.org/nategood/httpful.png?branch=master)](http://travis-ci.org/nategood/httpful) [![Total Downloads](https://poser.pugx.org/nategood/httpful/downloads.png)](https://packagist.org/packages/nategood/httpful)
 
-[Httpful](http://phphttpclient.com) is a simple Http Client library for PHP 5.3+.  There is an emphasis of readability, simplicity, and flexibility – basically provide the features and flexibility to get the job done and make those features really easy to use.
+Httpful is a simple Http Client library for PHP 7.2+.  There is an emphasis of readability, simplicity, and flexibility – basically provide the features and flexibility to get the job done and make those features really easy to use.
 
 Features
 
@@ -34,16 +34,6 @@ echo "{$response->body->name} joined GitHub on " .
 
 # Installation
 
-## Phar
-
-A [PHP Archive](http://php.net/manual/en/book.phar.php) (or .phar) file is available for [downloading](http://phphttpclient.com/httpful.phar).  Simply [download](http://phphttpclient.com/httpful.phar) the .phar, drop it into your project, and include it like you would any other php file.  _This method is ideal for smaller projects, one off scripts, and quick API hacking_.
-
-```php
-include('httpful.phar');
-$r = \Httpful\Request::get($uri)->sendIt();
-...
-```
-
 ## Composer
 
 Httpful is PSR-0 compliant and can be installed using [composer](http://getcomposer.org/).  Simply add `nategood/httpful` to your composer.json file.  _Composer is the sane alternative to PEAR.  It is excellent for managing dependencies in larger projects_.
@@ -62,11 +52,7 @@ Because Httpful is PSR-0 compliant, you can also just clone the Httpful reposito
 
 If you want the build your own [Phar Archive](http://php.net/manual/en/book.phar.php) you can use the `build` script included.
 Make sure that your `php.ini` has the *Off* or 0 value for the `phar.readonly` setting.
-Also you need to create ad empty `downloads` directory in the project root.
-
-# Show Me More!
-
-You can checkout the [Httpful Landing Page](http://phphttpclient.com) for more info including many examples and  [documentation](http://phphttpclient.com/docs).
+Also you need to create an empty `downloads` directory in the project root.
 
 # Contributing
 
@@ -80,6 +66,18 @@ Httpful highly encourages sending in pull requests.  When submitting a pull requ
  - Include commenting where appropriate and add a descriptive pull request message
 
 # Changelog
+
+## 0.3.2
+
+ - REFACTOR [PR #276](https://github.com/nategood/httpful/pull/276) Add properly subclassed, more descriptive Exceptions for JSON parse errors
+
+## 0.3.1
+
+ - FIX [PR #286](https://github.com/nategood/httpful/pull/286) Fixed header case sensitivity
+
+## 0.3.0
+
+ - REFACTOR Dropped support for dead versions of PHP. Updated the PHPUnit tests.
 
 ## 0.2.20
 

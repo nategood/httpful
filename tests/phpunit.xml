@@ -8,6 +8,7 @@
         <const name="WEB_SERVER_HOST" value="localhost" />
         <const name="WEB_SERVER_PORT" value="1349" />
         <const name="WEB_SERVER_DOCROOT" value="./static" />
+	<env name="http_proxy" value="" />
     </php>
     <logging>
         <log type="coverage-text" target="php://stdout" showUncoveredFiles="false"/>
