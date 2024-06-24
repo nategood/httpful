@@ -181,6 +181,14 @@ class Request
     }
 
     /**
+     * @return bool Is this request setup for negotiate auth?
+     */
+    public function hasNegotiateAuth()
+    {
+        return isset($this->password) && isset($this->username) && $this->additional_curl_opts[CURLOPT_HTTPAUTH] == CURLAUTH_NEGOTIATE;
+    }
+
+    /**
      * Specify a HTTP timeout
      * @param float|int $timeout seconds to timeout the HTTP call
      * @return Request
@@ -307,6 +315,27 @@ class Request
     public function authenticateWithDigest($username, $password)
     {
         return $this->digestAuth($username, $password);
+    }
+
+    /**
+     * User Negotiate Auth.
+     * @param string $username
+     * @param string $password
+     * @return Request
+     */
+    public function negotiateAuth($username, $password)
+    {
+        $this->addOnCurlOption(CURLOPT_HTTPAUTH, CURLAUTH_NEGOTIATE);
+        if (!empty($_SERVER['KRB5CCNAME'])) {
+            putenv('KRB5CCNAME=' . $_SERVER['KRB5CCNAME']);
+        }
+        return $this->basicAuth($username, $password);
+    }
+
+    // @alias of negotiateAuth
+    public function authenticateWithNegotiate($username, $password)
+    {
+        return $this->negotiateAuth($username, $password);
     }
 
     /**
