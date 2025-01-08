@@ -25,6 +25,6 @@ class FormHandler extends MimeHandlerAdapter
      */
     public function serialize($payload): string
     {
-        return http_build_query($payload, null, '&');
+        return http_build_query($payload, '', '&');
     }
 }
